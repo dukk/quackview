@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "dotnet",
+			"task": "build",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "dotnet: build"
+		},
+		{
+			"type": "dotnet",
+			"task": "run",
+			"group": "none",
+			"problemMatcher": [],
+			"label": "dotnet: run"
+		},
+		{
+			"type": "dotnet",
+			"task": "test",
+			"group": "test",
+			"problemMatcher": [],
+			"label": "dotnet: test"
+		}
+	]
+}

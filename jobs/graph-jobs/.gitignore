@@ -1,0 +1,99 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Pp]ublish/
+
+# NuGet Packages
+*.nupkg
+# The packages folder can be ignored if you use Package Restore
+**/packages/*
+!**/packages/build/
+!**/packages/repositories.config
+
+# Visual Studio Code
+.vscode/
+
+# Rider
+.idea/
+*.sln.iml
+
+# Others
+*.dbmdl
+*.pdb
+*.cache
+*.mdb
+*.opendb
+*.pidb
+*.svclog
+*.scc
+*.psess
+*.vsp
+*.vspscc
+*.vssscc
+*.tmp
+*.bak
+*.swp
+*.swo
+*.orig
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# IIS Express
+/.vs/
+*.vspscc
+
+# DotCover
+*.dotCover
+
+# StyleCop
+StyleCopReport.xml
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# NCrunch
+*.ncrunch*
+_NCrunch_*
+
+# Web
+node_modules/
+bower_components/
+wwwroot/
+
+# Publish
+*.publishsettings
+
+# Azure
+*.azurePubxml
+*.azurePubxml.user
+
+# Entity Framework
+Migrations/
+
+# Others
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.mdf
+*.ldf
