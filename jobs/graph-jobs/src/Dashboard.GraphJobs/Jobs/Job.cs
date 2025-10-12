@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Graph.Drives.Item.Items.Item.Workbook.Functions.N;
 
 namespace TypoDukk.Dashboard.GraphJobs.Jobs;
 
@@ -24,8 +25,10 @@ internal abstract class Job<TConfig> : IJob<TConfig>, IJob
         if (name.EndsWith("Job", StringComparison.InvariantCultureIgnoreCase))
             name = name[..^3];
 
-        return name.Equals(argName, StringComparison.InvariantCultureIgnoreCase)
-            || name.Replace("-", "").Equals(argName, StringComparison.InvariantCultureIgnoreCase);
+        var match = name.Equals(argName, StringComparison.InvariantCultureIgnoreCase)
+            || name.Equals(argName.Replace("-", ""), StringComparison.InvariantCultureIgnoreCase);
+
+        return match;
     }
 
     public abstract Task ExecuteAsync(TConfig config);
@@ -39,8 +42,11 @@ internal abstract class Job<TConfig> : IJob<TConfig>, IJob
             throw new FileNotFoundException($"Config file '{configFile}' not found.", configFile);
 
         var configJson = await File.ReadAllTextAsync(configFile);
-        var config = JsonSerializer.Deserialize<TConfig>(configJson) 
-            ?? throw new InvalidOperationException($"Failed to deserialize config file '{configFile}' to type '{typeof(TConfig).FullName}'.");
+        var config = JsonSerializer.Deserialize<TConfig>(configJson, new JsonSerializerOptions()
+        {
+            PropertyNameCaseInsensitive = true,
+            AllowTrailingCommas = true
+        }) ?? throw new InvalidOperationException($"Failed to deserialize config file '{configFile}' to type '{typeof(TConfig).FullName}'.");
         
         await this.ExecuteAsync(config);
     }

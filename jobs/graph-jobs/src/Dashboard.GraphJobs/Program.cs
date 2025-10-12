@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using TypoDukk.Dashboard.GraphJobs.Jobs;
 using TypoDukk.Dashboard.GraphJobs.Services;
 
@@ -29,6 +31,7 @@ internal class Program : IProgram
         hostBuilder.Services.AddSingleton<IJobRunnerService, JobRunnerService>();
         hostBuilder.Services.AddSingleton<IGraphService, GraphService>();
         hostBuilder.Services.AddSingleton<ICalendarEventService, CalendarEventService>();
+        hostBuilder.Services.AddSingleton<IPhotosService, PhotosService>();
         hostBuilder.Services.AddSingleton<IDataFileService, DataFileService>();
 
         // Adding jobs (all should be of type IJob):
@@ -46,18 +49,55 @@ internal class Program : IProgram
 #if DEBUG
         this.logger.LogCritical("Running in DEBUG mode - using hardcoded args");
 
-        args = ["run", "upcoming-calendar-events:./debug/jobs/upcoming-calendar-events.json"];
+        args = ["run", "upcoming-calendar-events:\"D:\\Development\\dashboard\\jobs\\graph-jobs\\debug\\jobs\\upcoming-calendar-events.json\""];
 #endif
+
+        this.logger.LogInformation("Current working directory: {workingDirectory}", Environment.CurrentDirectory);
+
+        if (args.IsNullOrEmpty())
+            throw new ArgumentException(nameof(args));
+
+        var action = args[0].ToLower();
+
         try
         {
-            var jobRunner = this.host.Services.GetRequiredService<IJobRunnerService>();
-            await jobRunner.RunJobsAsync(args);
+            switch (action)
+            {
+                case "run":
+                    await this.runJobs(args[1..]);
+                    break;
+                case "new":
+                    await this.newJob(args[1]);
+                    break;
+                case "jobs":
+                    await this.listJobs();
+                    break;
+                default:
+                    return 2;
+            }
+
             return 0;
         }
-        catch
+        catch (Exception exception)
         {
+            this.logger.LogCritical(exception, "An unhandled exception occurred");
             return 1;
         }
+    }
+    private Task newJob(string v)
+    {
+        throw new NotImplementedException();
+    }
+
+    private Task listJobs()
+    {
+        throw new NotImplementedException();
+    }
+
+    private async Task runJobs(string[] jobArgs)
+    {
+        var jobRunner = this.host.Services.GetRequiredService<IJobRunnerService>();
+        await jobRunner.RunJobsAsync(jobArgs);
     }
 
     public string GetAppDataDirectory()

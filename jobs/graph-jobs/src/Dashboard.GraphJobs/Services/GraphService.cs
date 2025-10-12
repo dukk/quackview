@@ -38,11 +38,15 @@ internal class GraphService : IGraphService
                 .WithRedirectUri("http://localhost");
         var pca = pcaBuilder.Build();
         var auth = await this.getAccessToken(pca, accountUserName);
-        var httpClient = new HttpClient()
-        {
-            DefaultRequestHeaders = { Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken) }
-        };
+        var httpClient = new HttpClient();
+        var clientRequestId = Guid.NewGuid().ToString();
+        
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
+        httpClient.DefaultRequestHeaders.Add("client-request-id", clientRequestId);
+
         var graphClient = new GraphServiceClient(httpClient);
+
+        this.logger.LogDebug("Executing action in Graph context for account: {Account} using client-request-id: {ClientRequestId}", accountUserName ?? GraphService.DEFAULT_ACCOUNT_CACHE, clientRequestId);
 
         return await action(graphClient);
     }
@@ -61,7 +65,7 @@ internal class GraphService : IGraphService
 
         AuthenticationResult? result = null;
 
-        this.logger.LogInformation("Looking for cached graph accounts to authenticate silently");
+        this.logger.LogDebug("Looking for cached graph accounts to authenticate silently");
 
         var accounts = await pca.GetAccountsAsync();
 
@@ -111,7 +115,7 @@ internal class GraphService : IGraphService
         
         Directory.CreateDirectory(cacheDir);
 
-        this.logger.LogInformation("Using cache directory {cacheDir}", cacheDir);
+        this.logger.LogDebug("Using cache directory {cacheDir}", cacheDir);
 
         return cacheDir;
     }

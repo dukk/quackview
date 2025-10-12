@@ -16,8 +16,14 @@ internal class JobRunnerService(ILogger<JobRunnerService> logger, IServiceProvid
 
     public async Task RunJobsAsync(string[] jobArgs)
     {
+        this.logger.LogInformation("Running jobs using arguments {jobArgs}", jobArgs);
+
         var jobs = this.serviceProvider.GetServices<IJob>();
+
+        this.logger.LogDebug("Found {JobCount} jobs", jobs.Count());
+
         var jobRuns = jobArgs.Select((jobArg) => JobRun.FromArgString(jobArg, jobs)).ToArray();
+
         await RunJobsAsync(jobRuns);
     }
 
@@ -42,10 +48,10 @@ internal class JobRun(IJob job, string configPath)
         if (String.IsNullOrWhiteSpace(arg))
             throw new ArgumentNullException(nameof(arg));
 
-        var pair = arg.Split(':', 1, StringSplitOptions.None);
+        var pair = arg.Split(':', 2);
         var job = jobs.FirstOrDefault(j => j.MatchesArgName(pair[0]))
             ?? throw new ArgumentException("Unknown job.", nameof(arg));
 
-        return new JobRun(job, pair[1]);
+        return new JobRun(job, pair[1].Trim('\'', '"'));
     }
 }
