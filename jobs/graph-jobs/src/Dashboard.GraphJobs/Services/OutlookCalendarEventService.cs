@@ -17,7 +17,7 @@ internal class CalendarEvent
     public string? Account { get; internal set; }
 }
 
-internal interface ICalendarEventService
+internal interface IOutlookCalendarEventService
 {
     Task<IEnumerable<CalendarEventCalendar>> GetCalendarsAsync(string accountName);
 
@@ -32,12 +32,12 @@ internal class CalendarEventCalendar
     public string? Name { get; set; }
 }
 
-internal class CalendarEventService : ICalendarEventService
+internal class OutlookCalendarEventService : IOutlookCalendarEventService
 {
-    private readonly ILogger<CalendarEventService> logger;
+    private readonly ILogger<OutlookCalendarEventService> logger;
     private readonly IGraphService graphService;
 
-    public CalendarEventService(ILogger<CalendarEventService> logger, IGraphService graphService)
+    public OutlookCalendarEventService(ILogger<OutlookCalendarEventService> logger, IGraphService graphService)
     {
         this.logger = logger;
         this.graphService = graphService;

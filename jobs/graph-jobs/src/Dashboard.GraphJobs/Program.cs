@@ -30,7 +30,7 @@ internal class Program : IProgram
         hostBuilder.Services.AddSingleton<IProgram>(this);
         hostBuilder.Services.AddSingleton<IJobRunnerService, JobRunnerService>();
         hostBuilder.Services.AddSingleton<IGraphService, GraphService>();
-        hostBuilder.Services.AddSingleton<ICalendarEventService, CalendarEventService>();
+        hostBuilder.Services.AddSingleton<IOutlookCalendarEventService, OutlookCalendarEventService>();
         hostBuilder.Services.AddSingleton<IDataFileService, DataFileService>();
 
         // Adding jobs (all should be of type IJob):
