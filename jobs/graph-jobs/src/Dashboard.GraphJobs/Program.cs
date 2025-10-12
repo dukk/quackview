@@ -31,12 +31,10 @@ internal class Program : IProgram
         hostBuilder.Services.AddSingleton<IJobRunnerService, JobRunnerService>();
         hostBuilder.Services.AddSingleton<IGraphService, GraphService>();
         hostBuilder.Services.AddSingleton<ICalendarEventService, CalendarEventService>();
-        hostBuilder.Services.AddSingleton<IPhotosService, PhotosService>();
         hostBuilder.Services.AddSingleton<IDataFileService, DataFileService>();
 
         // Adding jobs (all should be of type IJob):
         hostBuilder.Services.AddSingleton<IJob, UpcomingCalendarEventsJob>();
-        hostBuilder.Services.AddSingleton<IJob, RandomPhotosJob>();
 
         this.host = hostBuilder.Build();
         this.logger = this.host.Services.GetRequiredService<ILogger<Program>>();
