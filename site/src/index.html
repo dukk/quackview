@@ -145,6 +145,7 @@
     <script src="components/calendar-agenda-view/calendar-agenda-view.js" defer></script>
     <script src="components/digital-clock/digital-clock.js" defer></script>
     <script src="components/vertical-bounce-back/vertical-bounce-back.js" defer></script>
+    <script src="components/random-image/random-image.js" defer></script>
 </head>
 <body>
     <header class="three-column-layout">
@@ -164,7 +165,7 @@
 
             <section class="golden-right-layout" slot="section" data-interval="10000">
                 <div class="column-left">
-                    Left
+                    <random-image src="data/photos/animals/animals.json" interval="5000"></random-image>
                 </div>
                 <div class="column-right" style="display:inline;">
                     <h1>Upcoming Events</h1>
@@ -177,6 +178,7 @@
             </section>
             
             <section slot="section" data-interval="3000">
+                <random-image src="data/photos/landscapes/landscapes.json" interval="10000"></random-image>
             </section>
 
         </section-carousel>
