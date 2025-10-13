@@ -146,6 +146,7 @@
     <script src="components/digital-clock/digital-clock.js" defer></script>
     <script src="components/vertical-bounce-back/vertical-bounce-back.js" defer></script>
     <script src="components/random-image/random-image.js" defer></script>
+    <script src="components/news-ticker/news-ticker.js" defer></script>
 </head>
 <body>
     <header class="three-column-layout">
@@ -184,15 +185,7 @@
         </section-carousel>
     </main>
     <footer class="three-column-layout">
-        <div class="column-left">
-            1
-        </div>
-        <div class="column-center">
-            2
-        </div>
-        <div class="column-right">
-            3
-        </div>
+        <news-ticker source="data/news/news.json" speed="50" separator="•"></news-ticker>
     </footer>
 </body>
 </html>

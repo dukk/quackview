@@ -1,0 +1,52 @@
+{
+    "meta-data": {
+        "last-updated": "2024-06-15 12:00:00",
+        "sources": [
+            {
+                "name": "Global News Network",
+                "url": "https://www.globalnewsnetwork.com"
+            },
+            {
+                "name": "Tech Today",
+                "url": "https://www.techtoday.com"
+            }
+        ]
+    },
+    "articles": [
+        {
+            "title": "Breakthrough in Renewable Energy",
+            "date": "2024-06-14",
+            "image": "data/news/renewable-energy-breakthrough.jpg",
+            "summary": "Scientists have developed a new method to harness solar energy more efficiently.",
+            "source": "Global News Network"
+        },
+        {
+            "title": "AI Revolutionizes Healthcare",
+            "date": "2024-06-13",
+            "image": "data/news/ai-healthcare.jpg",
+            "summary": "Artificial Intelligence is transforming diagnostics and patient care in hospitals worldwide.",
+            "source": "Tech Today"
+        },
+        {
+            "title": "Global Markets Rally Amid Economic Optimism",
+            "date": "2024-06-12",
+            "image": "data/news/global-markets-rally.jpg",
+            "summary": "Stock markets around the world are seeing significant gains as economic outlooks improve.",
+            "source": "Global News Network"
+        },
+        {
+            "title": "New Species Discovered in the Amazon Rainforest",
+            "date": "2024-06-11",
+            "image": "data/news/amazon-new-species.jpg",
+            "summary": "Researchers have identified a previously unknown species of butterfly in the Amazon.",
+            "source": "Global News Network"
+        },
+        {
+            "title": "Space Mission Successfully Launches",
+            "date": "2024-06-10",
+            "image": "data/news/space-mission-launch.jpg",
+            "summary": "The latest space exploration mission has successfully reached orbit.",
+            "source": "Tech Today"
+        }
+    ]
+}
