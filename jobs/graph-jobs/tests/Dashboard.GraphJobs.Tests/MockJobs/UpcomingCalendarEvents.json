@@ -2,7 +2,7 @@
     "DaysInFuture": 14,
     "Accounts": [
         {
-            "Account": "dukk@dukk.org",
+            "Account": "blah@example.com",
             "Calendars": [""]
         }
     ]
