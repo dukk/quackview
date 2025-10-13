@@ -81,7 +81,7 @@
         }
         .golden-left-layout > .column-left,
         .golden-left-layout > .column-right {
-            flex: 1 0;
+            flex: 1 0 0;
             display: flex;
         }
         .golden-left-layout > .column-left { justify-content: flex-start; max-width: 38%; }
@@ -144,40 +144,60 @@
     <script src="components/section-carousel/section-carousel.js" defer></script>
     <script src="components/calendar-agenda-view/calendar-agenda-view.js" defer></script>
     <script src="components/alert-list/alert-list.js" defer></script>
+    <script src="components/calendar-month/calendar-month.js" defer></script>
     <script src="components/digital-clock/digital-clock.js" defer></script>
     <script src="components/vertical-bounce-back/vertical-bounce-back.js" defer></script>
     <script src="components/random-image/random-image.js" defer></script>
     <script src="components/news-ticker/news-ticker.js" defer></script>
 </head>
 <body>
-    <header class="three-column-layout">
+    <header class="golden-left-layout">
         <div class="column-left">
             <digital-clock id="main-clock" format="h:mmssa" show-date="true" date-format="dddd, MMM D"></digital-clock>
         </div>
-        <div class="column-center">
+        <div class="column-right">
             <vertical-bounce-back speed="80" delay="2000" style="height: calc(var(--header-height) - (var(--gutter)));">
                 <alert-list id="main-alerts" external-scroll
                     url="data/alerts/alerts.json" interval="300000" time-format="h:mma"></alert-list>
             </vertical-bounce-back>
-        </div>
-        <div class="column-right">
-            Right
         </div>
     </header>
     <main>
         
         <section-carousel default-interval="5000" slide-duration="3000">
 
-            <section class="golden-right-layout" slot="section" data-interval="10000">
+            <section class="golden-left-layout" slot="section" data-interval="3000">
                 <div class="column-left">
+                    <vertical-bounce-back speed="150" delay="2000" style="height: calc(var(--main-height) - (var(--gutter) * 2));">
+                        <random-image src="data/photos/animals/animals.json" interval="1000"></random-image>
+                        <random-image src="data/photos/animals/animals.json" interval="3000"></random-image>
+                        <random-image src="data/photos/animals/animals.json" interval="2000"></random-image>
+                        <random-image src="data/photos/animals/animals.json" interval="4000"></random-image>
+                    </vertical-bounce-back>
+                </div>
+                <div class="column-right">
                     <random-image src="data/photos/animals/animals.json" interval="5000"></random-image>
                 </div>
-                <div class="column-right" style="display:inline;">
-                    <h1>Upcoming Events</h1>
-                    <vertical-bounce-back speed="80" delay="2000" style="height: calc(var(--main-height) - (var(--gutter) * 2) - 1.5rem);">
+                
+            </section>
+
+            <section class="three-column-layout" slot="section" data-interval="10000">
+                <div class="column-left">
+                    <calendar-month select-today="true" url="data/calendar/events.json" refresh="5"></calendar-month>
+                </div>
+                <div class="column-center">
+                     <vertical-bounce-back speed="80" delay="2000" style="height: calc(var(--main-height) - (var(--gutter) * 2));">
                         <calendar-agenda-view id="family-calendar-events" external-scroll
                             url="data/calendar/events.json" refresh="5"
                             day-format="D dddd" time-format="h:mma"></calendar-agenda-view>
+                    </vertical-bounce-back>
+                </div>
+                <div class="column-right">
+                    <vertical-bounce-back speed="50" delay="2000" style="height: calc(var(--main-height) - (var(--gutter) * 2));">
+                        <random-image src="data/photos/landscapes/landscapes.json" interval="1000"></random-image>
+                        <random-image src="data/photos/landscapes/landscapes.json" interval="3000"></random-image>
+                        <random-image src="data/photos/landscapes/landscapes.json" interval="2000"></random-image>
+                        <random-image src="data/photos/landscapes/landscapes.json" interval="4000"></random-image>
                     </vertical-bounce-back>
                 </div>
             </section>
