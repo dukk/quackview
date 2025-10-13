@@ -1,73 +1,82 @@
-# dashboard
+# QuackView
 
-## TODO List
+This is a project I started to replace my Dakboard dashboard display. It was intended to be more of a quick and dirty solution. We'll see where it goes. It's really intended just for myself to play around. Perhaps it'll become useful to someone...
 
-### Calendar
+## Features
 
-- US Flag days
-- Historic events
-- Rocket launches
-- Meteor showers
+- Designed to be self hosted and personalized
+  - Simple job schedule (cron) to collect data files
+- Browser based display
+  - Sliding screen transitions
+  - Docked header and footer sections
+- Alerts
+- Calendar
+  - Month View with highlighted days that have events (looks good on the same screen as the agenda view)
+  - Agenda view to display event details
+   Upcoming event data collection
+    - Microsoft Outlook calendar support
+- Photos
+  - Random photo display
+- News
+  - Scrolling ticker
 
-### News ticker
+### Feature TODO List
 
-Use RSS new sources, get images if available.
-Posible sources:
+- Calendar
+  - US Flag days
+  - Historic events
+  - Rocket launches
+  - Meteor showers
+- News
+  - RSS news sources
+    - ABC News
+    - CNet
+    - Fox News
+    - NBC News
+    - New York Times
+    - Wall Street Journal
+    - Buzzfeed
+- Weather
+  - Alerts
+  - Current weather
+  - Forcast
+  - Data sources
+    - Weatherbit
+    - Weather Underground
+    - Open Weather Map
+    - Atmospheric Map
+    - Weather Alerts
+    - Air Quality
+- Financial
+  - Stock quotes
+  - Exchange rates
+  - TradingView widgets
+- Just for fun  
+  - Word of the day - <https://merriam-webster.com>
+  - Quote of the day - <https://zenquotes.io>
+  - Compliments
+  - Dad jokes
+- Photos
+  - OneDrive integration
+  - Bing photo of the day
+  - Weather photos
+- Smarthome
+  - Home Assistant
+  - Unifi
+  - Alexa?
+- Productivity
+  - Trello
+  - MS TODO
+  - QR code (mostly for WiFi)
+  - Traffic drive time
+- Misc
+  - Gauges and graphs
+  - IFrames
 
-- ABC News
-- CNet
-- Fox News
-- NBC News
-- New York Times
-- Wall Street Journal
-- Buzzfeed
+## Setup
 
-### Weather
+Docker containers... TBD
 
-Display current weather and forecast. Look at <https://www.weather.gov/> API's.
-Radar would be cool.
-Also look into:
+## Contributing
 
-- Weatherbit
-- Weather Underground
-- Open Weather Map
-- Atmospheric Map
-- Weather Alerts
-- Air Quality
-
-### Financial info
-
-- Stock quotes
-- Exchange rates
-- TradingView widgets
-
-### Text updates
-
-- Word of the day - <https://merriam-webster.com>
-- Quote of the day - <https://zenquotes.io>
-- Compliments
-- Dad jokes
-
-### Photos
-
-- OneDrive integration
-- Bing photo of the day
-- Weather photos
-
-### Smarthome
-
-- Home Assistant
-- Unifi
-- Alexa?
-
-### Productivity
-
-- Trello
-- MS TODO
-- QR code (mostly for WiFi)
-- Traffic drive time
-
-### Misc
-
-- Gauges and graphs
-- IFrame
+TBD...
