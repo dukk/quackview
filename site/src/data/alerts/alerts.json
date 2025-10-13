@@ -1,0 +1,23 @@
+{
+    "meta-data": {
+        "last-updated": "2024-06-15 12:00:00",
+        "source": "https://example.com/news/top"
+    },
+    "alerts": 
+    [
+        {
+            "title": "Severe Thunderstorm Warning",
+            "description": "A severe thunderstorm has been detected in your area. Seek shelter immediately.",
+            "severity": "Severe",
+            "effective": "2025-10-10T14:00:00Z",
+            "expires": "2025-10-20T15:00:00Z"
+        },
+        {
+            "title": "Flash Flood Watch",
+            "description": "Heavy rains are expected to cause flash flooding in low-lying areas.",
+            "severity": "Moderate",
+            "effective": "2025-10-10T14:00:00Z",
+            "expires": "2025-10-20T15:00:00Z"
+        }
+    ]
+}

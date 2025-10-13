@@ -143,6 +143,7 @@
     </style>
     <script src="components/section-carousel/section-carousel.js" defer></script>
     <script src="components/calendar-agenda-view/calendar-agenda-view.js" defer></script>
+    <script src="components/alert-list/alert-list.js" defer></script>
     <script src="components/digital-clock/digital-clock.js" defer></script>
     <script src="components/vertical-bounce-back/vertical-bounce-back.js" defer></script>
     <script src="components/random-image/random-image.js" defer></script>
@@ -154,7 +155,10 @@
             <digital-clock id="main-clock" format="h:mmssa" show-date="true" date-format="dddd, MMM D"></digital-clock>
         </div>
         <div class="column-center">
-            Center
+            <vertical-bounce-back speed="80" delay="2000" style="height: calc(var(--header-height) - (var(--gutter)));">
+                <alert-list id="main-alerts" external-scroll
+                    url="data/alerts/alerts.json" interval="300000" time-format="h:mma"></alert-list>
+            </vertical-bounce-back>
         </div>
         <div class="column-right">
             Right

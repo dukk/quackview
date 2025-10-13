@@ -19,17 +19,19 @@ class NewsTicker extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['source', 'speed', 'separator'];
+        return ['source', 'speed', 'separator', 'interval'];
     }
 
     connectedCallback() {
         this.render();
         this.loadNews();
+        this._startAutoReload();
         window.addEventListener('resize', this._resizeHandler);
     }
 
     disconnectedCallback() {
         this.stopScrolling();
+        this._stopAutoReload();
         window.removeEventListener('resize', this._resizeHandler);
     }
 
@@ -37,6 +39,7 @@ class NewsTicker extends HTMLElement {
         if (oldValue !== newValue) {
             if (name === 'source') {
                 this.loadNews();
+                this._restartAutoReload();
             } else if (name === 'speed') {
                 this.restartScrolling();
             } else if (name === 'separator') {
@@ -45,6 +48,10 @@ class NewsTicker extends HTMLElement {
                     this.displayNews();
                     this.startScrolling();
                 }
+            }
+            else if (name === 'interval') {
+                // restart the auto reload timer with new value
+                this._restartAutoReload();
             }
         }
     }
@@ -155,6 +162,11 @@ class NewsTicker extends HTMLElement {
     }
 
     async loadNews() {
+        // if manual reload triggered, clear any pending reload so we don't double-fire
+        if (this._reloadTimer) {
+            clearTimeout(this._reloadTimer);
+            this._reloadTimer = null;
+        }
         const source = this.getAttribute('source');
         if (!source) {
             this.showError('No source attribute provided');
@@ -177,6 +189,41 @@ class NewsTicker extends HTMLElement {
             console.error('Error loading news:', error);
             this.showError(`Error loading news: ${error.message}`);
         }
+        // restart reload timer after successful or failed load
+        this._restartAutoReload();
+    }
+
+    // Default auto-reload interval: 30 minutes
+    static get DEFAULT_RELOAD_MS() { return 30 * 60 * 1000; }
+
+    _parseInterval() {
+        const raw = this.getAttribute('interval');
+        if (!raw) return NewsTicker.DEFAULT_RELOAD_MS;
+        const n = Number(raw);
+        if (!Number.isFinite(n) || n <= 0) return NewsTicker.DEFAULT_RELOAD_MS;
+        // if provided in seconds (small numbers), interpret >0 and <10000 as seconds
+        if (n < 10000) return n * 1000;
+        return n; // assume milliseconds if large
+    }
+
+    _startAutoReload() {
+        this._stopAutoReload();
+        const ms = this._parseInterval();
+        this._reloadTimer = setTimeout(() => {
+            this.loadNews();
+        }, ms);
+    }
+
+    _stopAutoReload() {
+        if (this._reloadTimer) {
+            clearTimeout(this._reloadTimer);
+            this._reloadTimer = null;
+        }
+    }
+
+    _restartAutoReload() {
+        this._stopAutoReload();
+        this._startAutoReload();
     }
 
     displayNews() {
