@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <!-- Preconnect to Google Fonts for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Share+Tech+Mono&family=Sour+Gummy:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+        :root, html, body {
+            height: 100%;
+        }
+
+        :root{
+            font-size: 18pt;
+            --dashboard-bg: #0b1220;
+            --panel-bg: rgba(255,255,255,0.04);
+            --accent: #Fff;
+            --muted: #bfc9d6;
+            --text: #e6eef6;
+            --header-height: 20vh;
+            --main-height: 70vh;
+            --footer-height: 10vh;
+            --gutter: 28px;
+            --title-size: 48px;
+            --subtext-size: 28px;
+        }
+
+        body {
+            font-family: 'Oswald', "Segoe UI", Roboto, sans-serif;
+            font-size: 18pt;
+            color: var(--text);
+            background: var(--dashboard-bg);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-user-select: none;
+            user-select: none; /* prevent accidental highlighting on TV */
+        }
+
+        header {
+            height: var(--header-height);
+            padding: 0 var(--gutter);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .three-column-layout {
+            display: flex;
+            align-items: center;
+            gap: var(--gutter);
+        }
+        .three-column-layout > .column-left,
+        .three-column-layout > .column-center,
+        .three-column-layout > .column-right {
+            flex: 1 1 0;
+            display: flex;
+        }
+        .three-column-layout > .column-left { justify-content: flex-start; width: 33.33%; }
+        .three-column-layout > .column-center { justify-content: center; width: 33.33%; }
+        .three-column-layout > .column-right { justify-content: flex-end; width: 33.33%; }
+
+        .golden-left-layout {
+            display: flex;
+            align-items: center;
+            gap: var(--gutter);
+        }
+        .golden-left-layout > .column-left,
+        .golden-left-layout > .column-right {
+            flex: 1 0;
+            display: flex;
+        }
+        .golden-left-layout > .column-left { justify-content: flex-start; max-width: 38%; }
+        .golden-left-layout > .column-right { justify-content: flex-end; max-width: 62%; }
+
+
+        .golden-right-layout {
+            display: flex;
+            align-items: center;
+            gap: var(--gutter);
+        }
+        .golden-right-layout > .column-left,
+        .golden-right-layout > .column-right {
+            flex: 1 0 0;
+            display: flex;
+        }
+        .golden-right-layout > .column-left { justify-content: flex-start; max-width: 62%; }
+        .golden-right-layout > .column-right { justify-content: flex-end; max-width: 38%; }
+
+        main {
+            flex: 1 1 auto;
+            padding: var(--gutter);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        footer {
+            height: var(--footer-height);
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: rgba(0,0,0,0.25);
+            position: sticky;
+            bottom: 0;
+            z-index: 10;
+            border-top: 1px solid rgba(255,255,255,0.02);
+            color: var(--muted);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 0.25em 0;
+            font-weight: 400;
+        }
+
+        section-carousel {
+            display: block;
+            flex: 1 1 auto;
+            width: 100%;
+        }
+
+        /* section-carousel::part(viewport), section-carousel .viewport, section-carousel .section {
+            height: 100%;
+        } */
+
+    </style>
+    <script src="components/section-carousel/section-carousel.js" defer></script>
+    <script src="components/calendar-agenda-view/calendar-agenda-view.js" defer></script>
+    <script src="components/digital-clock/digital-clock.js" defer></script>
+    <script src="components/qr-code/qr-code.js" defer></script>
+    <script src="components/vertical-bounce-back/vertical-bounce-back.js" defer></script>
+</head>
+<body>
+    <header class="three-column-layout">
+        <div class="column-left">
+            <digital-clock id="main-clock" format="h:mmssa" show-date="true" date-format="dddd, MMM D"></digital-clock>
+        </div>
+        <div class="column-center">
+            Center
+        </div>
+        <div class="column-right">
+            Right
+        </div>
+    </header>
+    <main>
+        
+        <section-carousel default-interval="5000" slide-duration="3000">
+
+            <section class="golden-right-layout" slot="section" data-interval="10000">
+                <div class="column-left">
+                    Left
+                </div>
+                <div class="column-right" style="display:inline;">
+                    <h1>Upcoming Events</h1>
+                    <vertical-bounce-back speed="80" delay="2000" style="height: calc(var(--main-height) - (var(--gutter) * 2) - 1.5rem);">
+                        <calendar-agenda-view id="family-calendar-events" external-scroll
+                            url="data/calendar/events.json" refresh="5"
+                            day-format="D dddd" time-format="h:mma"></calendar-agenda-view>
+                    </vertical-bounce-back>
+                </div>
+            </section>
+            
+            <section slot="section" data-interval="3000">
+                <qr-code data="wifi:Cow;T:WPA;P:AmmoAmmo!;" size="200"></qr-code>
+            </section>
+
+        </section-carousel>
+    </main>
+    <footer class="three-column-layout">
+        <div class="column-left">
+            1
+        </div>
+        <div class="column-center">
+            2
+        </div>
+        <div class="column-right">
+            3
+        </div>
+    </footer>
+</body>
+</html>
