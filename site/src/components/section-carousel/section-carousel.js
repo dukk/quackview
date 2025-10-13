@@ -17,6 +17,8 @@ class SectionCarousel extends HTMLElement {
                 flex:0 0 100%;
                 height:100%;
                 box-sizing:border-box;
+                opacity: 1;
+                transition: opacity 0.6s ease-in-out;
             }
         `;
 
@@ -38,10 +40,18 @@ class SectionCarousel extends HTMLElement {
         this.cloneLightNode = null;
     }
 
+    static get observedAttributes() {
+        return ['slide-duration'];
+    }
+
     connectedCallback() {
         // Default per-section interval (ms) when not specified on the child: 60_000ms (1 minute)
         this.defaultInterval = (parseInt(this.getAttribute('default-interval')) || 60000);
         this.slideDuration = Math.min(Math.max(parseInt(this.getAttribute('slide-duration')) || 3000, 100), 3000); // 100ms..3000ms
+
+        // Update the opacity transition to match slide duration
+        const style = this.shadowRoot.querySelector('style');
+        style.textContent = style.textContent.replace('opacity 0.6s', `opacity ${this.slideDuration}ms`);
 
         this.refreshSlots();
 
@@ -116,6 +126,15 @@ class SectionCarousel extends HTMLElement {
         if (this.isAnimating || this.slots.length === 0) return;
         this.isAnimating = true;
 
+        const currentSection = this.slots[this.currentIndex];
+        const nextIndex = (this.currentIndex + 1) % this.slots.length;
+        const nextSection = this.slots[nextIndex];
+
+        // Start fade out current section
+        if (currentSection) {
+            currentSection.style.opacity = '0';
+        }
+
         // animate by updating transform
         this.viewport.style.transition = `transform ${this.slideDuration}ms cubic-bezier(.3,0,.7,1)`;
         this.viewport.style.transform = `translateX(-${(this.currentIndex + 1) * 100}%)`;
@@ -124,6 +143,11 @@ class SectionCarousel extends HTMLElement {
         await new Promise(res => setTimeout(res, this.slideDuration + 20));
 
         this.currentIndex++;
+
+        // Reset opacity for all sections
+        this.slots.forEach(section => {
+            section.style.opacity = '1';
+        });
 
         // If we've reached the clone (wrap), reset to 0 without animation
         if (this.currentIndex >= this.slots.length) {
@@ -202,6 +226,17 @@ class SectionCarousel extends HTMLElement {
             clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
             this.appendChild(clone);
             this.cloneLightNode = clone;
+        }
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'slide-duration' && oldValue !== newValue) {
+            this.slideDuration = Math.min(Math.max(parseInt(newValue) || 3000, 100), 3000);
+            // Update the opacity transition to match new slide duration
+            const style = this.shadowRoot.querySelector('style');
+            if (style) {
+                style.textContent = style.textContent.replace(/opacity \d+ms/, `opacity ${this.slideDuration}ms`);
+            }
         }
     }
 }
