@@ -80,3 +80,16 @@ Docker containers... TBD
 ## Contributing
 
 TBD...
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+Attribution requirement: The MIT license requires that the copyright and permission
+notice be included in all copies or substantial portions of the Software. If you
+redistribute or publish a derivative, please preserve the `LICENSE` file and any
+third-party notices.
+
+Third-party notices:
+- QR Code generator (qrcodejs) by davidshimjs — MIT
+
