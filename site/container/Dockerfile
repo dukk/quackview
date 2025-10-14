@@ -9,7 +9,7 @@ COPY ${SRC_DIR}/ /usr/share/nginx/html/
 RUN rm -rf /usr/share/nginx/html/data
 
 RUN mkdir -p /quackview/data && chown -R nginx:nginx /quackview/data
-COPY container/default.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 VOLUME ["/quackview/data"]
 
