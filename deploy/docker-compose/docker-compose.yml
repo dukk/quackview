@@ -6,7 +6,7 @@ services:
     volumes:
       - shared-data:/quackview/data
     ports:
-      - "8080:80"
+      - "8080:8008"
     depends_on:
       - schedular
 
@@ -14,6 +14,8 @@ services:
     image: ghcr.io/dukk/quackview-schedular:latest
     volumes:
       - shared-data:/quackview/data
+      - jobs:/quackview/jobs
 
 volumes:
   shared-data:
+  jobs:

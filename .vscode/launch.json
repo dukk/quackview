@@ -32,7 +32,7 @@
         //     "args": [
         //         "build",
         //         "-t",
-        //         "dashboard-site",
+        //         "quackview-display",
         //         "${workspaceFolder}/site"
         //     ],
         //     "cwd": "${workspaceFolder}",
@@ -46,7 +46,7 @@
             "args": [
                 "build",
                 "-t",
-                "dashboard-scheduler",
+                "quackview-scheduler",
                 "${workspaceFolder}/scheduler"
             ],
             "cwd": "${workspaceFolder}",

@@ -29,16 +29,16 @@ jobs:
       - name: Build and push quackview-display image
         uses: docker/build-push-action@v5
         with:
-          context: ./site
-          file: ./site/container/Dockerfile
+          context: ./display
+          file: ./display/container/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/quackview-display:latest
 
-      - name: Build and push quackview-schedular image
+      - name: Build and push quackview-scheduler image
         uses: docker/build-push-action@v5
         with:
-          context: ./jobs
-          file: ./jobs/container/Dockerfile
+          context: ./scheduler
+          file: ./scheduler/container/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/quackview-schedular:latest
-          
+          tags: ghcr.io/${{ github.repository_owner }}/quackview-scheduler:latest
+
