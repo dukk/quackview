@@ -2,16 +2,17 @@
 FROM nginx:alpine
 
 ARG SRC_DIR=../src
-ARG DATA_SRC=../mock-data
 
-ENV DATA_DIR=/data
+ENV DATA_DIR=/dashboard/data
 
 COPY ${SRC_DIR}/ /usr/share/nginx/html/
+RUN rm -rf /usr/share/nginx/html/data
 
-RUN mkdir -p ${DATA_DIR} && chown -R nginx:nginx ${DATA_DIR}
-COPY ${DATA_SRC}/ ${DATA_DIR}/
+RUN mkdir -p /dashboard/data && chown -R nginx:nginx /dashboard/data
 COPY default.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+VOLUME ["/dashboard/data"]
+
+EXPOSE 8008
 
 CMD ["nginx", "-g", "daemon off;"]

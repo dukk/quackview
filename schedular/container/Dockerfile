@@ -1,33 +1,37 @@
 # Use a minimal base image with cron
 FROM ubuntu:22.04
 
-RUN apt-get update && \
+ARG JOBS_DIR=../build/Jobs
+
+RUN add-apt-repository ppa:dotnet/backports && \
+    apt-get update && \
     apt-get install -y \
         cron \
-        python3 \
-        python3-pip \
-        nodejs \
-        npm \
-        golang-go \
-        dotnet-sdk-6.0 \
+        dotnet-sdk-9.0 \
         ca-certificates \
         curl && \
     rm -rf /var/lib/apt/lists/*
 
-ENV DATA_DIR=/data
-ENV JOBS_DIR=/jobs
+ENV DATA_DIR=/quackview/data
+ENV JOBS_DIR=/quackview/jobs
 
-RUN useradd -m cronuser
-RUN mkdir -p /data && chown cronuser:cronuser /data
-RUN mkdir -p /jobs && chown -R cronuser:cronuser /jobs
+COPY crontab /etc/cron.d/quackview-jobs
+COPY ${JOBS_DIR}/ /quackview/jobs
 
-COPY crontab /etc/cron.d/jobs
+RUN useradd -m quackjob && \
+    chown -R quackjob:quackjob /quackview && \
+    chmod +x /quackview/jobs/*.sh && \
+    chmod +x /quackview/jobs/*.exe && \
+    chmod +x /quackview/jobs/*.dll
+    
+RUN mkdir -p /quackview/data && chown quackjob:quackjob /quackview/data
+RUN mkdir -p /quackview/jobs && chown -R quackjob:quackjob /quackview/jobs
 
-RUN chmod 0644 /etc/cron.d/jobs
-RUN crontab /etc/cron.d/jobs
+RUN chmod 0644 /etc/cron.d/quackview-jobs
+RUN crontab /etc/cron.d/quackview-jobs
 
-VOLUME ["/data", "/jobs"]
+VOLUME ["/quackview/data", "/quackview/jobs"]
 
-USER cronuser
+USER quackjob
 
 CMD ["cron", "-f"]

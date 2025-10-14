@@ -1,13 +1,14 @@
 {
     "version": "0.2.0",
     "configurations": [
+        
         {
             "name": "Debug Graph Jobs (Console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}\\jobs\\graph-jobs\\src\\Dashboard.GraphJobs\\bin\\Debug\\net9.0\\win-x64\\tddgraphjobs.exe",
-            "args": [
+                "args": [
                 "run", 
                 "-c", "Debug",
                 "-e", "TDD_GRAPHJOBS_DATA_DIR=\"C:\\Users\\dukk\\AppData\\Local\\TDDashboard\\TDDGraphJobs\\ENV-DATA\""
@@ -15,6 +16,41 @@
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
+        },
+        {
+            "name": "Build Site Docker Container",
+            "type": "dockerfile",
+            "request": "launch",
+            "dockerfile": "./container/Dockerfile",
+            "contextPath": "${workspaceFolder}/site"
+        },
+        // {
+        //     "name": "Build Site Docker Container",
+        //     "type": "process",
+        //     "request": "launch",
+        //     "command": "docker",
+        //     "args": [
+        //         "build",
+        //         "-t",
+        //         "dashboard-site",
+        //         "${workspaceFolder}/site"
+        //     ],
+        //     "cwd": "${workspaceFolder}",
+        //     "console": "integratedTerminal"
+        // },
+        {
+            "name": "Build Scheduler Docker Container",
+            "type": "process",
+            "request": "launch",
+            "command": "docker",
+            "args": [
+                "build",
+                "-t",
+                "dashboard-scheduler",
+                "${workspaceFolder}/scheduler"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
         }
     ]
 }
