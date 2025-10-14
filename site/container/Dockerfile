@@ -1,15 +1,13 @@
 # Use official nginx image as base
 FROM nginx:alpine
 
-ARG SRC_DIR=src
-
 ENV DATA_DIR=/quackview/data
 
-COPY ${SRC_DIR}/ /usr/share/nginx/html/
+COPY src/ /usr/share/nginx/html/
 RUN rm -rf /usr/share/nginx/html/data
 
 RUN mkdir -p /quackview/data && chown -R nginx:nginx /quackview/data
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY container/nginx.conf /etc/nginx/conf.d/default.conf
 
 VOLUME ["/quackview/data"]
 

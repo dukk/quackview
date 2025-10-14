@@ -1,32 +1,28 @@
-# Use a minimal base image with cron
-FROM ubuntu:22.04
+# Use a minimal Alpine base image
+FROM alpine:3.20
 
-RUN add-apt-repository ppa:dotnet/backports && \
-    apt-get update && \
-    apt-get install -y \
-        cron \
-        dotnet-sdk-9.0 \
+# Install cron daemon and tools
+RUN apk add --no-cache \
         ca-certificates \
-        curl && \
-    rm -rf /var/lib/apt/lists/*
+        curl \
+        cronie
 
 ENV DATA_DIR=/quackview/data
 ENV JOBS_DIR=/quackview/jobs
 
-COPY crontab /etc/cron.d/quackview-jobs
-COPY jobs/ /quackview/jobs
+COPY container/crontab /etc/cron.d/quackview-jobs
+COPY container/jobs/ /quackview/jobs
 
-RUN useradd -m quackjob && \
+# Create application user (system account without password)
+RUN adduser -D -h /home/quackjob -s /bin/sh quackjob && \
     chown -R quackjob:quackjob /quackview
 
-RUN mkdir -p /quackview/data && chown quackjob:quackjob /quackview/data
-RUN mkdir -p /quackview/jobs && chown -R quackjob:quackjob /quackview/jobs
-RUN ln -s /etc/cron.d/quackview-jobs /quackview/jobs/crontab
-RUN chmod 0644 /etc/cron.d/quackview-jobs
-RUN crontab /etc/cron.d/quackview-jobs
+RUN mkdir -p /quackview/data && chown quackjob:quackjob /quackview/data && \
+    mkdir -p /quackview/jobs && chown -R quackjob:quackjob /quackview/jobs && \
+    ln -s /etc/cron.d/quackview-jobs /quackview/jobs/crontab && \
+    chmod 0644 /etc/cron.d/quackview-jobs
 
 VOLUME ["/quackview/data", "/quackview/jobs"]
 
-USER quackjob
-
-CMD ["cron", "-f"]
+# Run cron in the foreground (as root so it can switch to the target user defined in /etc/cron.d)
+CMD ["crond", "-f", "-l", "2"]

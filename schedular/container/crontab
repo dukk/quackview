@@ -1,0 +1,2 @@
+# Run "/quackview/jobs/quackjob run" every 30 minutes as user quackjob
+#*/30 * * * * quackjob /quackview/jobs/quackjob run
