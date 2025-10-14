@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  site:
+  display:
     image: ghcr.io/dukk/quackview-display:latest
     volumes:
       - shared-data:/quackview/data

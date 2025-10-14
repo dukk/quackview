@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
-using TypoDukk.Dashboard.GraphJobs.Jobs;
+using TypoDukk.QuackView.QuackJob.Jobs;
 
 internal interface IJobRunnerService
 {

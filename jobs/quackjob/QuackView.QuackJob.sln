@@ -5,11 +5,11 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "jobs", "jobs", "{8FACA5AE-6910-C0F8-C7AF-9A631EB1C11B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dashboard.GraphJobs", "src/Dashboard.GraphJobs/Dashboard.GraphJobs.csproj", "{0624854B-97CE-038F-6F6C-43F8A31A02C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuackView.QuackJob", "src/QuackView.QuackJob/QuackView.QuackJob.csproj", "{0624854B-97CE-038F-6F6C-43F8A31A02C0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dashboard.GraphJobs.Tests", "tests\Dashboard.GraphJobs.Tests\Dashboard.GraphJobs.Tests.csproj", "{3A7CA933-80C4-407C-B3F6-7C6703692E13}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuackView.QuackJob.Tests", "tests\QuackView.QuackJob.Tests\QuackView.QuackJob.Tests.csproj", "{3A7CA933-80C4-407C-B3F6-7C6703692E13}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

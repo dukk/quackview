@@ -1,4 +1,4 @@
-﻿namespace Dashboard.GraphJobs.Tests;
+﻿namespace Dashboard.QuackJob.Tests;
 
 [TestClass]
 public sealed class Test1

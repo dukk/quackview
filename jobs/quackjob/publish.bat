@@ -8,7 +8,7 @@ if "%1"=="" (
   set CONFIG=%1
 )
 
-set PROJ=Dashboard.GraphJobs.csproj
+set PROJ=QuackView.QuackJob.csproj
 set OUTDIR=.\publish
 
 echo Publishing win-x64...

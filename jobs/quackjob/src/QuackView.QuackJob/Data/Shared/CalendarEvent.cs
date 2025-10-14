@@ -1,4 +1,4 @@
-namespace TypoDukk.Dashboard.GraphJobs.Data.Shared;
+namespace TypoDukk.QuackView.QuackJob.Data.Shared;
 
 internal class CalendarEvent
 {

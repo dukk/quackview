@@ -7,50 +7,29 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}\\jobs\\graph-jobs\\src\\Dashboard.GraphJobs\\bin\\Debug\\net9.0\\win-x64\\tddgraphjobs.exe",
+            "program": "${workspaceFolder}\\jobs\\graph-jobs\\src\\Dashboard.QuackJob\\bin\\Debug\\net9.0\\win-x64\\tddQuackJob.exe",
                 "args": [
                 "run", 
                 "-c", "Debug",
-                "-e", "TDD_GRAPHJOBS_DATA_DIR=\"C:\\Users\\dukk\\AppData\\Local\\TDDashboard\\TDDGraphJobs\\ENV-DATA\""
+                "-e", "TDD_QuackJob_DATA_DIR=\"C:\\Users\\dukk\\AppData\\Local\\TDDashboard\\TDDQuackJob\\ENV-DATA\""
             ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
         },
         {
-            "name": "Build Site Docker Container",
+            "name": "Build Display Docker Container",
             "type": "dockerfile",
             "request": "launch",
-            "dockerfile": "./container/Dockerfile",
-            "contextPath": "${workspaceFolder}/site"
+            "dockerfile": "./display/container/Dockerfile",
+            "contextPath": "${workspaceFolder}/display"
         },
-        // {
-        //     "name": "Build Site Docker Container",
-        //     "type": "process",
-        //     "request": "launch",
-        //     "command": "docker",
-        //     "args": [
-        //         "build",
-        //         "-t",
-        //         "quackview-display",
-        //         "${workspaceFolder}/site"
-        //     ],
-        //     "cwd": "${workspaceFolder}",
-        //     "console": "integratedTerminal"
-        // },
         {
             "name": "Build Scheduler Docker Container",
-            "type": "process",
+            "type": "dockerfile",
             "request": "launch",
-            "command": "docker",
-            "args": [
-                "build",
-                "-t",
-                "quackview-scheduler",
-                "${workspaceFolder}/scheduler"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            "dockerfile": "./scheduler/container/Dockerfile",
+            "contextPath": "${workspaceFolder}/scheduler"
         }
     ]
 }

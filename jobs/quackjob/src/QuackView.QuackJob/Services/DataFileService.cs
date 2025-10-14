@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 
-namespace TypoDukk.Dashboard.GraphJobs.Services;
+namespace TypoDukk.QuackView.QuackJob.Services;
 
 internal interface IDataFileService
 {
@@ -54,11 +54,11 @@ internal class DataFileService : IDataFileService
 
     private string getDataDirectory()
     {
-        var dataDir = Environment.GetEnvironmentVariable("TDD_GRAPHJOBS_DATA_DIR");
+        var dataDir = Environment.GetEnvironmentVariable("TDD_QuackJob_DATA_DIR");
 
         if (string.IsNullOrEmpty(dataDir))
         {
-            dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TDDashboard", "TDDGraphJobs", "Data");
+            dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TDDashboard", "TDDQuackJob", "Data");
         }
         Directory.CreateDirectory(dataDir);
         return dataDir;

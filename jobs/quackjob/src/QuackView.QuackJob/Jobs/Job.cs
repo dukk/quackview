@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.Graph.Drives.Item.Items.Item.Workbook.Functions.N;
 
-namespace TypoDukk.Dashboard.GraphJobs.Jobs;
+namespace TypoDukk.QuackView.QuackJob.Jobs;
 
 internal interface IJob
 {

@@ -1,12 +1,12 @@
 using System.Reflection;
 using System.Runtime.Versioning;
 
-[assembly: AssemblyTitle("TDDGraphJobs")]
+[assembly: AssemblyTitle("Quack View - Quack Job")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("TypoDukk")]
-[assembly: AssemblyProduct("TypoDukk.Dashboard.GraphJobs")]
-[assembly: AssemblyCopyright("Copyright © TypoDukk")]
+[assembly: AssemblyProduct("TypoDukk.QuackView.QuackJob")]
+[assembly: AssemblyCopyright("Copyright © TypoDukk 2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

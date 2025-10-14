@@ -2,9 +2,9 @@ using System.Collections.Immutable;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
-using TypoDukk.Dashboard.GraphJobs.Data.Shared;
+using TypoDukk.QuackView.QuackJob.Data.Shared;
 
-namespace TypoDukk.Dashboard.GraphJobs.Services;
+namespace TypoDukk.QuackView.QuackJob.Services;
 
 internal interface IOutlookCalendarEventService
 {

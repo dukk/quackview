@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>tddgraphjobs</AssemblyName>
+    <AssemblyName>quackjob</AssemblyName>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -13,7 +13,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
     <PublishTrimmed>false</PublishTrimmed>
-    <RootNamespace>TypoDukk.Dashboard.GraphJobs</RootNamespace>
+    <RootNamespace>TypoDukk.QuackView.QuackJob</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

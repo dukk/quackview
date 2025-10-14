@@ -3,10 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using TypoDukk.Dashboard.GraphJobs.Jobs;
-using TypoDukk.Dashboard.GraphJobs.Services;
+using TypoDukk.QuackView.QuackJob.Jobs;
+using TypoDukk.QuackView.QuackJob.Services;
 
-namespace TypoDukk.Dashboard.GraphJobs;
+namespace TypoDukk.QuackView.QuackJob;
 
 internal interface IProgram
 {
@@ -17,7 +17,7 @@ internal interface IProgram
 internal class Program : IProgram
 {
     public const string SOLUTION_NAME = "TDDashboard";
-    public const string APP_NAME = "TDDGraphJobs";
+    public const string APP_NAME = "TDDQuackJob";
 
     private readonly ILogger<Program> logger;
     private readonly IHost host;
@@ -101,7 +101,7 @@ internal class Program : IProgram
     public string GetAppDataDirectory()
     {
         var appDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "TDDashboard", "TDDGraphJobs");
+            "TDDashboard", "TDDQuackJob");
 
         Directory.CreateDirectory(appDataDirectory);
 

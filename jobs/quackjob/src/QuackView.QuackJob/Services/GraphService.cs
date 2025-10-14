@@ -5,7 +5,7 @@ using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
 
-namespace TypoDukk.Dashboard.GraphJobs.Services;
+namespace TypoDukk.QuackView.QuackJob.Services;
 
 internal interface IGraphService
 {
@@ -111,7 +111,7 @@ internal class GraphService : IGraphService
      private string getCacheDirectory()
     {
         var cacheDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "TDDashboard", "TDDGraphJobs", "cache");
+            "TDDashboard", "TDDQuackJob", "cache");
         
         Directory.CreateDirectory(cacheDir);
 
