@@ -91,5 +91,5 @@ redistribute or publish a derivative, please preserve the `LICENSE` file and any
 third-party notices.
 
 Third-party notices:
-- QR Code generator (qrcodejs) by davidshimjs — MIT
 
+- QR Code generator (qrcodejs) by davidshimjs — MIT
