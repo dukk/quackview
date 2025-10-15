@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <!-- Preconnect to Google Fonts for faster loading -->
+    <title>Quack View!</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -27,6 +26,8 @@
             --gutter: 28px;
             --title-size: 48px;
             --subtext-size: 28px;
+            /* compensates for overscan on some displays */
+            --display-correction: 20px;
         }
 
         body {
@@ -35,28 +36,60 @@
             color: var(--text);
             background: var(--dashboard-bg);
             margin: 0;
-            padding: 0;
+            padding: var(--display-correction);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             -webkit-user-select: none;
-            user-select: none; /* prevent accidental highlighting on TV */
+            user-select: none;
+            cursor: none;
+            pointer-events: none;
         }
 
         header {
-            height: var(--header-height);
             padding: 0 var(--gutter);
             display: flex;
-            align-items: center;
-            gap: 12px;
             background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-            position: sticky;
-            top: 0;
             z-index: 10;
             box-shadow: 0 6px 18px rgba(0,0,0,0.6);
             border-bottom: 1px solid rgba(255,255,255,0.03);
+            overflow: hidden;
+        }
+
+        main {
+            flex: 1 1 auto;
+            padding: var(--gutter);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            
+        }
+
+        header, header div {
+            height: calc(var(--header-height));
+        }
+
+        main, main section, main section div {
+            height: calc(var(--main-height) - var(--display-correction));
+            margin-bottom: var(--display-correction);
+        }
+
+        footer {
+            height: var(--footer-height);
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: rgba(0,0,0,0.25);
+            position: sticky;
+            bottom: var(--display-correction);
+            z-index: 10;
+            border-top: 1px solid rgba(255,255,255,0.02);
+            color: var(--muted);
+            overflow: hidden;
         }
 
         .three-column-layout {
@@ -76,7 +109,6 @@
 
         .golden-left-layout {
             display: flex;
-            align-items: center;
             gap: var(--gutter);
         }
         .golden-left-layout > .column-left,
@@ -88,9 +120,8 @@
         .golden-left-layout > .column-right { justify-content: flex-end; max-width: 62%; }
 
 
-        .golden-right-layout {
+       .golden-right-layout {
             display: flex;
-            align-items: center;
             gap: var(--gutter);
         }
         .golden-right-layout > .column-left,
@@ -100,29 +131,6 @@
         }
         .golden-right-layout > .column-left { justify-content: flex-start; max-width: 62%; }
         .golden-right-layout > .column-right { justify-content: flex-end; max-width: 38%; }
-
-        main {
-            flex: 1 1 auto;
-            padding: var(--gutter);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        footer {
-            height: var(--footer-height);
-            padding: 0 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            background: rgba(0,0,0,0.25);
-            position: sticky;
-            bottom: 0;
-            z-index: 10;
-            border-top: 1px solid rgba(255,255,255,0.02);
-            color: var(--muted);
-        }
 
         h1 {
             font-size: 1.5rem;
@@ -135,10 +143,6 @@
             flex: 1 1 auto;
             width: 100%;
         }
-
-        /* section-carousel::part(viewport), section-carousel .viewport, section-carousel .section {
-            height: 100%;
-        } */
 
     </style>
     <script src="components/section-carousel/section-carousel.js" defer></script>
@@ -156,7 +160,7 @@
             <digital-clock id="main-clock" format="h:mmssa" show-date="true" date-format="dddd, MMM D"></digital-clock>
         </div>
         <div class="column-right">
-            <vertical-bounce-back speed="80" delay="2000" style="height: calc(var(--header-height) - (var(--gutter)));">
+            <vertical-bounce-back speed="80" delay="2000" class="header-height-fix">
                 <alert-list id="main-alerts" external-scroll
                     url="data/alerts/alerts.json" interval="300000" time-format="h:mma"></alert-list>
             </vertical-bounce-back>
@@ -168,11 +172,11 @@
 
             <section class="golden-left-layout" slot="section" data-interval="3000">
                 <div class="column-left">
-                    <vertical-bounce-back speed="150" delay="2000" style="height: calc(var(--main-height) - (var(--gutter) * 2));">
-                        <random-image src="data/photos/animals/animals.json" interval="1000"></random-image>
-                        <random-image src="data/photos/animals/animals.json" interval="3000"></random-image>
+                    <vertical-bounce-back speed="150" delay="2000" class="main-height-fix">
                         <random-image src="data/photos/animals/animals.json" interval="2000"></random-image>
+                        <random-image src="data/photos/animals/animals.json" interval="6000"></random-image>
                         <random-image src="data/photos/animals/animals.json" interval="4000"></random-image>
+                        <random-image src="data/photos/animals/animals.json" interval="8000"></random-image>
                     </vertical-bounce-back>
                 </div>
                 <div class="column-right">
@@ -186,14 +190,14 @@
                     <calendar-month select-today="true" url="data/calendar/events.json" refresh="5"></calendar-month>
                 </div>
                 <div class="column-center">
-                     <vertical-bounce-back speed="80" delay="2000" style="height: calc(var(--main-height) - (var(--gutter) * 2));">
+                     <vertical-bounce-back speed="80" delay="2000" class="main-height-fix">
                         <calendar-agenda-view id="family-calendar-events" external-scroll
                             url="data/calendar/events.json" refresh="5"
                             day-format="D dddd" time-format="h:mma"></calendar-agenda-view>
                     </vertical-bounce-back>
                 </div>
                 <div class="column-right">
-                    <vertical-bounce-back speed="50" delay="2000" style="height: calc(var(--main-height) - (var(--gutter) * 2));">
+                    <vertical-bounce-back speed="50" delay="2000" class="main-height-fix">
                         <random-image src="data/photos/landscapes/landscapes.json" interval="1000"></random-image>
                         <random-image src="data/photos/landscapes/landscapes.json" interval="3000"></random-image>
                         <random-image src="data/photos/landscapes/landscapes.json" interval="2000"></random-image>
@@ -208,7 +212,7 @@
 
         </section-carousel>
     </main>
-    <footer class="three-column-layout">
+    <footer>
         <news-ticker source="data/news/news.json" speed="50" separator="•"></news-ticker>
     </footer>
 </body>
