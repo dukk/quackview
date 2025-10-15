@@ -1,16 +1,21 @@
 # Use official nginx image as base
 FROM nginx:alpine
 
-ENV DATA_DIR=/quackview/data
+# Everything is relative to the <repo>/display/ directory
+ARG CONTEXT_ROOT=./
 
-COPY src/ /usr/share/nginx/html/
+ENV QUACKVIEW_DATA_DIR=/quackview/data
+
+COPY ${CONTEXT_ROOT}src/ /usr/share/nginx/html/
+COPY ${CONTEXT_ROOT}container/nginx.conf /etc/nginx/conf.d/default.conf
+
 RUN rm -rf /usr/share/nginx/html/data
-
 RUN mkdir -p /quackview/data && chown -R nginx:nginx /quackview/data
-COPY container/nginx.conf /etc/nginx/conf.d/default.conf
+
+# TODO: Install jobs once there is a package to install them from...
 
 VOLUME ["/quackview/data"]
 
-EXPOSE 8008
+EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]

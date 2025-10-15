@@ -1,12 +1,10 @@
-version: '3.8'
-
 services:
   display:
     image: ghcr.io/dukk/quackview-display:latest
     volumes:
       - shared-data:/quackview/data
     ports:
-      - "8080:8008"
+      - "8080:80"
     depends_on:
       - schedular
 

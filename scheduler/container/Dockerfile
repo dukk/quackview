@@ -1,17 +1,19 @@
 # Use a minimal Alpine base image
 FROM alpine:3.20
 
-# Install cron daemon and tools
+# Everything is relative to the <repo>/scheduler/ directory
+ARG CONTEXT_ROOT=./
+
 RUN apk add --no-cache \
         ca-certificates \
         curl \
         cronie
 
-ENV DATA_DIR=/quackview/data
-ENV JOBS_DIR=/quackview/jobs
+ENV QUACKVIEW_DATA_DIR=/quackview/data
+ENV QUACKVIEW_JOBS_DIR=/quackview/jobs
 
-COPY container/crontab /etc/cron.d/quackview-jobs
-COPY container/jobs/ /quackview/jobs
+COPY ${CONTEXT_ROOT}container/crontab /etc/cron.d/quackview-jobs
+COPY ${CONTEXT_ROOT}container/jobs/ /quackview/jobs
 
 # Create application user (system account without password)
 RUN adduser -D -h /home/quackjob -s /bin/sh quackjob && \
