@@ -65,7 +65,6 @@ class NewsTicker extends HTMLElement {
                     height: 100%;
                     overflow: hidden;
                     position: relative;
-                    background: rgba(0,0,0,0.3);
                     border-radius: 4px;
                 }
 
