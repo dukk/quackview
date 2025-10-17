@@ -127,7 +127,7 @@ class VerticalBounceBack extends HTMLElement {
         }
 
         if (this.rafId === null) {
-            console.debug('[vertical-bounceback] starting animation loop');
+            //console.debug('[vertical-bounceback] starting animation loop');
             this.resetState();
             this.rafId = requestAnimationFrame(this.step);
         }
