@@ -43,7 +43,7 @@ jobs:
       - name: Copy files to dist so the rest of the script can find them
         run: |
           mkdir -p ./dist/quackjob/linux-x64
-          cp -r ./jobs/quackjob/src/QuackView.QuackJob/bin/Release/${{ env.FRAMEWORK }}/linux-x64/publish* ./dist/quackjob/linux-x64
+          cp -r ./jobs/quackjob/src/QuackView.QuackJob/bin/Release/${{ env.FRAMEWORK }}/linux-x64/publish/* ./dist/quackjob/linux-x64
 
       - name: Verify quackjob executable exists
         run: |
