@@ -9,8 +9,6 @@ COPY container/nginx.conf /etc/nginx/conf.d/default.conf
 RUN rm -rf /usr/share/nginx/html/data
 RUN mkdir -p /quackview/data && chown -R nginx:nginx /quackview/data
 
-# TODO: Install jobs once there is a package to install them from...
-
 VOLUME ["/quackview/data"]
 
 EXPOSE 80

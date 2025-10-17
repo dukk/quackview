@@ -7,22 +7,28 @@ RUN apk add --no-cache \
         curl \
         cronie
 
-ENV QUACKVIEW_DATA_DIR=/quackview/data/
-ENV QUACKVIEW_JOBS_DIR=/quackview/jobs/
+RUN mkdir -p /quackview/{config,jobs,bin,data,secrets,logs}/
 
-RUN mkdir -p /quackview/{jobs,bin,data}/
+# Set environment variables for QuackView directories
+ENV QUACKVIEW_DIR=/quackview/
 
 RUN adduser -D -h /home/quackjob -s /bin/sh quackjob
-RUN chown -R quackjob:quackjob /quackview
 
-COPY dist/bin/ /quackview/bin/
-COPY container/crontab /etc/cron.d/quackview
 COPY container/jobs/ /quackview/jobs/
+COPY container/secrets/ /quackview/secrets/
 
-RUN chmod +x /quackview/bin/quackjob
+COPY dist/bin/appsettings.json /quackview/config/quackjob.json
+COPY dist/bin/quackjob /usr/bin/quackjob
+RUN chmod +x /usr/bin/quackjob
+
+COPY container/startup.sh /quackview/config/startup.sh
+RUN chmod +x /quackview/config/startup.sh
+
+COPY container/crontab /etc/cron.d/quackview
 RUN chmod 0644 /etc/cron.d/quackview
 
-VOLUME ["/quackview/data/", "/quackview/jobs/"]
+RUN chown -R quackjob:quackjob /quackview
 
-# Run cron in the foreground (as root so it can switch to the target user defined in /etc/cron.d)
-CMD ["crond", "-f", "-l", "2"]
+VOLUME ["/quackview/"]
+
+CMD ["sh", "-c", "/quackview/config/startup.sh"]

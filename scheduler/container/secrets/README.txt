@@ -1,0 +1,1 @@
+Put all of your secrets in this directory in a .txt file. The file name will be the secret key.
