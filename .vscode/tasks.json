@@ -1,0 +1,31 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "QuackJob dotnet publish",
+			"type": "process",
+			"command": "dotnet",
+			"args": [
+				"publish",
+				"${workspaceFolder}/jobs/quackjob/QuackView.QuackJob.sln",
+				"-c",
+				"Release"
+			],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "publish-scheduler-bin",
+			"dependsOn": ["QuackJob dotnet publish"],
+			"type": "process",
+			"command": "mkdir -p ${workspaceFolder}\\scheduler\\dist\\bin && cp -r ${workspaceFolder}\\dist\\quackjob\\linux-x86\\* ${workspaceFolder}\\scheduler\\dist\\bin",
+			"problemMatcher": []
+		},
+		{
+			"label": "clean-scheduler-bin",
+			"type": "shell",
+			"command": "rm -rf ${workspaceFolder}/scheduler/dist/bin",
+			"problemMatcher": []
+		}
+	]
+}

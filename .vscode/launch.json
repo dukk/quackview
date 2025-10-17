@@ -1,35 +1,24 @@
 {
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
         {
-            "name": "Debug Graph Jobs (Console)",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}\\jobs\\graph-jobs\\src\\Dashboard.QuackJob\\bin\\Debug\\net9.0\\win-x64\\tddQuackJob.exe",
-                "args": [
-                "run", 
-                "-c", "Debug",
-                "-e", "TDD_QuackJob_DATA_DIR=\"C:\\Users\\dukk\\AppData\\Local\\TDDashboard\\TDDQuackJob\\ENV-DATA\""
-            ],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "console": "internalConsole"
-        },
-        {
-            "name": "Build Display Docker Container",
             "type": "dockerfile",
             "request": "launch",
-            "dockerfile": "./display/container/Dockerfile",
+            "name": "Docker: Build Scheduler",
+            "dockerfile": "${workspaceFolder}/scheduler/container/Dockerfile",
+            "contextPath": "${workspaceFolder}/scheduler",
+            "preLaunchTask": "publish-scheduler-bin",
+            "postDebugTask": "clean-scheduler-bin"
+        },
+        {
+            "type": "dockerfile",
+            "request": "launch",
+            "name": "Docker: Build Display",
+            "dockerfile": "${workspaceFolder}/display/container/Dockerfile",
             "contextPath": "${workspaceFolder}/display"
-        },
-        {
-            "name": "Build Scheduler Docker Container",
-            "type": "dockerfile",
-            "request": "launch",
-            "dockerfile": "./scheduler/container/Dockerfile",
-            "contextPath": "${workspaceFolder}/scheduler"
         }
     ]
 }
