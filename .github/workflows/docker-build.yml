@@ -9,7 +9,7 @@ env:
   REGISTRY: ghcr.io
   SCHEDULER_IMAGE_NAME: ${{ github.repository_owner }}/quackview-scheduler
   DISPLAY_IMAGE_NAME: ${{ github.repository_owner }}/quackview-display
-  QUACKJOB_SOLUTION: QuackView.QuackJob.sln
+  QUACKJOB_SOLUTION: ./jobs/quackjob/QuackView.QuackJob.sln
   DOTNET_VERSION: '9.0.x'
   FRAMEWORK: net9.0
 
