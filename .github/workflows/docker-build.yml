@@ -45,6 +45,11 @@ jobs:
           mkdir -p ./dist/quackjob/linux-x64
           cp -r ./jobs/quackjob/src/QuackView.QuackJob/bin/Release/${{ env.FRAMEWORK }}/linux-x64/publish* ./dist/quackjob/linux-x64
 
+      - name: Verify quackjob executable exists
+        run: |
+          ls -la ./dist/quackjob/linux-x64
+          file ./dist/quackjob/linux-x64/quackjob
+
       # - name: Removing pdb files from dist
       #   run: |
       #     find ./dist/quackjob/linux-x64 -name "*.pdb" -type f -delete
