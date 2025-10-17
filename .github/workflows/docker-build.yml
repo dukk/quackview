@@ -50,9 +50,9 @@ jobs:
           ls -la ./dist/quackjob/linux-x64
           file ./dist/quackjob/linux-x64/quackjob
 
-      # - name: Removing pdb files from dist
-      #   run: |
-      #     find ./dist/quackjob/linux-x64 -name "*.pdb" -type f -delete
+      - name: Removing pdb files from dist
+        run: |
+          find ./dist/quackjob/linux-x64 -name "*.pdb" -type f -delete
 
       # No point in building this without publishing it somewhere
       # - name: Publish QuackJob win-x64
