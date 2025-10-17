@@ -38,22 +38,15 @@ jobs:
           dotnet publish "${{ env.QUACKJOB_SOLUTION }}" \
             -c Release \
             -r "linux-x64" \
-            -f "${{ env.FRAMEWORK }}" \
-            --self-contained true \
-            --publish-single-file true \
-            --publish-trimmed false \
-            -o ./dist/quackjob/linux-x64
+            -f "${{ env.FRAMEWORK }}"
 
-      - name: Publish QuackJob win-x64
-        run: |
-          dotnet publish "${{ env.QUACKJOB_SOLUTION }}" \
-            -c Release \
-            -r "win-x64" \
-            -f "${{ env.FRAMEWORK }}" \
-            --self-contained true \
-            --publish-single-file true \
-            --publish-trimmed false \
-            -o ./dist/quackjob/win-x64
+      # No point in building this without publishing it somewhere
+      # - name: Publish QuackJob win-x64
+      #   run: |
+      #     dotnet publish "${{ env.QUACKJOB_SOLUTION }}" \
+      #       -c Release \
+      #       -r "win-x64" \
+      #       -f "${{ env.FRAMEWORK }}"
 
       - name: Copy linux-x64 publish output to scheduler for the container build (keep context limited)
         run: |
