@@ -21,19 +21,15 @@ internal class CalendarEventCalendar
     public string? Name { get; set; }
 }
 
-internal class OutlookCalendarEventService : IOutlookCalendarEventService
+internal class OutlookCalendarEventService(ILogger<OutlookCalendarEventService> logger, IGraphService graphService) : IOutlookCalendarEventService
 {
-    private readonly ILogger<OutlookCalendarEventService> logger;
-    private readonly IGraphService graphService;
-
-    public OutlookCalendarEventService(ILogger<OutlookCalendarEventService> logger, IGraphService graphService)
-    {
-        this.logger = logger;
-        this.graphService = graphService;
-    }
+    private readonly ILogger<OutlookCalendarEventService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IGraphService graphService = graphService ?? throw new ArgumentNullException(nameof(graphService));
 
     public async Task<IEnumerable<CalendarEventCalendar>> GetCalendarsAsync(string accountName)
     {
+        accountName.NotNullOrWhiteSpace(nameof(accountName));
+
         var calendars = await this.graphService.ExecuteInContextAsync(async (client) =>
         {
             var calendarsResponse = await client.Me.Calendars.GetAsync(requestConfig =>
@@ -56,6 +52,10 @@ internal class OutlookCalendarEventService : IOutlookCalendarEventService
 
     public async Task<IEnumerable<CalendarEvent>> GetEventsAsync(string accountName, string[] calendarNames, DateTime start, DateTime end)
     {
+        accountName.NotNullOrWhiteSpace(nameof(accountName));
+        calendarNames.NotNullOrEmpty(nameof(calendarNames));
+        start.EnsureBefore(end);
+
         logger.LogInformation("Fetching calendar events from {start} to {end} for calendars: {calendarNames} on account {accountName}", start, end, string.Join(", ", calendarNames), accountName);
 
         var calendars = await this.GetCalendarsAsync(accountName);

@@ -14,20 +14,13 @@ internal interface IGraphService
     Task<T> ExecuteInContextAsync<T>(Func<GraphServiceClient, Task<T>> action, string? accountUserName = null);
 }
 
-internal class GraphService : IGraphService
+internal class GraphService(ILogger<GraphService> logger) : IGraphService
 {
     private const string DEFAULT_CLIENT_ID = "27bc410e-75a4-4bdc-9281-921f446aef52";
     private static readonly string[] CLIENT_SCOPES = new string[] { "User.Read", "Calendars.Read" };
     private const string DEFAULT_ACCOUNT_CACHE = "default";
 
-    private readonly ILogger<GraphService> logger;
-    private readonly IProgram program;
-
-    public GraphService(ILogger<GraphService> logger, IProgram program)
-    {
-        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this.program = program ?? throw new ArgumentNullException(nameof(program));;
-    }
+    private readonly ILogger<GraphService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<T> ExecuteInContextAsync<T>(Func<GraphServiceClient, Task<T>> action, string? accountUserName = null)
     {
@@ -110,9 +103,13 @@ internal class GraphService : IGraphService
 
      private string getCacheDirectory()
     {
+#if DEBUG
         var cacheDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "TDDashboard", "TDDQuackJob", "cache");
-        
+#elif RELEASE
+        var cacheDir = Path.Combine(Environment.GetEnvironmentVariable("QUACKVIEW_DIR") ?? "/quackview","secrets", "graphapi-cache");
+#endif
+
         Directory.CreateDirectory(cacheDir);
 
         this.logger.LogDebug("Using cache directory {cacheDir}", cacheDir);

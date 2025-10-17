@@ -48,7 +48,7 @@ public class UpcomingCalendarEventsJobConfig()
     public IList<CalendarAccounts> Accounts { get; set; } = [];
     public int DaysInFuture { get; set; } = 14;
 
-    public string OutputFileName { get; set; } = "calendar-events.json";
+    public string OutputFileName { get; set; } = "calendar/upcoming-events.json";
 }
 
 public class CalendarAccounts()

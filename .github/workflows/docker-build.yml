@@ -40,6 +40,18 @@ jobs:
             -r "linux-x64" \
             -f "${{ env.FRAMEWORK }}"
 
+      - name: Run unit tests
+        run: dotnet test "${{ env.QUACKJOB_SOLUTION }}" -c Release --no-restore --logger "trx;LogFileName=test-results.trx" -collect:"Code Coverage"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quackjob-test-results
+          path: "**/TestResults/*.trx"
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Copy files to dist so the rest of the script can find them
         run: |
           mkdir -p ./dist/quackjob/linux-x64
