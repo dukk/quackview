@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
 using TypoDukk.QuackView.QuackJob.Services;
-using TypoDukk.QuackView.QuackJob.Data.Shared;
+using TypoDukk.QuackView.QuackJob.Data;
 
 namespace TypoDukk.QuackView.QuackJob.Tests.Services
 {

@@ -35,7 +35,7 @@ internal class BuildImageFileListJob(ILogger<BuildImageFileListJob> logger, IDat
             })]
         };
 
-        await this.dataFileService.WriteJsonFileAsync(config.OutputFileName, imageFileList);
+        await this.dataFileService.WriteJsonFileAsync(config.OutputDataFile, imageFileList);
     }
 }
 
@@ -47,5 +47,5 @@ internal class BuildImageFileListJobConfig
 
     public bool IncludeSubdirectories { get; set; } = true;
 
-    public string OutputFileName { get; set; } = "file-list.json";
+    public string OutputDataFile { get; set; } = "file-list.json";
 }

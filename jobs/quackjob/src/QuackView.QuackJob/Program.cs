@@ -83,6 +83,11 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
     [ExcludeFromCodeCoverage]
     public static async Task<int> Main(string[] args)
     {
+#if DEBUG
+        Environment.SetEnvironmentVariable("QUACKVIEW_DIR",
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "QuackView"));
+#endif
+
         try
         {
             var host = Program.BuildApplication();
@@ -127,6 +132,7 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
         return host;
     }
 
+    [ExcludeFromCodeCoverage]
     internal static void VerifyNoDuplicationActions(IHost host)
     {
         var actions = host.Services.GetService<IAction>();
@@ -144,6 +150,7 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
         }
     }
 
+    [ExcludeFromCodeCoverage]
     internal static void VerifyNoDuplicationJobs(IHost host)
     {
         var jobs = host.Services.GetService<IJob>();
@@ -171,7 +178,7 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
         services.AddSingleton<ICommandLineParser, CommandLineParser>();
         services.AddSingleton<IJobRunnerService, JobRunnerService>();
         services.AddSingleton<ICronScheduler, CronScheduler>();
-        services.AddSingleton<ISecretStore, SecretStore>();
+        services.AddSingleton<ISecretStore, FileSystemSecretStore>();
         services.AddSingleton<IGraphService, GraphService>();
         services.AddSingleton<IOutlookCalendarEventService, OutlookCalendarEventService>();
     }
