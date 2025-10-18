@@ -1,0 +1,18 @@
+{
+    "job": {
+        "name": "Refresh calendar events every Saturday morning",
+        "description": "Generates a list of calendar events and saves them to a JSON file.",
+        "type": "",
+        "schedule": "*/30 * * * *"
+    },
+    "config": {
+        "daysInFuture": 14,
+        "accounts": [
+            {
+                "account": "$^{microsoft-calendar-account}",
+                "calendars": ["Family", "School Calendar", "United States holidays"]
+            }
+        ],
+        "outputFileName": "calendar/upcoming-events.json"
+    }
+}

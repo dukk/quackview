@@ -14,8 +14,9 @@ ENV QUACKVIEW_DIR=/quackview/
 
 RUN adduser -D -h /home/quackjob -s /bin/sh quackjob
 
-COPY container/jobs/ /quackview/jobs/
-COPY container/secrets/ /quackview/secrets/
+COPY container/jobs/* /quackview/jobs/
+COPY container/secrets/* /quackview/secrets/
+COPY container/data/* /quackview/data/
 
 COPY dist/bin/appsettings.json /quackview/config/quackjob.json
 COPY dist/bin/quackjob /usr/bin/quackjob

@@ -1,0 +1,1 @@
+Place photos in this directory for them to be included in the list.

@@ -1,0 +1,14 @@
+{
+    "job": {
+        "name": "Refresh photo list every 6 hours",
+        "description": "Generates a list of photos and saves them to a JSON file.",
+        "type": "open-ai-prompt",
+        "schedule": "0 /6 * * *"
+    },
+    "config": {
+        "directoryPath": "photos",
+        "searchPattern": "*.jpg|*.jpeg|*.png",
+        "includeSubdirectories": "false",
+        "outputDataFile": "photos/list.json"
+    }
+}
