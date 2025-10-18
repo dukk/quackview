@@ -13,7 +13,7 @@ public sealed class ProgramTests
 {
     internal Program CreateProgram()
     {
-        #pragma warning disable CS8604 // Possible null reference argument.
+#pragma warning disable CS8604 // Possible null reference argument.
 
         var host = TestHost.CreateHost();
         return new Program(
@@ -21,7 +21,23 @@ public sealed class ProgramTests
             host.Services.GetService<ILogger<Program>>(),
             host.Services.GetService<IConsoleService>());
 
-        #pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8604 // Possible null reference argument.
+    }
+
+    [TestMethod]
+    public void VerifyNoDuplicationActions()
+    {
+        var host = TestHost.CreateHost();
+
+        Program.VerifyNoDuplicationActions(host);
+    }
+    
+    [TestMethod]
+    public void VerifyNoDuplicationJobs() 
+    {
+        var host = TestHost.CreateHost();
+
+        Program.VerifyNoDuplicationJobs(host);
     }
 
     [TestMethod]
@@ -35,7 +51,5 @@ public sealed class ProgramTests
 
         // Act
         await program.Run(args);
-
-        
     }
 }

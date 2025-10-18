@@ -106,7 +106,7 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
     }
     // These static methods below are separated for easier testing
 
-    internal static IHost BuildApplication() 
+    internal static IHost BuildApplication()
     {
         var hostBuilder = Host.CreateApplicationBuilder();
 
@@ -117,9 +117,48 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
         Program.ComposeActions(hostBuilder.Services);
         Program.ComposeJobs(hostBuilder.Services);
 
-    // TODO: Validate that we don't have actions that would match the same name etc...
+        var host = hostBuilder.Build();
 
-        return hostBuilder.Build();
+#if DEBUG
+        // Extra check to make sure I'm not being dumb...
+        Program.VerifyNoDuplicationActions(host);
+        Program.VerifyNoDuplicationJobs(host);
+#endif
+        return host;
+    }
+
+    internal static void VerifyNoDuplicationActions(IHost host)
+    {
+        var actions = host.Services.GetService<IAction>();
+        var registeredActions = host.Services.GetServices<IAction>().ToList();
+        var duplicateActionGroups = registeredActions
+            .GroupBy(a => a.Name, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .ToList();
+
+        if (duplicateActionGroups.Count > 0)
+        {
+            var details = string.Join("; ", duplicateActionGroups.Select(g =>
+                $"{g.Key}: {string.Join(", ", g.Select(a => a.GetType().FullName))}"));
+            throw new InvalidOperationException($"Duplicate action names detected: {details}");
+        }
+    }
+
+    internal static void VerifyNoDuplicationJobs(IHost host)
+    {
+        var jobs = host.Services.GetService<IJob>();
+        var registeredJobs = host.Services.GetServices<IJob>().ToList();
+        var duplicateJobGroups = registeredJobs
+            .GroupBy(j => j.Name, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .ToList();
+
+        if (duplicateJobGroups.Count > 0)
+        {
+            var details = string.Join("; ", duplicateJobGroups.Select(g =>
+                $"{g.Key}: {string.Join(", ", g.Select(a => a.GetType().FullName))}"));
+            throw new InvalidOperationException($"Duplicate job names detected: {details}");
+        }
     }
 
     internal static void ComposeServices(IServiceCollection services)
@@ -140,6 +179,8 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
     {
         services.AddSingleton<IAction, HelpAction>();
         services.AddSingleton<IAction, RunAction>();
+        services.AddSingleton<IAction, ListAction>();
+        services.AddSingleton<IAction, RebuildScheduleAction>();
     }
 
     internal static void ComposeJobs(IServiceCollection services)

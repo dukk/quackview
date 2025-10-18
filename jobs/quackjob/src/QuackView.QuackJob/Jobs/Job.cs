@@ -1,11 +1,12 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Graph.Drives.Item.Items.Item.Workbook.Functions.N;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
 internal interface IJob
 {
-    bool MatchesArgName(string argName);
+    string Name { get; }
     Task ExecuteFromConfigFileAsync(string configFile);
 }
 
@@ -15,20 +16,26 @@ internal interface IJob<TConfig> : IJob
     Task ExecuteAsync(TConfig config);
 }
 
-internal abstract class Job<TConfig> : IJob<TConfig>, IJob
+internal abstract partial class Job<TConfig> : IJob<TConfig>, IJob
     where TConfig : class, new()
 {
-    bool IJob.MatchesArgName(string argName)
+    [GeneratedRegex("([A-Z])")]
+    private static partial Regex nameRegex();
+
+    public virtual string Name => Job<TConfig>.GetNameFromType(this.GetType());
+
+    internal static string GetNameFromType(Type type)
     {
-        var name = this.GetType().Name;
+        return Job<TConfig>.GetNameFromType(type.Name);
+    }
 
-        if (name.EndsWith("Job", StringComparison.InvariantCultureIgnoreCase))
+    internal static string GetNameFromType(string typeName)
+    {
+        const string ending = "job";
+        var name = nameRegex().Replace(typeName, "-$1").ToLower();
+        if (name.EndsWith(ending))
             name = name[..^3];
-
-        var match = name.Equals(argName, StringComparison.InvariantCultureIgnoreCase)
-            || name.Equals(argName.Replace("-", ""), StringComparison.InvariantCultureIgnoreCase);
-
-        return match;
+        return name.Trim('-');
     }
 
     public abstract Task ExecuteAsync(TConfig config);

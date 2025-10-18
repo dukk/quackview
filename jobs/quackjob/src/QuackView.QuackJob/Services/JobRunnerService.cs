@@ -48,8 +48,8 @@ internal class JobRun(IJob job, string configPath)
         if (String.IsNullOrWhiteSpace(arg))
             throw new ArgumentNullException(nameof(arg));
 
-        var pair = arg.Split(':', 2);
-        var job = jobs.FirstOrDefault(j => j.MatchesArgName(pair[0]))
+        var pair = arg.ToLower().Split(':', 2);
+        var job = jobs.FirstOrDefault(j => j.Name.Equals(pair[0]))
             ?? throw new ArgumentException("Unknown job.", nameof(arg));
 
         return new JobRun(job, pair[1].Trim('\'', '"'));

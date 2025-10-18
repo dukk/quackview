@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Actions;
@@ -11,20 +12,27 @@ internal interface IAction
     bool MatchesActionName(string actionName);
 }
 
-internal abstract class Action(IConsoleService console) : IAction
+internal abstract partial class Action(IConsoleService console) : IAction
 {
     protected IConsoleService console = console ?? throw new ArgumentNullException(nameof(console));
 
-    public virtual string Name
-    {
-        get
-        {
-            var name = this.GetType().Name;
-            if (name.EndsWith("Action", StringComparison.InvariantCultureIgnoreCase))
-                name = name[..^6];
+    [GeneratedRegex("([A-Z])")]
+    private static partial Regex nameRegex();
 
-            return name;
-        }
+    public virtual string Name => Action.GetNameFromType(this.GetType());
+
+    internal static string GetNameFromType(Type type)
+    {
+        return Action.GetNameFromType(type.Name);
+    }
+
+    internal static string GetNameFromType(string typeName)
+    {
+        const string ending = "action";
+        var name = nameRegex().Replace(typeName, "-$1").ToLower();
+        if (name.EndsWith(ending))
+            name = name[..^6];
+        return name.Trim('-');
     }
 
     public abstract Task ExecuteAsync(string[] args);
