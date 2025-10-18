@@ -23,7 +23,7 @@ internal interface IDataFileService
 
 internal class DataFileService(ILogger<DataFileService> logger, IFileService file, IDataDirectoryService directory) : IDataFileService
 {
-    private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new JsonSerializerOptions
+    public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new JsonSerializerOptions
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -41,7 +41,7 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative.", nameof(path));
 
-        path = this.getFullPath(path);
+        path = await this.GetFullPathAsync(path);
 
         return await this.file.ExistsAsync(path);
     }
@@ -69,7 +69,7 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
 
         try
         {
-            path = this.getFullPath(path);
+            path = await this.GetFullPathAsync(path);
 
             await this.file.WriteAllTextAsync(path, content);
             logger.LogInformation("Data file written to {Path}", path);
@@ -90,7 +90,7 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
 
         try
         {
-            path = this.getFullPath(path);
+            path = await this.GetFullPathAsync(path);
 
             await this.file.AppendAllTextAsync(path, content);
             this.logger.LogInformation("Appended line to {Path}", path);
@@ -111,7 +111,7 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
 
         try
         {
-            path = this.getFullPath(path);
+            path = await this.GetFullPathAsync(path);
 
             JsonListFile<T>? jsonArrayFile = null;
             var existingContent = await this.file.ReadAllTextAsync(path);
@@ -152,7 +152,7 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
 
         try
         {
-            path = this.getFullPath(path);
+            path = await this.GetFullPathAsync(path);
 
             if (await this.file.ExistsAsync(path))
             {
@@ -170,11 +170,11 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
         }
     }
 
-    private string getFullPath(string path)
+    protected virtual async Task<string> GetFullPathAsync(string path)
     {
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative", nameof(path));
 
-        return Path.Combine(this.directory.GetDataDirectoryPath(), path);
+        return Path.Combine(await this.directory.GetDataDirectoryPathAsync(), path);
     }
 }

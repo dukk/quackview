@@ -5,24 +5,25 @@ using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.IdentityModel.Tokens;
 using TypoDukk.QuackView.QuackJob.Data;
+using Microsoft.IdentityModel.Protocols.Configuration;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
 internal class UpcomingCalendarEventsJob(
     ILogger<UpcomingCalendarEventsJob> logger,
     IOutlookCalendarEventService outlookCalendarEventService,
-    IDataFileService dataFileService) : Job<UpcomingCalendarEventsJobConfig>
+    IDataFileService dataFileService) : JobRunner
 {
     private readonly ILogger<UpcomingCalendarEventsJob> logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOutlookCalendarEventService outlookCalendarEventService = outlookCalendarEventService ?? throw new ArgumentNullException(nameof(outlookCalendarEventService));
     private readonly IDataFileService dataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
 
-    public override async Task ExecuteAsync(UpcomingCalendarEventsJobConfig config)
+    public override async Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        var config = await this.LoadJsonConfigAsync<UpcomingCalendarEventsJobConfig>(configFile);
 
         if (config.Accounts.IsNullOrEmpty())
-            throw new ArgumentNullException(nameof(config), "Invalid job configuration.");
+            throw new ArgumentException("Invalid job configuration. No accounts specified.", nameof(config));
 
         logger.LogInformation("Executing Upcoming Calendar Events job.");
         

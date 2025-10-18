@@ -1,35 +1,35 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Graph.Drives.Item.Items.Item.Workbook.Functions.N;
+using Microsoft.Graph.Models;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
-internal interface IJob
+internal interface IJobRunner
 {
     string Name { get; }
     string Description { get; }
-    Task ExecuteFromConfigFileAsync(string configFile);
+    Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null);
 }
 
-internal interface IJob<TConfig> : IJob
-    where TConfig : class, new()
+internal abstract partial class JobRunner : IJobRunner
 {
-    Task ExecuteAsync(TConfig config);
-}
+    public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        AllowTrailingCommas = true
+    };
 
-internal abstract partial class Job<TConfig> : IJob<TConfig>, IJob
-    where TConfig : class, new()
-{
     [GeneratedRegex("([A-Z])")]
     private static partial Regex nameRegex();
 
-    public virtual string Name => Job<TConfig>.GetNameFromType(this.GetType());
+    public virtual string Name => JobRunner.GetNameFromType(this.GetType());
 
     public string Description { get; protected set; } = "No description available.";
 
     internal static string GetNameFromType(Type type)
     {
-        return Job<TConfig>.GetNameFromType(type.Name);
+        return JobRunner.GetNameFromType(type.Name);
     }
 
     internal static string GetNameFromType(string typeName)
@@ -41,9 +41,9 @@ internal abstract partial class Job<TConfig> : IJob<TConfig>, IJob
         return name.Trim('-');
     }
 
-    public abstract Task ExecuteAsync(TConfig config);
+    public abstract Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null);
 
-    async Task IJob.ExecuteFromConfigFileAsync(string configFile)
+    protected virtual async Task<TConfig> LoadJsonConfigAsync<TConfig>(string? configFile, JsonSerializerOptions? options = null)
     {
         if (string.IsNullOrWhiteSpace(configFile))
             throw new ArgumentNullException(nameof(configFile));
@@ -51,13 +51,12 @@ internal abstract partial class Job<TConfig> : IJob<TConfig>, IJob
         if (!File.Exists(configFile))
             throw new FileNotFoundException($"Config file '{configFile}' not found.", configFile);
 
+        options ??= DefaultJsonSerializerOptions;
+
         var configJson = await File.ReadAllTextAsync(configFile);
-        var config = JsonSerializer.Deserialize<TConfig>(configJson, new JsonSerializerOptions()
-        {
-            PropertyNameCaseInsensitive = true,
-            AllowTrailingCommas = true
-        }) ?? throw new InvalidOperationException($"Failed to deserialize config file '{configFile}' to type '{typeof(TConfig).FullName}'.");
-        
-        await this.ExecuteAsync(config);
+        var config = JsonSerializer.Deserialize<TConfig>(configJson, options)
+            ?? throw new InvalidOperationException($"Failed to deserialize config file '{configFile}' to type '{typeof(TConfig).FullName}'.");
+
+        return config;
     }
 }

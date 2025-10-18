@@ -5,14 +5,15 @@ using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
-internal class OpenAiPromptJob(ILogger<OpenAiPromptJob> logger, IDataFileService dataFileService) : Job<OpenAiPromptJobConfig>
+internal class OpenAiPromptJob(ILogger<OpenAiPromptJob> logger, IDataFileService dataFileService) : JobRunner
 {
     private readonly ILogger<OpenAiPromptJob> logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IDataFileService dataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
 
-    public override async Task ExecuteAsync(OpenAiPromptJobConfig config)
+    public override async Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        var config = await this.LoadJsonConfigAsync<OpenAiPromptJobConfig>(configFile)
+            ?? throw new ArgumentException("Invalid job configuration.", nameof(configFile));
 
         if (string.IsNullOrWhiteSpace(config.Prompt))
             throw new ArgumentNullException(nameof(config), "Invalid job configuration.");

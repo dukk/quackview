@@ -5,8 +5,8 @@ namespace TypoDukk.QuackView.QuackJob.Services;
 
 internal interface ICronScheduler
 {
-    Task ClearAllJobs();
-    Task Schedule(CronJob job);
+    Task ClearAllJobsAsync();
+    Task ScheduleAsync(CronJob job);
 }
 
 internal class CronJob
@@ -19,14 +19,14 @@ internal class CronScheduler(ILogger<CronScheduler> logger) : ICronScheduler
 {
     private readonly ILogger<CronScheduler> logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task ClearAllJobs()
+    public async Task ClearAllJobsAsync()
     {
         var crontabFile = this.getCrontabFilePath();
 
         await File.WriteAllTextAsync(crontabFile, await this.getCrontabFileTemplate());
     }
 
-    public async Task Schedule(CronJob job)
+    public async Task ScheduleAsync(CronJob job)
     {
         var crontabFile = this.getCrontabFilePath();
 
@@ -40,12 +40,12 @@ internal class CronScheduler(ILogger<CronScheduler> logger) : ICronScheduler
         using var reader = new StreamReader(stream);
         var template = await reader.ReadToEndAsync();
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        var quackjobsPath = this.getQuackJobExecutablePath();
+        var quackjobPath = this.getQuackJobExecutablePath();
         var jobsDir = Path.Combine(Environment.GetEnvironmentVariable("QUACKVIEW_DIR")
             ?? throw new InvalidOperationException("QUACKVIEW_DIR environment variable is not set."), "jobs");
 
         return template.Replace("${timestamp}", timestamp, StringComparison.OrdinalIgnoreCase)
-            .Replace("${quackjobs}", quackjobsPath, StringComparison.OrdinalIgnoreCase)
+            .Replace("${quackjob}", quackjobPath, StringComparison.OrdinalIgnoreCase)
             .Replace("${jobs_dir}", jobsDir, StringComparison.OrdinalIgnoreCase);
     }
 

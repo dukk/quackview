@@ -25,11 +25,11 @@ internal static class TestHost
     {
         var hostBuilder = Host.CreateDefaultBuilder();
 
-        hostBuilder.ConfigureAppConfiguration((context, config) =>
-        {
-            config.AddJsonFile(Environment.ExpandEnvironmentVariables("%QUACKVIEW_DIR%config/quackjob.json"),
-                optional: true, reloadOnChange: true);
-        });
+        // hostBuilder.ConfigureAppConfiguration((context, config) =>
+        // {
+        //     config.AddJsonFile(Environment.ExpandEnvironmentVariables("%QUACKVIEW_DIR%config/quackjob.json"),
+        //         optional: true, reloadOnChange: true);
+        // });
 
         hostBuilder.ConfigureServices(services =>
         {
@@ -57,14 +57,14 @@ internal static class TestHost
                     _ = services.AddSingleton(action.GetType(), action);
             }
 
-            Program.ComposeJobs(services);
+            Program.ComposeJobRunners(services);
 
             if (expandJobs)
             {
                 var serviceProvider = services.BuildServiceProvider();
-                var jobs = serviceProvider.GetServices<IJob>();
-                foreach (var job in jobs)
-                    _ = services.AddSingleton(job.GetType(), job);
+                var jobRunners = serviceProvider.GetServices<IJobRunner>();
+                foreach (var jobRunner in jobRunners)
+                    _ = services.AddSingleton(jobRunner.GetType(), jobRunner);
             }
 
             if (excludeServiceTypes != null)

@@ -1,25 +1,30 @@
+using System.Diagnostics.CodeAnalysis;
+
+namespace TypoDukk.QuackView.QuackJob.Services;
+
 internal interface IDirectoryService
 {
-    void CreateDirectory(string path);
-    bool Exists(string path);
-    IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", bool includeSubdirectories = false);
+    Task CreateDirectoryAsync(string path);
+    Task<bool> ExistsAsync(string path);
+    Task<IEnumerable<string>> EnumerateFilesAsync(string path, string searchPattern = "*", bool includeSubdirectories = false);
 }
 
+[ExcludeFromCodeCoverage]
 internal class DirectoryService : IDirectoryService
 {
-    public void CreateDirectory(string path)
+    public async Task CreateDirectoryAsync(string path)
     {
-        Directory.CreateDirectory(path);
+        await Task.Run(() => Directory.CreateDirectory(path));
     }
 
-    public bool Exists(string path)
+    public async Task<bool> ExistsAsync(string path)
     {
-        return Directory.Exists(path);
+        return await Task.Run(() => Directory.Exists(path));
     }
 
-    public IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", bool includeSubdirectories = false)
+    public Task<IEnumerable<string>> EnumerateFilesAsync(string path, string searchPattern = "*", bool includeSubdirectories = false)
     {
         var searchOption = includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-        return Directory.EnumerateFiles(path, searchPattern, searchOption);
+        return Task.Run(() => Directory.EnumerateFiles(path, searchPattern, searchOption));
     }
 }

@@ -7,9 +7,7 @@ namespace TypoDukk.QuackView.QuackJob.Services;
 internal interface ISecretStore
 {
     Task<string> GetSecretAsync(string key);
-
     Task SetSecretAsync(string key, string value, bool overwrite = false);
-
     Task<string> ExpandSecretsAsync(string input);
 }
 
@@ -38,7 +36,7 @@ internal partial class FileSystemSecretStore(ILogger<FileSystemSecretStore> logg
         
         this.logger.LogDebug("Retrieving secret for key: {Key}", key);
 
-        var secretFilePath = Path.Combine(this.GetSecretsDirectoryPath(), $"{key}.secret");
+        var secretFilePath = Path.Combine(await this.GetSecretsDirectoryPathAsync(), $"{key}.secret");
 
         if (!await this.file.ExistsAsync(secretFilePath))
             throw new KeyNotFoundException("Unknown secret.");
@@ -54,7 +52,7 @@ internal partial class FileSystemSecretStore(ILogger<FileSystemSecretStore> logg
 
         this.logger.LogDebug("Setting secret for key: {Key}", key);
 
-        var secretFilePath = Path.Combine(this.GetSecretsDirectoryPath(), $"{key}.secret");
+        var secretFilePath = Path.Combine(await this.GetSecretsDirectoryPathAsync(), $"{key}.secret");
 
         if (!overwrite && await this.file.ExistsAsync(secretFilePath))
             throw new ArgumentException("Secret already exists and overwrite is set to false.", nameof(key));
@@ -67,7 +65,7 @@ internal partial class FileSystemSecretStore(ILogger<FileSystemSecretStore> logg
         if (string.IsNullOrEmpty(input))
             return input;
 
-        var files = this.directory.EnumerateFiles(this.GetSecretsDirectoryPath());
+        var files = await this.directory.EnumerateFilesAsync(await this.GetSecretsDirectoryPathAsync());
 
         foreach (var file in files)
         {
@@ -83,14 +81,14 @@ internal partial class FileSystemSecretStore(ILogger<FileSystemSecretStore> logg
         return input;
     }
 
-    protected virtual string GetSecretsDirectoryPath()
+    protected virtual async Task<string> GetSecretsDirectoryPathAsync()
     {
         var path = Environment.GetEnvironmentVariable("QUACKVIEW_DIR") ?? string.Empty;
 
         if (!string.IsNullOrWhiteSpace(path))
             path = Path.Combine(path, "secrets");
 
-        directory.CreateDirectory(path);
+        await this.directory.CreateDirectoryAsync(path);
 
         this.logger.LogDebug("Using secrets directory path: {Path}", path);
 

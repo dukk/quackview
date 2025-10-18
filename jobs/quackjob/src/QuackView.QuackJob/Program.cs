@@ -120,7 +120,7 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
 
         Program.ComposeServices(hostBuilder.Services);
         Program.ComposeActions(hostBuilder.Services);
-        Program.ComposeJobs(hostBuilder.Services);
+        Program.ComposeJobRunners(hostBuilder.Services);
 
         var host = hostBuilder.Build();
 
@@ -153,8 +153,8 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
     [ExcludeFromCodeCoverage]
     internal static void VerifyNoDuplicationJobs(IHost host)
     {
-        var jobs = host.Services.GetService<IJob>();
-        var registeredJobs = host.Services.GetServices<IJob>().ToList();
+        var jobs = host.Services.GetService<IJobRunner>();
+        var registeredJobs = host.Services.GetServices<IJobRunner>().ToList();
         var duplicateJobGroups = registeredJobs
             .GroupBy(j => j.Name, StringComparer.OrdinalIgnoreCase)
             .Where(g => g.Count() > 1)
@@ -176,7 +176,6 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
         services.AddSingleton<IDataDirectoryService, DataDirectoryService>();
         services.AddSingleton<IConsoleService, ConsoleService>();
         services.AddSingleton<ICommandLineParser, CommandLineParser>();
-        services.AddSingleton<IJobRunnerService, JobRunnerService>();
         services.AddSingleton<ICronScheduler, CronScheduler>();
         services.AddSingleton<ISecretStore, FileSystemSecretStore>();
         services.AddSingleton<IGraphService, GraphService>();
@@ -191,10 +190,10 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
         services.AddSingleton<IAction, RebuildScheduleAction>();
     }
 
-    internal static void ComposeJobs(IServiceCollection services)
+    internal static void ComposeJobRunners(IServiceCollection services)
     {
-        services.AddSingleton<IJob, OpenAiPromptJob>();
-        services.AddSingleton<IJob, UpcomingCalendarEventsJob>();
-        services.AddSingleton<IJob, BuildImageFileListJob>();
+        services.AddSingleton<IJobRunner, OpenAiPromptJob>();
+        services.AddSingleton<IJobRunner, UpcomingCalendarEventsJob>();
+        services.AddSingleton<IJobRunner, BuildImageFileListJob>();
     }
 }

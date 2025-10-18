@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 
+namespace TypoDukk.QuackView.QuackJob.Services;
+
 internal interface IFileService
 {
     Task<string> ReadAllTextAsync(string path);

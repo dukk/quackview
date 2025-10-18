@@ -1,16 +1,16 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace TypoDukk.QuackView.QuackJob.Services;
 
 internal interface IDataDirectoryService
 {
-    string GetDataDirectoryPath();
-    bool Exists(string path);
-
-    IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", bool includeSubdirectories = false);
+    Task<string> GetDataDirectoryPathAsync();
+    Task<bool> ExistsAsync(string path);
+    Task<IEnumerable<string>> EnumerateFilesAsync(string path, string searchPattern = "*", bool includeSubdirectories = false);
 }
 
 internal class DataDirectoryService(ILogger<DataDirectoryService> logger, IDirectoryService directory) : IDataDirectoryService
@@ -18,28 +18,28 @@ internal class DataDirectoryService(ILogger<DataDirectoryService> logger, IDirec
     private readonly ILogger<DataDirectoryService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IDirectoryService directory = directory ?? throw new ArgumentNullException(nameof(directory));
 
-    public bool Exists(string path)
+    public async Task<bool> ExistsAsync(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
 
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative.", nameof(path));
 
-        return directory.Exists(path);
+        return await directory.ExistsAsync(path);
     }
 
-    public IEnumerable<string> EnumerateFiles(string path, string searchPattern = "*", bool includeSubdirectories = false)
+    public async Task<IEnumerable<string>> EnumerateFilesAsync(string path, string searchPattern = "*", bool includeSubdirectories = false)
     {
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(searchPattern);
-        
+
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative.", nameof(path));
 
-        return directory.EnumerateFiles(path, searchPattern, includeSubdirectories);
+        return await directory.EnumerateFilesAsync(path, searchPattern, includeSubdirectories);
     }
 
-    public string GetDataDirectoryPath()
+    public async Task<string> GetDataDirectoryPathAsync()
     {
         var dataDir = Environment.GetEnvironmentVariable("QUACKVIEW_DIR") ?? string.Empty;
 
@@ -50,7 +50,7 @@ internal class DataDirectoryService(ILogger<DataDirectoryService> logger, IDirec
             dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "QuackView", "QuackJob", "Data");
 
-        directory.CreateDirectory(dataDir);
+        await directory.CreateDirectoryAsync(dataDir);
 
         return dataDir;
     }
