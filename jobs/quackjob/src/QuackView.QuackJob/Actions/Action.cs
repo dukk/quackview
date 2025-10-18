@@ -7,6 +7,7 @@ namespace TypoDukk.QuackView.QuackJob.Actions;
 internal interface IAction
 {
     string Name { get; }
+    string Description { get; }
     Task ExecuteAsync(string[] args);
     void DisplayHelp();
     bool MatchesActionName(string actionName);
@@ -20,6 +21,8 @@ internal abstract partial class Action(IConsoleService console) : IAction
     private static partial Regex nameRegex();
 
     public virtual string Name => Action.GetNameFromType(this.GetType());
+
+    public virtual string Description { get; protected set; } = "No description available.";
 
     internal static string GetNameFromType(Type type)
     {

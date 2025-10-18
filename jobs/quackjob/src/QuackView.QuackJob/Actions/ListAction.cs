@@ -17,14 +17,12 @@ internal class ListAction(ILogger<ListAction> logger, IConsoleService console, I
         await Task.Run(() =>
         {
             var jobs = this.serviceProvider.GetServices<IJob>();
-            var jobTypes = from j in jobs
-                           select j.GetType();
 
             console.WriteLine("Available Jobs:");
 
-            foreach (var job in jobTypes.OrderBy(j => j.Name))
+            foreach (var job in jobs.OrderBy(j => j.Name))
             {
-                console.WriteLine($"\t{job.Name}\t- ...");
+                console.WriteLine($" {job.Name}\t- {job.Description}");
             }
         });
     }

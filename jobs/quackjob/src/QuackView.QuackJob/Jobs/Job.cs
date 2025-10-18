@@ -7,6 +7,7 @@ namespace TypoDukk.QuackView.QuackJob.Jobs;
 internal interface IJob
 {
     string Name { get; }
+    string Description { get; }
     Task ExecuteFromConfigFileAsync(string configFile);
 }
 
@@ -23,6 +24,8 @@ internal abstract partial class Job<TConfig> : IJob<TConfig>, IJob
     private static partial Regex nameRegex();
 
     public virtual string Name => Job<TConfig>.GetNameFromType(this.GetType());
+
+    public string Description { get; protected set; } = "No description available.";
 
     internal static string GetNameFromType(Type type)
     {
