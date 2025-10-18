@@ -2,38 +2,55 @@ using System.Diagnostics.CodeAnalysis;
 
 internal interface IFileService
 {
-    string ReadAllText(string path);
-    void WriteAllText(string path, string content);
-    bool Exists(string path);
-    void DeleteFile(string path);
-    void MoveFile(string sourcePath, string destinationPath);
+    Task<string> ReadAllTextAsync(string path);
+    Task WriteAllTextAsync(string path, string content);
+    Task AppendAllTextAsync(string path, string content);
+    Task<bool> ExistsAsync(string path);
+    Task DeleteFileAsync(string path);
+    Task MoveFileAsync(string sourcePath, string destinationPath);
 }
 
 [ExcludeFromCodeCoverage]
 internal class FileService : IFileService
 {
-    public string ReadAllText(string path)
+    public Task<string> ReadAllTextAsync(string path)
     {
-        return File.ReadAllText(path);
+        return File.ReadAllTextAsync(path);
     }
 
-    public void WriteAllText(string path, string content)
+    public Task WriteAllText(string path, string content)
     {
-        File.WriteAllText(path, content);
+        return File.WriteAllTextAsync(path, content);
     }
 
-    public bool Exists(string path)
+    public Task AppendAllTextAsync(string path, string content)
     {
-        return File.Exists(path);
+        return File.AppendAllTextAsync(path, content);
     }
 
-    public void DeleteFile(string path)
+    public Task<bool> ExistsAsync(string path)
     {
-        File.Delete(path);
+        return Task.FromResult(File.Exists(path));
     }
 
-    public void MoveFile(string sourcePath, string destinationPath)
+    public Task DeleteFileAsync(string path)
     {
-        File.Move(sourcePath, destinationPath);
+        return Task.Run(() =>
+        {
+            File.Delete(path);
+        });
+    }
+
+    public Task MoveFileAsync(string sourcePath, string destinationPath)
+    {
+        return Task.Run(() =>
+        {
+            File.Move(sourcePath, destinationPath);
+        });
+    }
+
+    public Task WriteAllTextAsync(string path, string content)
+    {
+        return File.WriteAllTextAsync(path, content);
     }
 }

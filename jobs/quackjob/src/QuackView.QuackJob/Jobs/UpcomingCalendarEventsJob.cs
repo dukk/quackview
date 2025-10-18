@@ -37,7 +37,7 @@ internal class UpcomingCalendarEventsJob(
                 DateTime.UtcNow.AddDays(config.DaysInFuture)));
         }
 
-        await this.dataFileService.WriteJsonFile(config.OutputFileName, allEvents.OrderBy(e => e.Start));
+        await this.dataFileService.WriteJsonFileAsync(config.OutputFileName, allEvents.OrderBy(e => e.Start));
 
         return;
     }

@@ -164,7 +164,9 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
     internal static void ComposeServices(IServiceCollection services)
     {
         services.AddSingleton<IFileService, FileService>();
+        services.AddSingleton<IDataFileService, DataFileService>();
         services.AddSingleton<IDirectoryService, DirectoryService>();
+        services.AddSingleton<IDataDirectoryService, DataDirectoryService>();
         services.AddSingleton<IConsoleService, ConsoleService>();
         services.AddSingleton<ICommandLineParser, CommandLineParser>();
         services.AddSingleton<IJobRunnerService, JobRunnerService>();
@@ -172,7 +174,6 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
         services.AddSingleton<ISecretStore, SecretStore>();
         services.AddSingleton<IGraphService, GraphService>();
         services.AddSingleton<IOutlookCalendarEventService, OutlookCalendarEventService>();
-        services.AddSingleton<IDataFileService, DataFileService>();
     }
 
     internal static void ComposeActions(IServiceCollection services)
@@ -185,7 +186,8 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
 
     internal static void ComposeJobs(IServiceCollection services)
     {
-        services.AddSingleton<IJob, UpcomingCalendarEventsJob>();
         services.AddSingleton<IJob, OpenAiPromptJob>();
+        services.AddSingleton<IJob, UpcomingCalendarEventsJob>();
+        services.AddSingleton<IJob, BuildImageFileListJob>();
     }
 }

@@ -31,7 +31,7 @@ internal class OpenAiPromptJob(ILogger<OpenAiPromptJob> logger, IDataFileService
             });
         var responseText = response.GetOutputText();
 
-        await this.dataFileService.WriteFile(config.OutputFileName, responseText);
+        await this.dataFileService.WriteFileAsync(config.OutputFileName, responseText);
 
 #pragma warning restore OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     }

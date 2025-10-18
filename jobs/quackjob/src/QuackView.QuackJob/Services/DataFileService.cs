@@ -7,36 +7,20 @@ namespace TypoDukk.QuackView.QuackJob.Services;
 
 internal interface IDataFileService
 {
-    Task CreateJsonArrayFile<T>(string path, bool overwrite = true);
+    Task<bool> ExistsAsync(string path);
 
-    bool Exists(string path);
+    Task WriteFileAsync(string path, string content);
 
-    Task WriteFile(string path, string content);
+    Task WriteJsonFileAsync<T>(string path, T content);
 
-    Task WriteJsonFile<T>(string path, T content);
+    Task AppendToFileAsync(string path, string content);
 
-    Task AppendToFile(string path, string content);
+    Task AppendToJsonListFileAsync<T>(string path, T content);
 
-    Task AppendToJsonArrayFile<T>(string path, T content);
-
-    Task DeleteFile(string path);
+    Task DeleteFileAsync(string path);
 }
 
-internal class JsonArrayFile<T>
-{
-    public FileMetaData MetaData { get; set; } = new FileMetaData();
-
-    public IList<T> List { get; set; } = new List<T>();
-}
-
-internal class FileMetaData
-{
-    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
-    public DateTime Created { get; set; } = DateTime.UtcNow;
-    public IList<string> Sources { get; set; } = new List<string>();
-}
-
-internal class DataFileService(ILogger<DataFileService> logger) : IDataFileService
+internal class DataFileService(ILogger<DataFileService> logger, IFileService file, IDataDirectoryService directory) : IDataFileService
 {
     private static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new JsonSerializerOptions
     {
@@ -46,38 +30,47 @@ internal class DataFileService(ILogger<DataFileService> logger) : IDataFileServi
     };
 
     private readonly ILogger<DataFileService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IFileService file = file ?? throw new ArgumentNullException(nameof(file));
+    private readonly IDataDirectoryService directory = directory ?? throw new ArgumentNullException(nameof(directory));
 
-    public async Task CreateJsonArrayFile<T>(string path, bool overwrite = true)
+    public async Task<bool> ExistsAsync(string path)
     {
-        var json = JsonSerializer.Serialize(new JsonArrayFile<T>(), DataFileService.DefaultJsonSerializerOptions);
+        ArgumentNullException.ThrowIfNull(path);
 
-        if (overwrite && this.Exists(path))
-            await this.DeleteFile(path);
+        if (Path.IsPathRooted(path))
+            throw new ArgumentException("Path must be relative.", nameof(path));
 
-        await WriteFile(path, json);
-    }
-
-    public bool Exists(string path)
-    {
         path = this.getFullPath(path);
 
-        return File.Exists(path);
+        return await this.file.ExistsAsync(path);
     }
 
-    public async Task WriteJsonFile<T>(string path, T content)
+    public async Task WriteJsonFileAsync<T>(string path, T content)
     {
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(content);
+
+        if (Path.IsPathRooted(path))
+            throw new ArgumentException("Path must be relative.", nameof(path));
+
         var json = JsonSerializer.Serialize(content, DataFileService.DefaultJsonSerializerOptions);
 
-        await WriteFile(path, json);
+        await this.WriteFileAsync(path, json);
     }
 
-    public async Task WriteFile(string path, string content)
+    public async Task WriteFileAsync(string path, string content)
     {
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(content);
+
+        if (Path.IsPathRooted(path))
+            throw new ArgumentException("Path must be relative.", nameof(path));
+
         try
         {
             path = this.getFullPath(path);
 
-            await File.WriteAllTextAsync(path, content);
+            await this.file.WriteAllTextAsync(path, content);
             logger.LogInformation("Data file written to {Path}", path);
         }
         catch (Exception ex)
@@ -86,13 +79,19 @@ internal class DataFileService(ILogger<DataFileService> logger) : IDataFileServi
         }
     }
 
-    public async Task AppendToFile(string path, string content)
+    public async Task AppendToFileAsync(string path, string content)
     {
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(content);
+
+        if (Path.IsPathRooted(path))
+            throw new ArgumentException("Path must be relative.", nameof(path));
+
         try
         {
             path = this.getFullPath(path);
 
-            await File.AppendAllTextAsync(path, content);
+            await this.file.AppendAllTextAsync(path, content);
             this.logger.LogInformation("Appended line to {Path}", path);
         }
         catch (Exception ex)
@@ -101,21 +100,27 @@ internal class DataFileService(ILogger<DataFileService> logger) : IDataFileServi
         }
     }
 
-    public async Task AppendToJsonArrayFile<T>(string path, T content)
+    public async Task AppendToJsonListFileAsync<T>(string path, T content)
     {
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(content);
+
+        if (Path.IsPathRooted(path))
+            throw new ArgumentException("Path must be relative.", nameof(path));
+
         try
         {
             path = this.getFullPath(path);
 
-            JsonArrayFile<T>? jsonArrayFile = null;
-            var existingContent = await File.ReadAllTextAsync(path);
+            JsonListFile<T>? jsonArrayFile = null;
+            var existingContent = await this.file.ReadAllTextAsync(path);
             
             if (!string.IsNullOrWhiteSpace(existingContent))
             {
                 try
                 {
-                    jsonArrayFile = JsonSerializer.Deserialize<JsonArrayFile<T>>(
-                        existingContent, DataFileService.DefaultJsonSerializerOptions) ?? new JsonArrayFile<T>();
+                    jsonArrayFile = JsonSerializer.Deserialize<JsonListFile<T>>(
+                        existingContent, DataFileService.DefaultJsonSerializerOptions) ?? new JsonListFile<T>();
                 }
                 catch (JsonException jsonEx)
                 {
@@ -137,47 +142,31 @@ internal class DataFileService(ILogger<DataFileService> logger) : IDataFileServi
         }
     }
 
-    public async Task DeleteFile(string path)
+    public async Task DeleteFileAsync(string path)
     {
-        await Task.Run(() => // HACK: Tired of the warning message since File.Delete isn't awaitable, but I want to keep the interface async...
+        ArgumentNullException.ThrowIfNull(path);
+
+        if (Path.IsPathRooted(path))
+            throw new ArgumentException("Path must be relative.", nameof(path));
+
+        try
         {
-            try
+            path = this.getFullPath(path);
+
+            if (await this.file.ExistsAsync(path))
             {
-                path = this.getFullPath(path);
-
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                    this.logger.LogInformation("Deleted file {Path}", path);
-                }
-                else
-                {
-                    this.logger.LogWarning("File {Path} does not exist, cannot delete", path);
-                }
+                await this.file.DeleteFileAsync(path);
+                this.logger.LogInformation("Deleted file {Path}", path);
             }
-            catch (Exception ex)
+            else
             {
-                throw new Exception($"Failed to delete data file at {path}", ex);
+                this.logger.LogWarning("File {Path} does not exist, cannot delete", path);
             }
-
-            return;
-        });
-    }
-
-    private string getDataDirectory()
-    {
-        var dataDir = Environment.GetEnvironmentVariable("QUACKVIEW_DIR") ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(dataDir))
-            dataDir = Path.Combine(dataDir, "data");
-
-        if (string.IsNullOrEmpty(dataDir))
-            dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "QuackView", "QuackJob", "Data");
-
-        Directory.CreateDirectory(dataDir);
-
-        return dataDir;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to delete data file at {path}", ex);
+        }
     }
 
     private string getFullPath(string path)
@@ -185,6 +174,6 @@ internal class DataFileService(ILogger<DataFileService> logger) : IDataFileServi
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative", nameof(path));
 
-        return Path.Combine(this.getDataDirectory(), path);
+        return Path.Combine(this.directory.GetDataDirectoryPath(), path);
     }
 }
