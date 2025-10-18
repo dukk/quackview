@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using TypoDukk.QuackView.QuackJob.Data;
 
 namespace TypoDukk.QuackView.QuackJob.Services;
 

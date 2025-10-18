@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using TypoDukk.QuackView.QuackJob.Services;
-using TypoDukk.QuackView.QuackJob.Data.Shared;
+using TypoDukk.QuackView.QuackJob.Data;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 

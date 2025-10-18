@@ -1,3 +1,5 @@
+namespace TypoDukk.QuackView.QuackJob.Data;
+
 internal class JsonListFile<T>
 {
     public ListMetadata Metadata { get; set; } = new ListMetadata();

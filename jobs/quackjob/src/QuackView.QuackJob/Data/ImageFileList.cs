@@ -1,3 +1,5 @@
+namespace TypoDukk.QuackView.QuackJob.Data;
+
 internal class ImageFileList
 {
     public ImageFileListMetadata Metadata { get; set; } = new ImageFileListMetadata();

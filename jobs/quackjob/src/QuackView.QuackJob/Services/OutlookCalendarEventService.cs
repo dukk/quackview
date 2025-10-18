@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
-using TypoDukk.QuackView.QuackJob.Data.Shared;
+using TypoDukk.QuackView.QuackJob.Data;
 
 namespace TypoDukk.QuackView.QuackJob.Services;
 

@@ -4,7 +4,7 @@ using TypoDukk.QuackView.QuackJob.Services;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
 using Microsoft.IdentityModel.Tokens;
-using TypoDukk.QuackView.QuackJob.Data.Shared;
+using TypoDukk.QuackView.QuackJob.Data;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
