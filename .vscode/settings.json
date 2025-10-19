@@ -1,8 +1,12 @@
 {
     "cSpell.words": [
+        "adduser",
+        "appsettings",
+        "cronie",
         "Dukk",
         "msal",
         "quackjob",
-        "quackview"
+        "quackview",
+        "svcacct"
     ]
 }

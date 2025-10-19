@@ -2,30 +2,75 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "QuackJob dotnet publish",
+			"label": "QuackJob Build",
 			"type": "process",
 			"command": "dotnet",
 			"args": [
-				"publish",
+				"build",
 				"${workspaceFolder}/jobs/quackjob/QuackView.QuackJob.sln",
 				"-c",
 				"Release"
 			],
-			"group": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"problemMatcher": []
 		},
 		{
-			"label": "publish-scheduler-bin",
-			"dependsOn": ["QuackJob dotnet publish"],
+			"label": "QuackJob Test",
+			"dependsOn": [
+				"QuackJob Build"
+			],
 			"type": "process",
-			"command": "mkdir -p ${workspaceFolder}\\scheduler\\dist\\bin && cp -r ${workspaceFolder}\\dist\\quackjob\\linux-x86\\* ${workspaceFolder}\\scheduler\\dist\\bin",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"${workspaceFolder}/jobs/quackjob/QuackView.QuackJob.sln",
+				"-c",
+				"Release"
+			],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
 			"problemMatcher": []
 		},
-		{
-			"label": "clean-scheduler-bin",
-			"type": "shell",
-			"command": "rm -rf ${workspaceFolder}/scheduler/dist/bin",
-			"problemMatcher": []
-		}
+		// {
+		// 	"label": "QuackJob Publish",
+		// 	"dependsOn": [ "QuackJob Test" ],
+		// 	"type": "process",
+		// 	"command": "dotnet",
+		// 	"args": [
+		// 		"publish",
+		// 		"${workspaceFolder}/jobs/quackjob/QuackView.QuackJob.sln",
+		// 		"-c",
+		// 		"Release"
+		// 	],
+		// 	"group": "build",
+		// 	"problemMatcher": []
+		// },
+		// {
+		// 	"label": "QuackJob Publish",
+		// 	"dependsOn": ["QuackJob Test"],
+		// 	"type": "process",
+		// 	"command": "cd jobs\\quackjob && call publish-quackjob.bat",
+		// 	"problemMatcher": []
+		// },
+		// {
+		// 	"label": "Update Scheduler dist",
+		// 	"dependsOn": [
+		// 		"QuackJob Publish"
+		// 	],
+		// 	"type": "process",
+		// 	"command": "mkdir -p ${workspaceFolder}\\scheduler\\dist\\bin && cp -r ${workspaceFolder}\\dist\\quackjob\\linux-x86\\* ${workspaceFolder}\\scheduler\\dist\\bin",
+		// 	"problemMatcher": []
+		// },
+		// {
+		// 	"label": "Remove Scheduler dist",
+		// 	"type": "shell",
+		// 	"command": "rm -rf ${workspaceFolder}/scheduler/dist/bin",
+		// 	"problemMatcher": []
+		// }
 	]
 }
