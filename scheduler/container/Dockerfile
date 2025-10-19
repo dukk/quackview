@@ -7,29 +7,26 @@ RUN apk add --no-cache \
         curl \
         cronie
 
-RUN mkdir -p /quackview/{config,jobs,bin,data,secrets,logs}/
-
-# Set environment variables for QuackView directories
 ENV QUACKVIEW_DIR=/quackview/
 
 RUN adduser -D -h /home/quackjob -s /bin/sh quackjob
 
-COPY container/jobs/* /quackview/jobs/
-COPY container/secrets/* /quackview/secrets/
-COPY container/data/* /quackview/data/
+COPY container/scripts/docker-entrypoint.sh /docker-entrypoint.sh
+RUN mkdir -p /etc/docker-entrypoint.d
+COPY container/scripts/docker-entrypoint.d/* /etc/docker-entrypoint.d/
+RUN chmod +x /docker-entrypoint.sh
+RUN chmod +x /etc/docker-entrypoint.d/*.sh
 
-COPY dist/bin/appsettings.json /quackview/config/quackjob.json
+COPY container/template/* /quackview-template/
+COPY dist/bin/appsettings.json /quackview-template/config/quackjob.json
 COPY dist/bin/quackjob /usr/bin/quackjob
+RUN chown -R quackjob:quackjob /quackview-template
 RUN chmod +x /usr/bin/quackjob
-
-COPY container/startup.sh /quackview/config/startup.sh
-RUN chmod +x /quackview/config/startup.sh
-
-COPY container/crontab /etc/cron.d/quackview
-RUN chmod 0644 /etc/cron.d/quackview
-
-RUN chown -R quackjob:quackjob /quackview
 
 VOLUME ["/quackview/"]
 
-CMD ["sh", "-c", "/quackview/config/startup.sh"]
+ENTRYPOINT [ "/docker-entrypoint.sh"]
+
+USER quackjob
+
+CMD [ "touch /var/log/cron.log && tail -f /var/log/cron.log &" ]
