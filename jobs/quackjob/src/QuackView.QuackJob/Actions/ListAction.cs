@@ -7,21 +7,25 @@ using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Actions;
 
-internal class ListAction(ILogger<ListAction> logger, IConsoleService console, IServiceProvider serviceProvider) : Action(console)
+internal class ListAction(
+    ILogger<ListAction> logger,
+    IConsoleService console,
+    IServiceProvider serviceProvider) 
+    : Action(logger, console)
 {
-    private readonly ILogger<ListAction> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IServiceProvider serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    protected readonly new ILogger<ListAction> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IServiceProvider ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
     public override async Task ExecuteAsync(string[] args)
     {
         await Task.Run(() =>
         {
-            var jobRunners = this.serviceProvider.GetServices<IJobRunner>();
+            var jobRunners = this.ServiceProvider.GetServices<IJobRunner>();
 
-            console.WriteLine("Available Jobs Runners:");
+            this.Console.WriteLine("Available Jobs Runners:");
 
             foreach (var jobRunner in jobRunners.OrderBy(j => j.Name))
-                console.WriteLine($" {jobRunner.Name}\t- {jobRunner.Description}");
+                this.Console.WriteLine($" {jobRunner.Name}\t- {jobRunner.Description}");
         });
     }
 }

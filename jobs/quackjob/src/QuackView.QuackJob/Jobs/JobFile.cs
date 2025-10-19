@@ -7,11 +7,6 @@ namespace TypoDukk.QuackView.QuackJob.Jobs;
 internal class JobFile
 {
     public JobMetadata Metadata { get; set; } = new();
-}
-
-internal class JobFile<TConfig> : JobFile
-{
-    public TConfig? Config { get; set; } = default!;
 
     public string ToJson(JsonSerializerOptions? options = null)
     {
@@ -19,6 +14,11 @@ internal class JobFile<TConfig> : JobFile
 
         return json;
     }
+}
+
+internal class JobFile<TConfig> : JobFile
+{
+    public TConfig? Config { get; set; } = default!;
 }
 
 internal class JobMetadata

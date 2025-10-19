@@ -16,7 +16,7 @@ internal interface IMicrosoftGraphService
 }
 
 internal class MicrosoftGraphService(ILogger<MicrosoftGraphService> logger, IAlertService alertService,
-    ISpecialDirectories specialDirectories) : IMicrosoftGraphService
+    ISpecialPaths SpecialPaths) : IMicrosoftGraphService
 {
     private const string DefaultClientID = "27bc410e-75a4-4bdc-9281-921f446aef52";
     private static readonly string[] DefaultClientScopes = new string[] { "User.Read" };
@@ -24,7 +24,7 @@ internal class MicrosoftGraphService(ILogger<MicrosoftGraphService> logger, IAle
 
     private readonly ILogger<MicrosoftGraphService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IAlertService alertService = alertService ?? throw new ArgumentNullException(nameof(alertService));
-    private readonly ISpecialDirectories specialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
+    private readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
     public async Task<T> ExecuteInContextAsync<T>(Func<GraphServiceClient, Task<T>> action, string? accountUserName = null, string[]? scopes = null)
     {
@@ -56,7 +56,7 @@ internal class MicrosoftGraphService(ILogger<MicrosoftGraphService> logger, IAle
     {
         scopes ??= MicrosoftGraphService.DefaultClientScopes;
 
-        var cacheDir = await this.specialDirectories.GetSecretsDirectoryPathAsync();
+        var cacheDir = await this.SpecialPaths.GetSecretsDirectoryPathAsync();
         var cacheFile = String.IsNullOrWhiteSpace(accountUserName)
             ? "msal_graph_tokens.secret"
             : $"msal_graph_tokens_{accountUserName}.secret".Replace('@', '_');

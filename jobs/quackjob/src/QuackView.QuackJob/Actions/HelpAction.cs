@@ -4,9 +4,9 @@ using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Actions;
 
-internal class HelpAction(ILogger<HelpAction> logger, IConsoleService console) : Action(console)
+internal class HelpAction(ILogger<HelpAction> logger, IConsoleService console) : Action(logger,console)
 {
-    private readonly ILogger<HelpAction> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly new ILogger<HelpAction> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public override async Task ExecuteAsync(string[] args)
     {
@@ -15,7 +15,7 @@ internal class HelpAction(ILogger<HelpAction> logger, IConsoleService console) :
         using var reader = new StreamReader(stream);
         var helpText = await reader.ReadToEndAsync();
         
-        console.WriteLine(helpText);
+        this.Console.WriteLine(helpText);
 
         return;
     }

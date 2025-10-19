@@ -14,10 +14,10 @@ public sealed class FileSystemSecretStoreTests
         var logger = Substitute.For<ILogger<FileSystemSecretStore>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var store = new FileSystemSecretStore(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var store = new FileSystemSecretStore(logger, directory, file, SpecialPaths);
 
-        specialDirectories.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
+        SpecialPaths.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
 
         file.ExistsAsync(Path.Combine("quackview-test", "secrets", "MyKey.secret")).Returns(false);
 
@@ -40,10 +40,10 @@ public sealed class FileSystemSecretStoreTests
         var logger = Substitute.For<ILogger<FileSystemSecretStore>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var store = new FileSystemSecretStore(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var store = new FileSystemSecretStore(logger, directory, file, SpecialPaths);
 
-        specialDirectories.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
+        SpecialPaths.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
 
         file.ExistsAsync(Path.Combine("quackview-test", "secrets", "NonExistingKey.secret")).Returns(false);
 
@@ -58,10 +58,10 @@ public sealed class FileSystemSecretStoreTests
         var logger = Substitute.For<ILogger<FileSystemSecretStore>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var store = new FileSystemSecretStore(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var store = new FileSystemSecretStore(logger, directory, file, SpecialPaths);
 
-        specialDirectories.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
+        SpecialPaths.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
 
         file.ExistsAsync(Path.Combine("quackview-test", "secrets", "DoNotOverwrite.secret")).Returns(false);
 
@@ -79,10 +79,10 @@ public sealed class FileSystemSecretStoreTests
         var logger = Substitute.For<ILogger<FileSystemSecretStore>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var store = new FileSystemSecretStore(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var store = new FileSystemSecretStore(logger, directory, file, SpecialPaths);
 
-        specialDirectories.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
+        SpecialPaths.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
 
         file.ExistsAsync(Path.Combine("quackview-test", "secrets", "DoNotOverwrite.secret")).Returns(false);
 
@@ -100,10 +100,10 @@ public sealed class FileSystemSecretStoreTests
         var logger = Substitute.For<ILogger<FileSystemSecretStore>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var store = new FileSystemSecretStore(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var store = new FileSystemSecretStore(logger, directory, file, SpecialPaths);
 
-        specialDirectories.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
+        SpecialPaths.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
 
         await Assert.ThrowsExceptionAsync<ArgumentException>(async () => await store.SetSecretAsync("no.no.no.no", "bad"));
         await Assert.ThrowsExceptionAsync<ArgumentException>(async () => await store.SetSecretAsync("..\\..\\..\\", "bad"));
@@ -118,10 +118,10 @@ public sealed class FileSystemSecretStoreTests
         var logger = Substitute.For<ILogger<FileSystemSecretStore>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var store = new FileSystemSecretStore(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var store = new FileSystemSecretStore(logger, directory, file, SpecialPaths);
 
-        specialDirectories.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
+        SpecialPaths.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
 
         directory.EnumerateFilesAsync(Path.Combine("quackview-test", "secrets")).Returns(
             new[] {
@@ -149,11 +149,11 @@ public sealed class FileSystemSecretStoreTests
         var logger = Substitute.For<ILogger<FileSystemSecretStore>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var store = new FileSystemSecretStore(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var store = new FileSystemSecretStore(logger, directory, file, SpecialPaths);
         var input = "This string has no secrets.";
 
-        specialDirectories.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
+        SpecialPaths.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
 
         // Act
         var result = await store.ExpandSecretsAsync(input);
@@ -168,11 +168,11 @@ public sealed class FileSystemSecretStoreTests
         var logger = Substitute.For<ILogger<FileSystemSecretStore>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var store = new FileSystemSecretStore(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var store = new FileSystemSecretStore(logger, directory, file, SpecialPaths);
         var input = "This is $^{MissingKey}.";
 
-        specialDirectories.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
+        SpecialPaths.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
         
         // Act & Assert
         await Assert.ThrowsExceptionAsync<KeyNotFoundException>(async () => await store.ExpandSecretsAsync(input));

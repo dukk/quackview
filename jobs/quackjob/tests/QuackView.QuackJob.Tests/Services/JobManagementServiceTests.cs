@@ -17,8 +17,8 @@ internal class JobManagementServiceTests
         var logger = Substitute.For<ILogger<JobManagementService>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var jobManagementService = new JobManagementService(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
         var jobFiles = new string[] { "job1.json", "job2.json", "job3.json" };
 
         directory.EnumerateFilesAsync(Path.Combine("quackview-tests", "jobs")).Returns(jobFiles);
@@ -37,8 +37,8 @@ internal class JobManagementServiceTests
         var logger = Substitute.For<ILogger<JobManagementService>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var jobManagementService = new JobManagementService(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
 
         file.ExistsAsync(Arg.Any<string>()).Returns(true);
         file.ReadAllTextAsync(Arg.Any<string>()).Returns(Task.FromResult(getJobFileContentWithNoConfig()));
@@ -57,8 +57,8 @@ internal class JobManagementServiceTests
         var logger = Substitute.For<ILogger<JobManagementService>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var jobManagementService = new JobManagementService(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
 
         file.ExistsAsync(Arg.Any<string>()).Returns(true);
         file.ReadAllTextAsync(Arg.Any<string>()).Returns(Task.FromResult(getJobFileContentWithConfig()));
@@ -77,11 +77,11 @@ internal class JobManagementServiceTests
         var logger = Substitute.For<ILogger<JobManagementService>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var jobManagementService = new JobManagementService(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
 
         file.ExistsAsync(Arg.Any<string>()).Returns(false);
-        specialDirectories.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
+        SpecialPaths.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
 
         // Act
         var jobFile = this.getJobFileWithNoConfig();
@@ -101,11 +101,11 @@ internal class JobManagementServiceTests
         var logger = Substitute.For<ILogger<JobManagementService>>();
         var directory = Substitute.For<IDirectoryService>();
         var file = Substitute.For<IFileService>();
-        var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var jobManagementService = new JobManagementService(logger, directory, file, specialDirectories);
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
 
         file.ExistsAsync(Arg.Any<string>()).Returns(false);
-        specialDirectories.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
+        SpecialPaths.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
 
         // Act
         var jobFile = this.getJobFileWithConfig();
@@ -124,10 +124,10 @@ internal class JobManagementServiceTests
         // Arrange
         var logger = Substitute.For<ILogger<JobManagementService>>();
         var directory = Substitute.For<IDirectoryService>();
-        var file = Substitute.For<IFileService>();var specialDirectories = Substitute.For<ISpecialDirectories>();
-        var jobManagementService = new JobManagementService(logger, directory, file, specialDirectories);
+        var file = Substitute.For<IFileService>();var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
 
-        specialDirectories.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
+        SpecialPaths.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
 
         // Act
         await jobManagementService.DeleteJobFileAsync("test-job.json");

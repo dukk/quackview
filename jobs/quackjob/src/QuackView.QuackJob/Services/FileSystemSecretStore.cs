@@ -15,7 +15,7 @@ internal partial class FileSystemSecretStore(
     ILogger<FileSystemSecretStore> logger,
     IDirectoryService directory,
     IFileService file,
-    ISpecialDirectories specialDirectories) : ISecretStore
+    ISpecialPaths SpecialPaths) : ISecretStore
 {
     // This isn't great security but it's better than nothing...
 
@@ -32,7 +32,7 @@ internal partial class FileSystemSecretStore(
     protected readonly ILogger<FileSystemSecretStore> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
     protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
-    protected readonly ISpecialDirectories SpecialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
+    protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
 
     public async Task<string> GetSecretAsync(string key)
@@ -42,7 +42,7 @@ internal partial class FileSystemSecretStore(
 
         this.Logger.LogDebug("Retrieving secret for key: {Key}", key);
 
-        var secretFilePath = Path.Combine(await this.SpecialDirectories.GetSecretsDirectoryPathAsync(), $"{key}.secret");
+        var secretFilePath = Path.Combine(await this.SpecialPaths.GetSecretsDirectoryPathAsync(), $"{key}.secret");
 
         if (!await this.File.ExistsAsync(secretFilePath))
             throw new KeyNotFoundException("Unknown secret.");
@@ -58,7 +58,7 @@ internal partial class FileSystemSecretStore(
 
         this.Logger.LogDebug("Setting secret for key: {Key}", key);
 
-        var secretFilePath = Path.Combine(await this.SpecialDirectories.GetSecretsDirectoryPathAsync(), $"{key}.secret");
+        var secretFilePath = Path.Combine(await this.SpecialPaths.GetSecretsDirectoryPathAsync(), $"{key}.secret");
 
         if (!overwrite && await this.File.ExistsAsync(secretFilePath))
             throw new ArgumentException("Secret already exists and overwrite is set to false.", nameof(key));
@@ -71,7 +71,7 @@ internal partial class FileSystemSecretStore(
         if (string.IsNullOrEmpty(input))
             return input;
 
-        var files = await this.Directory.EnumerateFilesAsync(await this.SpecialDirectories.GetSecretsDirectoryPathAsync());
+        var files = await this.Directory.EnumerateFilesAsync(await this.SpecialPaths.GetSecretsDirectoryPathAsync());
 
         foreach (var file in files)
         {

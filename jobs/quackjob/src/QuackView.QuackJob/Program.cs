@@ -29,11 +29,16 @@ internal class Program(
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNameCaseInsensitive = true,
+        UnknownTypeHandling = JsonUnknownTypeHandling.JsonElement,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip
     };
 
-    public const string SOLUTION_NAME = "TDDashboard";
-    public const string APP_NAME = "TDDQuackJob";
+    public const string SolutionName = "Quack View";
+    public const string SolutionPathName = "quackview";
+    public const string ApplicationName = "Quack Jobs";
+    public const string ApplicationPathName = "quackjob";
 
     protected readonly ILogger<Program> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     protected readonly IServiceProvider ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
@@ -131,7 +136,7 @@ internal class Program(
 
     internal static void ComposeServices(IServiceCollection services)
     {
-        services.AddSingleton<ISpecialDirectories, SpecialDirectories>();
+        services.AddSingleton<ISpecialPaths, SpecialPaths>();
         services.AddSingleton<IFileService, FileService>();
         services.AddSingleton<IDataFileService, DataFileService>();
         services.AddSingleton<IDirectoryService, DirectoryService>();
@@ -161,15 +166,16 @@ internal class Program(
     }
 
     [Conditional("DEBUG")]
+    [ExcludeFromCodeCoverage]
     internal static void ComposeDebugInjectionPoint(IServiceCollection services,
         [CallerFilePath] string sourceFilePath = "")
     {
         System.Console.WriteLine($"ComposeDebugInjectionPoint: sourceFilePath = '{sourceFilePath}'");
 
         services.RemoveAll<IProgram>();
-        services.RemoveAll<ISpecialDirectories>();
+        services.RemoveAll<ISpecialPaths>();
 
         services.AddSingleton<IProgram, ProgramInDebugMode>();
-        services.AddSingleton<ISpecialDirectories, DebugSpecialDirectories>();
+        services.AddSingleton<ISpecialPaths, DebugSpecialPaths>();
     }
 }

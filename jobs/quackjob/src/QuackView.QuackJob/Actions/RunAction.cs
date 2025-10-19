@@ -7,15 +7,20 @@ using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Actions;
 
-internal class RunAction(ILogger<RunAction> logger, ICommandLineParser commandLineParser,
-    IServiceProvider serviceProvider, IFileService file, IConsoleService console, ISpecialDirectories specialDirectories) : Action(console)
+internal class RunAction(
+    ILogger<RunAction> logger,
+    ICommandLineParser commandLineParser,
+    IServiceProvider serviceProvider,
+    IFileService file,
+    IConsoleService console,
+    ISpecialPaths SpecialPaths) 
+    : Action(logger, console)
 {
-    protected readonly ILogger<RunAction> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly new ILogger<RunAction> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     protected readonly ICommandLineParser CommandLineParser = commandLineParser ?? throw new ArgumentNullException(nameof(commandLineParser));
     protected readonly IServiceProvider ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
-    protected readonly IConsoleService Console = console ?? throw new ArgumentNullException(nameof(console));
-    protected readonly ISpecialDirectories SpecialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
+    protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
     public override async Task ExecuteAsync(string[] args)
     {
@@ -25,7 +30,7 @@ internal class RunAction(ILogger<RunAction> logger, ICommandLineParser commandLi
 
         if (parsedArgs.TryGetValue("job", out var jobPath))
         {
-            Console.WriteLine($"Using job file: {jobPath}");
+            this.Console.WriteLine($"Using job file: {jobPath}");
 
             if (String.IsNullOrWhiteSpace(jobPath))
                 throw new Exception($"Invalid job file '{jobPath}'.");
@@ -37,14 +42,14 @@ internal class RunAction(ILogger<RunAction> logger, ICommandLineParser commandLi
 
                 if (string.IsNullOrWhiteSpace(jobDirectory))
                 {
-                    jobDirectory = await this.SpecialDirectories.GetJobsDirectoryPathAsync();
+                    jobDirectory = await this.SpecialPaths.GetJobsDirectoryPathAsync();
                     jobPath = Path.Combine(jobDirectory, jobPath);
                 }
             }
 
             var jobFileContent = await this.File.ReadAllTextAsync(jobPath);
             var jobFile = JsonDocument.Parse(jobFileContent);
-            var jobMetadata = jobFile.RootElement.GetProperty("job");
+            var jobMetadata = jobFile.RootElement.GetProperty("metadata");
 
             runnerName = jobMetadata.GetProperty("runner").GetString();
             jsonConfig = jobFile.RootElement.GetProperty("config");
@@ -58,7 +63,7 @@ internal class RunAction(ILogger<RunAction> logger, ICommandLineParser commandLi
 
             if (parsedArgs.TryGetValue("config", out configPath))
             {
-                console.WriteLine($"Using config file: {configPath}");
+                this.Console.WriteLine($"Using config file: {configPath}");
 
                 if (String.IsNullOrWhiteSpace(configPath))
                     throw new Exception($"Invalid config file path '{configPath}'.");
@@ -70,7 +75,7 @@ internal class RunAction(ILogger<RunAction> logger, ICommandLineParser commandLi
         if (runnerName.IsNullOrEmpty())
             throw new Exception("Error: Unspecified job runner.");
 
-        Console.WriteLine($"Using job runner: {runnerName}");
+        this.Console.WriteLine($"Using job runner: {runnerName}");
 
         var jobRunner = this.ServiceProvider.GetServices<IJobRunner>()
             .FirstOrDefault(j => j.Name.Equals(runnerName, StringComparison.OrdinalIgnoreCase));

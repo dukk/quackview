@@ -13,11 +13,11 @@ internal class ProgramInDebugMode(
     ILogger<ProgramInDebugMode> logger,
     IServiceProvider serviceProvider,
     IConsoleService console,
-    ISpecialDirectories specialDirectories) 
+    ISpecialPaths SpecialPaths) 
     : Program(logger, serviceProvider, console)
 {
     protected readonly string QuackviewOverridePath = ProgramInDebugMode.GetQuackviewOverridePath();
-    protected readonly ISpecialDirectories SpecialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
+    protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
     public override Task<int> Run(string[] args)
     {
@@ -26,10 +26,29 @@ internal class ProgramInDebugMode(
 
         System.Console.WriteLine("RUNNING IN DEBUG MODE USER INPUT COULD BE OVERWRITTEN!!!");
 
+        // TODO: Should really move all of this to unit tests (or integration tests?)...
+
+        // Run Jobs:
         //args = ["run", "--job=\"build-image-file-list.json\""];
         //args = ["run", "--job=\"open-ai-prompt.json\""];
-        args = ["run", "--job=\"upcoming-calendar-events.json\""];
+        //args = ["run", "--job=\"upcoming-calendar-events.json\""];
+        //args = ["run", "--job=\"dad-jokes.json\""];
         //args = ["run", "--job=\"clear-expired-alerts.json\""];
+
+        // Rebuild Schedule:
+        args = ["rebuild-schedule"];
+
+        // Help:
+        //args = ["help"];
+        //args = ["help", "run"];
+        //args = ["help", "list"];
+        //args = ["help", "new"];
+
+        // List Job Runners (change to 'list-runners'?)
+        args = ["list"];
+
+        // New Jobs  (change to 'new-job'?)
+        args = ["new"];
 
         System.Console.WriteLine($"ARGS: {string.Join(' ', args)}");
         System.Console.ResetColor();
@@ -41,8 +60,6 @@ internal class ProgramInDebugMode(
 
     public void EnsureDebugFiles()
     {
-        // TODO: Should really move all of this to unit tests (or integration tests?)...
-
         if (!Directory.Exists(this.QuackviewOverridePath))
             Directory.CreateDirectory(this.QuackviewOverridePath);
 
@@ -170,11 +187,11 @@ internal class ProgramInDebugMode(
 }
 
 [ExcludeFromCodeCoverage]
-internal class DebugSpecialDirectories : SpecialDirectories
+internal class DebugSpecialPaths : SpecialPaths
 {
     protected readonly string QuackviewOverridePath;
 
-    public DebugSpecialDirectories(ILogger<SpecialDirectories> logger, IDirectoryService directory)
+    public DebugSpecialPaths(ILogger<SpecialPaths> logger, IDirectoryService directory)
         : base(logger, directory)
     {
         /* Cannot use the primary constructor here because the code generation will 

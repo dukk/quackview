@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Actions;
@@ -13,9 +14,10 @@ internal interface IAction
     bool MatchesActionName(string actionName);
 }
 
-internal abstract partial class Action(IConsoleService console) : IAction
+internal abstract partial class Action(ILogger<Action> logger, IConsoleService console) : IAction
 {
-    protected IConsoleService console = console ?? throw new ArgumentNullException(nameof(console));
+    protected IConsoleService Console = console ?? throw new ArgumentNullException(nameof(console));
+    protected ILogger<Action> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     [GeneratedRegex("([A-Z])")]
     private static partial Regex nameRegex();
@@ -42,8 +44,8 @@ internal abstract partial class Action(IConsoleService console) : IAction
 
     public virtual void DisplayHelp()
     {
-        Console.WriteLine($"Action: {this.Name}");
-        Console.WriteLine("No additional help available.");
+        this.Console.WriteLine($"Action: {this.Name}");
+        this.Console.WriteLine("No additional help available.");
     }
 
     public bool MatchesActionName(string actionName)

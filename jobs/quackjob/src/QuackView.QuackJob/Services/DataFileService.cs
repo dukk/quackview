@@ -25,7 +25,7 @@ internal class DataFileService(
     ILogger<DataFileService> logger,
     IFileService file,
     IDataDirectoryService directory,
-    ISpecialDirectories specialDirectories) 
+    ISpecialPaths SpecialPaths) 
     : IDataFileService
 {
     public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = Program.DefaultJsonSerializerOptions;
@@ -33,7 +33,7 @@ internal class DataFileService(
     protected readonly ILogger<DataFileService> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
     protected readonly IDataDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
-    protected readonly ISpecialDirectories SpecialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
+    protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
     public async Task<bool> ExistsAsync(string path)
     {
@@ -187,6 +187,6 @@ internal class DataFileService(
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative", nameof(path));
 
-        return Path.Combine(await this.SpecialDirectories.GetDataDirectoryPathAsync(), path);
+        return Path.Combine(await this.SpecialPaths.GetDataDirectoryPathAsync(), path);
     }
 }

@@ -14,16 +14,16 @@ internal interface IJobManagementService
 }
 
 internal class JobManagementService(ILogger<JobManagementService> logger,
-    IDirectoryService directory, IFileService file, ISpecialDirectories specialDirectories) : IJobManagementService
+    IDirectoryService directory, IFileService file, ISpecialPaths SpecialPaths) : IJobManagementService
 {
     protected readonly ILogger<JobManagementService> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
     protected readonly IFileService FileService = file ?? throw new ArgumentNullException(nameof(file));
-    protected readonly ISpecialDirectories SpecialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
+    protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
     public async Task<IEnumerable<string>> GetAvailableJobFilesAsync()
     {
-        return await this.Directory.EnumerateFilesAsync(await this.SpecialDirectories.GetJobsDirectoryPathAsync(), "*.json");
+        return await this.Directory.EnumerateFilesAsync(await this.SpecialPaths.GetJobsDirectoryPathAsync(), "*.json");
     }
 
     public async Task<JobFile<TConfig>> LoadJobFileAsync<TConfig>(string path)
@@ -31,7 +31,7 @@ internal class JobManagementService(ILogger<JobManagementService> logger,
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative.", nameof(path));
 
-        path = Path.Combine(await this.SpecialDirectories.GetJobsDirectoryPathAsync(), path);
+        path = Path.Combine(await this.SpecialPaths.GetJobsDirectoryPathAsync(), path);
 
         if (!await this.FileService.ExistsAsync(path))
             throw new FileNotFoundException("Job file not found.", path);
@@ -48,7 +48,7 @@ internal class JobManagementService(ILogger<JobManagementService> logger,
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative.", nameof(path));
 
-        path = Path.Combine(await this.SpecialDirectories.GetJobsDirectoryPathAsync(), path);
+        path = Path.Combine(await this.SpecialPaths.GetJobsDirectoryPathAsync(), path);
 
         if (await this.FileService.ExistsAsync(path) && !overwrite)
             throw new FileNotFoundException("Job file already exists and overwrite was not specified.", path);
@@ -65,7 +65,7 @@ internal class JobManagementService(ILogger<JobManagementService> logger,
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative.", nameof(path));
 
-        path = Path.Combine(await this.SpecialDirectories.GetJobsDirectoryPathAsync(), path);
+        path = Path.Combine(await this.SpecialPaths.GetJobsDirectoryPathAsync(), path);
 
         await this.FileService.DeleteFileAsync(path);
     }
