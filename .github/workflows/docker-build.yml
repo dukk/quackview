@@ -30,15 +30,8 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore
-        run: dotnet restore "${{ env.QUACKJOB_SOLUTION }}"
-
-      - name: Publish QuackJob linux-x64
-        run: |
-          dotnet publish "${{ env.QUACKJOB_SOLUTION }}" \
-            -c Release \
-            -r "linux-x64" \
-            -f "${{ env.FRAMEWORK }}"
+      - name: Restore with RuntimeIdentifiers (linux-x64; win-x64)
+        run: dotnet restore "${{ env.QUACKJOB_SOLUTION }}" -p:RuntimeIdentifiers="linux-x64;win-x64"
 
       - name: Run unit tests
         run: dotnet test "${{ env.QUACKJOB_SOLUTION }}" -c Release --no-restore --logger "trx;LogFileName=test-results.trx"
@@ -51,6 +44,13 @@ jobs:
           path: "**/TestResults/*.trx"
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: Publish QuackJob linux-x64
+        run: |
+          dotnet publish "${{ env.QUACKJOB_SOLUTION }}" \
+            -c Release \
+            -r "linux-x64" \
+            -f "${{ env.FRAMEWORK }}"
 
       - name: Copy files to dist so the rest of the script can find them
         run: |
