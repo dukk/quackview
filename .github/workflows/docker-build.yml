@@ -41,7 +41,7 @@ jobs:
             -f "${{ env.FRAMEWORK }}"
 
       - name: Run unit tests
-        run: dotnet test "${{ env.QUACKJOB_SOLUTION }}" -c Release --no-restore --logger "trx;LogFileName=test-results.trx" -collect:"Code Coverage"
+        run: dotnet test "${{ env.QUACKJOB_SOLUTION }}" -c Release --no-restore --logger "trx;LogFileName=test-results.trx"
 
       - name: Upload test results
         if: always()
