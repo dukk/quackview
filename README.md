@@ -2,6 +2,12 @@
 
 This is a project I started to replace my Dakboard dashboard display. It was intended to be more of a quick and dirty solution. We'll see where it goes. It's really intended just for myself to play around. Perhaps it'll become useful to someone...
 
+I'm still debating the name. I might change it to one of these:
+
+- QuackDash
+- QuackBoard
+- ???
+
 ## Features
 
 - Designed to be self hosted and personalized
