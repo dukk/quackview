@@ -5,17 +5,19 @@ RUN apk update && apk upgrade
 RUN apk add --no-cache \
         ca-certificates \
         curl \
-        cronie
+        cronie \
+        dos2unix
 
 ENV QUACKVIEW_DIR=/quackview/
 
 RUN adduser -D -h /home/quackjob -s /bin/sh quackjob
 
 COPY container/scripts/docker-entrypoint.sh /docker-entrypoint.sh
+RUN dos2unix /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
+
 RUN mkdir -p /etc/docker-entrypoint.d
 COPY container/scripts/docker-entrypoint.d/* /etc/docker-entrypoint.d/
-RUN chmod +x /docker-entrypoint.sh
-RUN chmod +x /etc/docker-entrypoint.d/*.sh
+RUN dos2unix /etc/docker-entrypoint.d/*.sh && chmod +x /etc/docker-entrypoint.d/*.sh
 
 COPY container/template/* /quackview-template/
 COPY dist/bin/appsettings.json /quackview-template/config/quackjob.json
