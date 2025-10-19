@@ -28,7 +28,7 @@ internal class RebuildScheduleAction(ILogger<RebuildScheduleAction> logger, ICro
             try
             {
                 var json = File.ReadAllText(file);
-                var jobFile = JsonSerializer.Deserialize<JobFile>(json);
+                var jobFile = JsonSerializer.Deserialize<JobFile<object>>(json);
 
                 if (jobFile == null || string.IsNullOrWhiteSpace(jobFile.Metadata.Schedule))
                 {

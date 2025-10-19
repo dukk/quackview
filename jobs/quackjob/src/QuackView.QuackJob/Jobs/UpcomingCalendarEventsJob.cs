@@ -1,11 +1,8 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using TypoDukk.QuackView.QuackJob.Services;
-using Microsoft.Graph;
-using Microsoft.Graph.Models;
 using Microsoft.IdentityModel.Tokens;
 using TypoDukk.QuackView.QuackJob.Data;
-using Microsoft.IdentityModel.Protocols.Configuration;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
@@ -18,9 +15,10 @@ internal class UpcomingCalendarEventsJob(
     private readonly IOutlookCalendarEventService outlookCalendarEventService = outlookCalendarEventService ?? throw new ArgumentNullException(nameof(outlookCalendarEventService));
     private readonly IDataFileService dataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
 
-    public override async Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null)
+    public override async Task ExecuteAsync(JsonElement? jsonConfig = null)
     {
-        var config = await this.LoadJsonConfigAsync<UpcomingCalendarEventsJobConfig>(configFile);
+        var config = this.LoadJsonConfig<UpcomingCalendarEventsJobConfig>(jsonConfig)
+            ?? throw new ArgumentException("Invalid job configuration.", nameof(jsonConfig));
 
         if (config.Accounts.IsNullOrEmpty())
             throw new ArgumentException("Invalid job configuration. No accounts specified.", nameof(config));

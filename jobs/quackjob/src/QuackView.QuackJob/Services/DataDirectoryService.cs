@@ -8,7 +8,6 @@ namespace TypoDukk.QuackView.QuackJob.Services;
 
 internal interface IDataDirectoryService
 {
-    Task<string> GetDataDirectoryPathAsync();
     Task<bool> ExistsAsync(string path);
     Task<IEnumerable<string>> EnumerateFilesAsync(string path, string searchPattern = "*", bool includeSubdirectories = false);
 }
@@ -37,21 +36,5 @@ internal class DataDirectoryService(ILogger<DataDirectoryService> logger, IDirec
             throw new ArgumentException("Path must be relative.", nameof(path));
 
         return await directory.EnumerateFilesAsync(path, searchPattern, includeSubdirectories);
-    }
-
-    public async Task<string> GetDataDirectoryPathAsync()
-    {
-        var dataDir = Environment.GetEnvironmentVariable("QUACKVIEW_DIR") ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(dataDir))
-            dataDir = Path.Combine(dataDir, "data");
-
-        if (string.IsNullOrEmpty(dataDir))
-            dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "QuackView", "QuackJob", "Data");
-
-        await directory.CreateDirectoryAsync(dataDir);
-
-        return dataDir;
     }
 }

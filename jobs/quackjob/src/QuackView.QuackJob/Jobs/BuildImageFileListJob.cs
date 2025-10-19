@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using TypoDukk.QuackView.QuackJob.Services;
 using TypoDukk.QuackView.QuackJob.Data;
+using System.Text.Json;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
@@ -11,12 +12,13 @@ internal class BuildImageFileListJob(ILogger<BuildImageFileListJob> logger, IDat
     private readonly IDataFileService dataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
     private readonly IDataDirectoryService dataDirectoryService = dataDirectoryService ?? throw new ArgumentNullException(nameof(dataDirectoryService));
 
-    public override async Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null)
+    public override async Task ExecuteAsync(JsonElement? jsonConfig = null)
     {
-        var config = await this.LoadJsonConfigAsync<BuildImageFileListJobConfig>(configFile);
+        var config = this.LoadJsonConfig<BuildImageFileListJobConfig>(jsonConfig)
+            ?? throw new ArgumentException("Invalid job configuration.", nameof(jsonConfig));
 
         if (string.IsNullOrWhiteSpace(config.DirectoryPath))
-            throw new ArgumentException("Invalid job configuration. DirectoryPath is required.", nameof(configFile));
+            throw new ArgumentException("Invalid job configuration. DirectoryPath is required.", nameof(config.DirectoryPath));
 
         logger.LogInformation("Executing build file list job.");
 
@@ -25,8 +27,8 @@ internal class BuildImageFileListJob(ILogger<BuildImageFileListJob> logger, IDat
         {
             Metadata = new ImageFileListMetadata
             {
-                Created = DateTime.UtcNow,
-                LastUpdated = DateTime.UtcNow,
+                Created = DateTime.Now,
+                LastUpdated = DateTime.Now,
                 Sources = new List<string> { config.DirectoryPath },
                 SearchPattern = config.SearchPattern
             },

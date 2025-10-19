@@ -8,54 +8,54 @@ namespace TypoDukk.QuackView.QuackJob.Services;
 internal interface IJobManagementService
 {
     Task<IEnumerable<string>> GetAvailableJobFilesAsync();
-    Task<JobFile> LoadJobFileAsync(string path);
-    Task SaveJobFileAsync(string path, JobFile jobFile, bool overwrite = false);
+    Task<JobFile<TConfig>> LoadJobFileAsync<TConfig>(string path);
+    Task SaveJobFileAsync<TConfig>(string path, JobFile<TConfig> jobFile, bool overwrite = false);
     Task DeleteJobFileAsync(string path);
-    string GetJobsDirectory();
 }
 
 internal class JobManagementService(ILogger<JobManagementService> logger,
-    IDirectoryService directory, IFileService file) : IJobManagementService
+    IDirectoryService directory, IFileService file, ISpecialDirectories specialDirectories) : IJobManagementService
 {
-    private readonly ILogger<JobManagementService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IDirectoryService directory = directory ?? throw new ArgumentNullException(nameof(directory));
-    private readonly IFileService fileService = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly ILogger<JobManagementService> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
+    protected readonly IFileService FileService = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly ISpecialDirectories SpecialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
 
     public async Task<IEnumerable<string>> GetAvailableJobFilesAsync()
     {
-        return await this.directory.EnumerateFilesAsync(this.GetJobsDirectory(), "*.json");
+        return await this.Directory.EnumerateFilesAsync(await this.SpecialDirectories.GetJobsDirectoryPathAsync(), "*.json");
     }
 
-    public async Task<JobFile> LoadJobFileAsync(string path)
+    public async Task<JobFile<TConfig>> LoadJobFileAsync<TConfig>(string path)
     {
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative.", nameof(path));
 
-        path = Path.Combine(this.GetJobsDirectory(), path);
+        path = Path.Combine(await this.SpecialDirectories.GetJobsDirectoryPathAsync(), path);
 
-        if (!await this.fileService.ExistsAsync(path))
+        if (!await this.FileService.ExistsAsync(path))
             throw new FileNotFoundException("Job file not found.", path);
 
-        var content = await this.fileService.ReadAllTextAsync(path);
-        var jobFile = JsonSerializer.Deserialize<JobFile>(content)
+        var content = await this.FileService.ReadAllTextAsync(path);
+        var jobFile = JsonSerializer.Deserialize<JobFile<TConfig>>(content)
             ?? throw new ArgumentException("Failed to read job file. Do you have a JSON syntax error?", nameof(path));
 
         return jobFile;
     }
 
-    public async Task SaveJobFileAsync(string path, JobFile jobFile, bool overwrite = false)
+    public async Task SaveJobFileAsync<TConfig>(string path, JobFile<TConfig> jobFile, bool overwrite = false)
     {
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative.", nameof(path));
 
-        path = Path.Combine(this.GetJobsDirectory(), path);
+        path = Path.Combine(await this.SpecialDirectories.GetJobsDirectoryPathAsync(), path);
 
-        if (await this.fileService.ExistsAsync(path) && !overwrite)
+        if (await this.FileService.ExistsAsync(path) && !overwrite)
             throw new FileNotFoundException("Job file already exists and overwrite was not specified.", path);
 
         var content = JsonSerializer.Serialize(jobFile);
 
-        await this.fileService.WriteAllTextAsync(path, content);
+        await this.FileService.WriteAllTextAsync(path, content);
     }
 
      public async Task DeleteJobFileAsync(string path)
@@ -65,16 +65,8 @@ internal class JobManagementService(ILogger<JobManagementService> logger,
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative.", nameof(path));
 
-        path = Path.Combine(this.GetJobsDirectory(), path);
+        path = Path.Combine(await this.SpecialDirectories.GetJobsDirectoryPathAsync(), path);
 
-        await fileService.DeleteFileAsync(path);
-    }
-
-    public string GetJobsDirectory()
-    {
-        var quackviewDir = Environment.GetEnvironmentVariable("QUACKVIEW_DIR")
-            ?? throw new InvalidOperationException("Missing QUACKVIEW_DIR env var.");
-
-        return Path.Combine(quackviewDir, "jobs");
+        await this.FileService.DeleteFileAsync(path);
     }
 } 

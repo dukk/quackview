@@ -9,17 +9,11 @@ internal interface IJobRunner
 {
     string Name { get; }
     string Description { get; }
-    Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null);
+    Task ExecuteAsync(JsonElement? jsonConfig);
 }
 
 internal abstract partial class JobRunner : IJobRunner
 {
-    public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        AllowTrailingCommas = true
-    };
-
     [GeneratedRegex("([A-Z])")]
     private static partial Regex nameRegex();
 
@@ -41,21 +35,22 @@ internal abstract partial class JobRunner : IJobRunner
         return name.Trim('-');
     }
 
-    public abstract Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null);
+    public abstract Task ExecuteAsync(JsonElement? jsonConfig = null);
 
-    protected virtual async Task<TConfig> LoadJsonConfigAsync<TConfig>(string? configFile, JsonSerializerOptions? options = null)
+    protected virtual TConfig LoadJsonConfig<TConfig>(JsonElement? jsonConfig, JsonSerializerOptions? options = null)
     {
-        if (string.IsNullOrWhiteSpace(configFile))
-            throw new ArgumentNullException(nameof(configFile));
+        if (!jsonConfig.HasValue)
+            throw new ArgumentNullException(nameof(jsonConfig));
 
-        if (!File.Exists(configFile))
-            throw new FileNotFoundException($"Config file '{configFile}' not found.", configFile);
+        return this.LoadJsonConfig<TConfig>(jsonConfig.Value, options);
+    }
 
-        options ??= DefaultJsonSerializerOptions;
+    protected virtual TConfig LoadJsonConfig<TConfig>(JsonElement jsonConfig, JsonSerializerOptions? options = null)
+    {
+        options ??= Program.DefaultJsonSerializerOptions;
 
-        var configJson = await File.ReadAllTextAsync(configFile);
-        var config = JsonSerializer.Deserialize<TConfig>(configJson, options)
-            ?? throw new InvalidOperationException($"Failed to deserialize config file '{configFile}' to type '{typeof(TConfig).FullName}'.");
+        var config = JsonSerializer.Deserialize<TConfig>(jsonConfig, options)
+            ?? throw new InvalidOperationException($"Failed to deserialize config JSON.");
 
         return config;
     }

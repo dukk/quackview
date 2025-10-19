@@ -1,47 +1,83 @@
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using TypoDukk.QuackView.QuackJob.Jobs;
 using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Actions;
 
 internal class RunAction(ILogger<RunAction> logger, ICommandLineParser commandLineParser,
-    IServiceProvider serviceProvider, IConsoleService console) : Action(console)
+    IServiceProvider serviceProvider, IFileService file, IConsoleService console, ISpecialDirectories specialDirectories) : Action(console)
 {
-    private readonly ILogger<RunAction> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly ICommandLineParser commandLineParser = commandLineParser ?? throw new ArgumentNullException(nameof(commandLineParser));
-    private readonly IServiceProvider serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    protected readonly ILogger<RunAction> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly ICommandLineParser CommandLineParser = commandLineParser ?? throw new ArgumentNullException(nameof(commandLineParser));
+    protected readonly IServiceProvider ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly IConsoleService Console = console ?? throw new ArgumentNullException(nameof(console));
+    protected readonly ISpecialDirectories SpecialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
 
     public override async Task ExecuteAsync(string[] args)
     {
-        var parsedArgs = this.commandLineParser.ParseArgs(args);
+        var runnerName = string.Empty;
+        JsonElement? jsonConfig = null;
+        var parsedArgs = this.CommandLineParser.ParseArgs(args);
 
-        if (!parsedArgs.TryGetValue("job", out var jobFile) || string.IsNullOrEmpty(jobFile))
+        if (parsedArgs.TryGetValue("job", out var jobPath))
         {
-            
+            Console.WriteLine($"Using job file: {jobPath}");
+
+            if (String.IsNullOrWhiteSpace(jobPath))
+                throw new Exception($"Invalid job file '{jobPath}'.");
+
+            // If no directory is specified and the file doesn't exist look for it in the job directory too
+            if (!await this.File.ExistsAsync(jobPath))
+            {
+                var jobDirectory = Path.GetDirectoryName(jobPath);
+
+                if (string.IsNullOrWhiteSpace(jobDirectory))
+                {
+                    jobDirectory = await this.SpecialDirectories.GetJobsDirectoryPathAsync();
+                    jobPath = Path.Combine(jobDirectory, jobPath);
+                }
+            }
+
+            var jobFileContent = await this.File.ReadAllTextAsync(jobPath);
+            var jobFile = JsonDocument.Parse(jobFileContent);
+            var jobMetadata = jobFile.RootElement.GetProperty("job");
+
+            runnerName = jobMetadata.GetProperty("runner").GetString();
+            jsonConfig = jobFile.RootElement.GetProperty("config");
+        }
+        else
+        {
+            if (!parsedArgs.TryGetValue("runner", out runnerName) || string.IsNullOrEmpty(runnerName))
+                throw new Exception("No job runner specified. Use --runner <runner-name> to specify a job runner to run.");
+
+            string? configPath = null!;
+
+            if (parsedArgs.TryGetValue("config", out configPath))
+            {
+                console.WriteLine($"Using config file: {configPath}");
+
+                if (String.IsNullOrWhiteSpace(configPath))
+                    throw new Exception($"Invalid config file path '{configPath}'.");
+
+                jsonConfig = JsonDocument.Parse(await this.File.ReadAllTextAsync(configPath)).RootElement;
+            }
         }
 
-        if (!parsedArgs.TryGetValue("runner", out var runnerName) || string.IsNullOrEmpty(runnerName))
-        {
-            console.WriteError("Error: No job runner specified. Use --runner <runner-name> to specify a job runner to run.");
-            return;
-        }
+        if (runnerName.IsNullOrEmpty())
+            throw new Exception("Error: Unspecified job runner.");
 
-        console.WriteLine($"Using job runner: {runnerName}");
+        Console.WriteLine($"Using job runner: {runnerName}");
 
-        var job = this.serviceProvider.GetServices<IJobRunner>()
+        var jobRunner = this.ServiceProvider.GetServices<IJobRunner>()
             .FirstOrDefault(j => j.Name.Equals(runnerName, StringComparison.OrdinalIgnoreCase));
 
-        if (job == null)
-        {
-            console.WriteError($"Error: Job runner '{runnerName}' not found.");
-            return;
-        }
-
-        string? configFile = null!;
-        if (parsedArgs.TryGetValue("config", out configFile) && !string.IsNullOrEmpty(configFile))
-            console.WriteLine($"Using config file: {configFile}");
+        if (jobRunner == null)
+            throw new Exception($"Job runner '{runnerName}' not found.");
         
-        await job.ExecuteAsync(configFile, parsedArgs);
+        await jobRunner.ExecuteAsync(jsonConfig);
     }
 }

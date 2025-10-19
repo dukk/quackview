@@ -21,10 +21,12 @@ internal class CalendarEventCalendar
     public string? Name { get; set; }
 }
 
-internal class OutlookCalendarEventService(ILogger<OutlookCalendarEventService> logger, IGraphService graphService) : IOutlookCalendarEventService
+internal class OutlookCalendarEventService(ILogger<OutlookCalendarEventService> logger, IMicrosoftGraphService graphService) : IOutlookCalendarEventService
 {
+    private static readonly string[] DefaultGraphScopes = new string[] { "User.Read", "Calendars.Read" };
+
     private readonly ILogger<OutlookCalendarEventService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IGraphService graphService = graphService ?? throw new ArgumentNullException(nameof(graphService));
+    private readonly IMicrosoftGraphService graphService = graphService ?? throw new ArgumentNullException(nameof(graphService));
 
     public async Task<IEnumerable<CalendarEventCalendar>> GetCalendarsAsync(string accountName)
     {
@@ -45,7 +47,7 @@ internal class OutlookCalendarEventService(ILogger<OutlookCalendarEventService> 
                 Id = c.Id,
                 Name = c.Name ?? string.Empty
             });
-        }, accountName);
+        }, accountName, OutlookCalendarEventService.DefaultGraphScopes);
 
         return calendars ?? [];
     }
@@ -91,7 +93,7 @@ internal class OutlookCalendarEventService(ILogger<OutlookCalendarEventService> 
                         Calendar = calendar.Name,
                         Account = accountName
                     }).ToList();
-            }, accountName));
+            }, accountName, OutlookCalendarEventService.DefaultGraphScopes));
         }
             
         return allEvents.ToImmutableArray();

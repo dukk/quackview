@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using OpenAI;
 using OpenAI.Responses;
@@ -10,10 +11,10 @@ internal class OpenAiPromptJob(ILogger<OpenAiPromptJob> logger, IDataFileService
     private readonly ILogger<OpenAiPromptJob> logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IDataFileService dataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
 
-    public override async Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null)
+    public override async Task ExecuteAsync(JsonElement? jsonConfig = null)
     {
-        var config = await this.LoadJsonConfigAsync<OpenAiPromptJobConfig>(configFile)
-            ?? throw new ArgumentException("Invalid job configuration.", nameof(configFile));
+        var config = this.LoadJsonConfig<OpenAiPromptJobConfig>(jsonConfig)
+            ?? throw new ArgumentException("Invalid job configuration.", nameof(jsonConfig));
 
         if (string.IsNullOrWhiteSpace(config.Prompt))
             throw new ArgumentNullException(nameof(config), "Invalid job configuration.");

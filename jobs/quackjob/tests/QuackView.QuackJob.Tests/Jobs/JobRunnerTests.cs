@@ -1,3 +1,4 @@
+using System.Text.Json;
 using TypoDukk.QuackView.QuackJob.Jobs;
 using TypoDukk.QuackView.QuackJob.Services;
 namespace TypoDukk.QuackView.QuackJob.Tests.Jobs;
@@ -13,17 +14,17 @@ public sealed class JobRunnerTests
     }
 }
 
-internal class TestJob() : JobRunner
+internal class TestJob : JobRunner
 {
-    override public Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null)
+    public override Task ExecuteAsync(JsonElement? jsonConfig = null)
     {
         throw new NotImplementedException();
     }
 }
 
-internal class TestTestTestJob() : JobRunner
+internal class TestTestTestJob : JobRunner
 {
-    override public Task ExecuteAsync(string? configFile = null, IDictionary<string, string>? parsedArgs = null)
+    public override Task ExecuteAsync(JsonElement? jsonConfig = null)
     {
         throw new NotImplementedException();
     }

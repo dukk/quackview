@@ -21,26 +21,26 @@ internal class CronScheduler(ILogger<CronScheduler> logger) : ICronScheduler
 
     public async Task ClearAllJobsAsync()
     {
-        var crontabFile = this.getCrontabFilePath();
+        var crontabFile = this.GetCrontabFilePath();
 
-        await File.WriteAllTextAsync(crontabFile, await this.getCrontabFileTemplate());
+        await File.WriteAllTextAsync(crontabFile, await this.GetCrontabFileTemplate());
     }
 
     public async Task ScheduleAsync(CronJob job)
     {
-        var crontabFile = this.getCrontabFilePath();
+        var crontabFile = this.GetCrontabFilePath();
 
         await File.AppendAllLinesAsync(crontabFile, [$"{job.Schedule} {job.Command}"]);
     }
 
-    private async Task<string> getCrontabFileTemplate()
+    protected virtual async Task<string> GetCrontabFileTemplate()
     {
         var assembly = typeof(CronScheduler).Assembly;
         using var stream = assembly.GetManifestResourceStream("CronTemplate") ?? throw new Exception("Cron template not found.");
         using var reader = new StreamReader(stream);
         var template = await reader.ReadToEndAsync();
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        var quackjobPath = this.getQuackJobExecutablePath();
+        var quackjobPath = this.GetQuackJobExecutablePath();
         var jobsDir = Path.Combine(Environment.GetEnvironmentVariable("QUACKVIEW_DIR")
             ?? throw new InvalidOperationException("QUACKVIEW_DIR environment variable is not set."), "jobs");
 
@@ -49,13 +49,13 @@ internal class CronScheduler(ILogger<CronScheduler> logger) : ICronScheduler
             .Replace("${jobs_dir}", jobsDir, StringComparison.OrdinalIgnoreCase);
     }
 
-    private string getQuackJobExecutablePath()
+    protected virtual string GetQuackJobExecutablePath()
     {
         return Environment.ProcessPath
             ?? throw new InvalidOperationException("Unable to determine the path of the current executable.");
     }
 
-    private string getCrontabFilePath()
+    protected virtual  string GetCrontabFilePath()
     {
         var path = Environment.GetEnvironmentVariable("QUACKVIEW_DIR");
 

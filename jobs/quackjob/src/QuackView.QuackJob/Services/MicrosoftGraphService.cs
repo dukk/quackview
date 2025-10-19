@@ -4,33 +4,39 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Extensions.Msal;
+using TypoDukk.QuackView.QuackJob.Data;
 
 namespace TypoDukk.QuackView.QuackJob.Services;
 
-internal interface IGraphService
+internal interface IMicrosoftGraphService
 {
     //Task ClearCacheAsync();
     //Task GetCachePathAsync();
-    Task<T> ExecuteInContextAsync<T>(Func<GraphServiceClient, Task<T>> action, string? accountUserName = null);
+    Task<T> ExecuteInContextAsync<T>(Func<GraphServiceClient, Task<T>> action, string? accountUserName = null, string[]? scopes = null);
 }
 
-internal class GraphService(ILogger<GraphService> logger) : IGraphService
+internal class MicrosoftGraphService(ILogger<MicrosoftGraphService> logger, IAlertService alertService,
+    ISpecialDirectories specialDirectories) : IMicrosoftGraphService
 {
-    private const string DEFAULT_CLIENT_ID = "27bc410e-75a4-4bdc-9281-921f446aef52";
-    private static readonly string[] CLIENT_SCOPES = new string[] { "User.Read", "Calendars.Read" };
-    private const string DEFAULT_ACCOUNT_CACHE = "default";
+    private const string DefaultClientID = "27bc410e-75a4-4bdc-9281-921f446aef52";
+    private static readonly string[] DefaultClientScopes = new string[] { "User.Read" };
+    private const string DefaultAccountName = "_default_";
 
-    private readonly ILogger<GraphService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<MicrosoftGraphService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IAlertService alertService = alertService ?? throw new ArgumentNullException(nameof(alertService));
+    private readonly ISpecialDirectories specialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
 
-    public async Task<T> ExecuteInContextAsync<T>(Func<GraphServiceClient, Task<T>> action, string? accountUserName = null)
+    public async Task<T> ExecuteInContextAsync<T>(Func<GraphServiceClient, Task<T>> action, string? accountUserName = null, string[]? scopes = null)
     {
-        var clientId = GraphService.DEFAULT_CLIENT_ID;
+        accountUserName ??= MicrosoftGraphService.DefaultAccountName;
+
+        var clientId = MicrosoftGraphService.DefaultClientID;
         var pcaBuilder = PublicClientApplicationBuilder
                 .Create(clientId)
                 .WithAuthority(AadAuthorityAudience.AzureAdAndPersonalMicrosoftAccount)
                 .WithRedirectUri("http://localhost");
         var pca = pcaBuilder.Build();
-        var auth = await this.getAccessToken(pca, accountUserName);
+        var auth = await this.GetAccessToken(pca, accountUserName, scopes);
         var httpClient = new HttpClient();
         var clientRequestId = Guid.NewGuid().ToString();
         
@@ -39,18 +45,21 @@ internal class GraphService(ILogger<GraphService> logger) : IGraphService
 
         var graphClient = new GraphServiceClient(httpClient);
 
-        this.logger.LogDebug("Executing action in Graph context for account: {Account} using client-request-id: {ClientRequestId}", accountUserName ?? GraphService.DEFAULT_ACCOUNT_CACHE, clientRequestId);
+        this.logger.LogDebug("Executing action in Graph context for account: {Account} using client-request-id: {ClientRequestId}",
+            accountUserName, clientRequestId);
 
         return await action(graphClient);
     }
 
-    private async Task<AuthenticationResult> getAccessToken(IPublicClientApplication pca,
-        string? accountUserName = null)
+    protected virtual async Task<AuthenticationResult> GetAccessToken(IPublicClientApplication pca,
+        string? accountUserName = null, string[]? scopes = null)
     {
-        var cacheDir = this.getCacheDirectory();
+        scopes ??= MicrosoftGraphService.DefaultClientScopes;
+
+        var cacheDir = await this.specialDirectories.GetSecretsDirectoryPathAsync();
         var cacheFile = String.IsNullOrWhiteSpace(accountUserName)
-            ? "msal_cache.dat"
-            : $"msal_cache-{accountUserName}.dat".Replace('@', '_');
+            ? "msal_graph_tokens.secret"
+            : $"msal_graph_tokens_{accountUserName}.secret".Replace('@', '_');
         var storageProperties = new StorageCreationPropertiesBuilder(cacheFile, cacheDir).Build();
         var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties);
 
@@ -64,7 +73,7 @@ internal class GraphService(ILogger<GraphService> logger) : IGraphService
 
         foreach (var account in accounts)
         {
-            var matchesRequestedAccount = accountUserName == GraphService.DEFAULT_ACCOUNT_CACHE
+            var matchesRequestedAccount = accountUserName == MicrosoftGraphService.DefaultAccountName
                 || account.Username.Equals(accountUserName, StringComparison.InvariantCultureIgnoreCase);
 
             if (!matchesRequestedAccount)
@@ -74,7 +83,7 @@ internal class GraphService(ILogger<GraphService> logger) : IGraphService
 
             try
             {
-                result = await pca.AcquireTokenSilent(GraphService.CLIENT_SCOPES, account).ExecuteAsync();
+                result = await pca.AcquireTokenSilent(scopes, account).ExecuteAsync();
                 this.logger.LogInformation("Acquired token silently from cached account: {Account}", account.Username);
                 break;
             }
@@ -88,9 +97,17 @@ internal class GraphService(ILogger<GraphService> logger) : IGraphService
         {
             this.logger.LogWarning("Silent token acquisition failed. Falling back to device code flow.");
 
-            result = await pca.AcquireTokenWithDeviceCode(GraphService.CLIENT_SCOPES, callback =>
+            result = await pca.AcquireTokenWithDeviceCode(scopes, callback =>
             {
                 this.logger.LogCritical(callback.Message);
+
+                alertService.AddAlertAsync(new Alert()
+                {
+                    Title = "Device Authentication Code",
+                    Message = callback.Message,
+                    Expires = DateTime.UtcNow.AddMinutes(15)
+                });
+
                 return Task.CompletedTask;
             }).ExecuteAsync();
         }
@@ -99,21 +116,5 @@ internal class GraphService(ILogger<GraphService> logger) : IGraphService
             throw new Exception("Unable to authenticate to the Microsoft Graph.");
 
         return result;
-    }
-
-     private string getCacheDirectory()
-    {
-#if DEBUG
-        var cacheDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "TDDashboard", "TDDQuackJob", "cache");
-#elif RELEASE
-        var cacheDir = Path.Combine(Environment.GetEnvironmentVariable("QUACKVIEW_DIR") ?? "/quackview","secrets", "graphapi-cache");
-#endif
-
-        Directory.CreateDirectory(cacheDir);
-
-        this.logger.LogDebug("Using cache directory {cacheDir}", cacheDir);
-
-        return cacheDir;
     }
 }

@@ -21,18 +21,19 @@ internal interface IDataFileService
     Task DeleteFileAsync(string path);
 }
 
-internal class DataFileService(ILogger<DataFileService> logger, IFileService file, IDataDirectoryService directory) : IDataFileService
+internal class DataFileService(
+    ILogger<DataFileService> logger,
+    IFileService file,
+    IDataDirectoryService directory,
+    ISpecialDirectories specialDirectories) 
+    : IDataFileService
 {
-    public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = new JsonSerializerOptions
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-    };
+    public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = Program.DefaultJsonSerializerOptions;
 
-    private readonly ILogger<DataFileService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IFileService file = file ?? throw new ArgumentNullException(nameof(file));
-    private readonly IDataDirectoryService directory = directory ?? throw new ArgumentNullException(nameof(directory));
+    protected readonly ILogger<DataFileService> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly IDataDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
+    protected readonly ISpecialDirectories SpecialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
 
     public async Task<bool> ExistsAsync(string path)
     {
@@ -43,7 +44,7 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
 
         path = await this.GetFullPathAsync(path);
 
-        return await this.file.ExistsAsync(path);
+        return await this.File.ExistsAsync(path);
     }
 
     public async Task WriteJsonFileAsync<T>(string path, T content)
@@ -71,7 +72,7 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
         {
             path = await this.GetFullPathAsync(path);
 
-            await this.file.WriteAllTextAsync(path, content);
+            await this.File.WriteAllTextAsync(path, content);
             logger.LogInformation("Data file written to {Path}", path);
         }
         catch (Exception ex)
@@ -82,6 +83,8 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
 
     public async Task AppendToFileAsync(string path, string content)
     {
+        // TODO: Add file locking
+        
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(content);
 
@@ -92,8 +95,8 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
         {
             path = await this.GetFullPathAsync(path);
 
-            await this.file.AppendAllTextAsync(path, content);
-            this.logger.LogInformation("Appended line to {Path}", path);
+            await this.File.AppendAllTextAsync(path, content);
+            this.Logger.LogInformation("Appended line to {Path}", path);
         }
         catch (Exception ex)
         {
@@ -103,6 +106,8 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
 
     public async Task AppendToJsonListFileAsync<T>(string path, T content)
     {
+        // TODO: Add file locking
+
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(content);
 
@@ -114,20 +119,27 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
             path = await this.GetFullPathAsync(path);
 
             JsonListFile<T>? jsonArrayFile = null;
-            var existingContent = await this.file.ReadAllTextAsync(path);
-            
-            if (!string.IsNullOrWhiteSpace(existingContent))
+
+            if (await this.File.ExistsAsync(path))
             {
-                try
+                var existingContent = await this.File.ReadAllTextAsync(path);
+                if (!string.IsNullOrWhiteSpace(existingContent))
                 {
-                    jsonArrayFile = JsonSerializer.Deserialize<JsonListFile<T>>(
-                        existingContent, DataFileService.DefaultJsonSerializerOptions) ?? new JsonListFile<T>();
+                    try
+                    {
+                        jsonArrayFile = JsonSerializer.Deserialize<JsonListFile<T>>(
+                            existingContent, DataFileService.DefaultJsonSerializerOptions) ?? new JsonListFile<T>();
+                    }
+                    catch (JsonException jsonEx)
+                    {
+                        this.Logger.LogError(jsonEx, "Failed to deserialize existing JSON content in {Path}. The file may be corrupted or not contain a JSON array.", path);
+                        throw;
+                    }
                 }
-                catch (JsonException jsonEx)
-                {
-                    this.logger.LogError(jsonEx, "Failed to deserialize existing JSON content in {Path}. The file may be corrupted or not contain a JSON array.", path);
-                    throw;
-                }
+            }
+            else
+            {
+                jsonArrayFile = new JsonListFile<T>();
             }
 
             jsonArrayFile?.List.Add(content);
@@ -135,7 +147,7 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
             var json = JsonSerializer.Serialize(jsonArrayFile, DataFileService.DefaultJsonSerializerOptions);
             await File.WriteAllTextAsync(path, json);
 
-            this.logger.LogInformation("Appended item to JSON array file at {Path}", path);
+            this.Logger.LogInformation("Appended item to JSON array file at {Path}", path);
         }
         catch (Exception ex)
         {
@@ -154,14 +166,14 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
         {
             path = await this.GetFullPathAsync(path);
 
-            if (await this.file.ExistsAsync(path))
+            if (await this.File.ExistsAsync(path))
             {
-                await this.file.DeleteFileAsync(path);
-                this.logger.LogInformation("Deleted file {Path}", path);
+                await this.File.DeleteFileAsync(path);
+                this.Logger.LogInformation("Deleted file {Path}", path);
             }
             else
             {
-                this.logger.LogWarning("File {Path} does not exist, cannot delete", path);
+                this.Logger.LogWarning("File {Path} does not exist, cannot delete", path);
             }
         }
         catch (Exception ex)
@@ -175,6 +187,6 @@ internal class DataFileService(ILogger<DataFileService> logger, IFileService fil
         if (Path.IsPathRooted(path))
             throw new ArgumentException("Path must be relative", nameof(path));
 
-        return Path.Combine(await this.directory.GetDataDirectoryPathAsync(), path);
+        return Path.Combine(await this.SpecialDirectories.GetDataDirectoryPathAsync(), path);
     }
 }

@@ -11,7 +11,11 @@ internal interface ISecretStore
     Task<string> ExpandSecretsAsync(string input);
 }
 
-internal partial class FileSystemSecretStore(ILogger<FileSystemSecretStore> logger, IDirectoryService directory, IFileService file) : ISecretStore
+internal partial class FileSystemSecretStore(
+    ILogger<FileSystemSecretStore> logger,
+    IDirectoryService directory,
+    IFileService file,
+    ISpecialDirectories specialDirectories) : ISecretStore
 {
     // This isn't great security but it's better than nothing...
 
@@ -25,23 +29,25 @@ internal partial class FileSystemSecretStore(ILogger<FileSystemSecretStore> logg
             throw new ArgumentException("Key contains invalid characters. Only alphanumeric characters, underscores, and hyphens are allowed.", nameof(key));
     }
 
-    private readonly ILogger<FileSystemSecretStore> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IDirectoryService directory = directory ?? throw new ArgumentNullException(nameof(directory));
-    private readonly IFileService file = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly ILogger<FileSystemSecretStore> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
+    protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly ISpecialDirectories SpecialDirectories = specialDirectories ?? throw new ArgumentNullException(nameof(specialDirectories));
+
 
     public async Task<string> GetSecretAsync(string key)
     {
         ArgumentNullException.ThrowIfNull(key);
         FileSystemSecretStore.ThrowIfInvalidKey(key);
-        
-        this.logger.LogDebug("Retrieving secret for key: {Key}", key);
 
-        var secretFilePath = Path.Combine(await this.GetSecretsDirectoryPathAsync(), $"{key}.secret");
+        this.Logger.LogDebug("Retrieving secret for key: {Key}", key);
 
-        if (!await this.file.ExistsAsync(secretFilePath))
+        var secretFilePath = Path.Combine(await this.SpecialDirectories.GetSecretsDirectoryPathAsync(), $"{key}.secret");
+
+        if (!await this.File.ExistsAsync(secretFilePath))
             throw new KeyNotFoundException("Unknown secret.");
 
-        return await this.file.ReadAllTextAsync(secretFilePath);
+        return await this.File.ReadAllTextAsync(secretFilePath);
     }
 
     public async Task SetSecretAsync(string key, string value, bool overwrite = false)
@@ -50,14 +56,14 @@ internal partial class FileSystemSecretStore(ILogger<FileSystemSecretStore> logg
         ArgumentNullException.ThrowIfNull(value);
         FileSystemSecretStore.ThrowIfInvalidKey(key);
 
-        this.logger.LogDebug("Setting secret for key: {Key}", key);
+        this.Logger.LogDebug("Setting secret for key: {Key}", key);
 
-        var secretFilePath = Path.Combine(await this.GetSecretsDirectoryPathAsync(), $"{key}.secret");
+        var secretFilePath = Path.Combine(await this.SpecialDirectories.GetSecretsDirectoryPathAsync(), $"{key}.secret");
 
-        if (!overwrite && await this.file.ExistsAsync(secretFilePath))
+        if (!overwrite && await this.File.ExistsAsync(secretFilePath))
             throw new ArgumentException("Secret already exists and overwrite is set to false.", nameof(key));
 
-        await this.file.WriteAllTextAsync(secretFilePath, value);
+        await this.File.WriteAllTextAsync(secretFilePath, value);
     }
 
     public async Task<string> ExpandSecretsAsync(string input)
@@ -65,12 +71,12 @@ internal partial class FileSystemSecretStore(ILogger<FileSystemSecretStore> logg
         if (string.IsNullOrEmpty(input))
             return input;
 
-        var files = await this.directory.EnumerateFilesAsync(await this.GetSecretsDirectoryPathAsync());
+        var files = await this.Directory.EnumerateFilesAsync(await this.SpecialDirectories.GetSecretsDirectoryPathAsync());
 
         foreach (var file in files)
         {
             var secretName = Path.GetFileNameWithoutExtension(file);
-            var secretValue = await this.file.ReadAllTextAsync(file);
+            var secretValue = await this.File.ReadAllTextAsync(file);
 
             input = input.Replace($"$^{{{secretName}}}", secretValue, StringComparison.OrdinalIgnoreCase);
         }
@@ -79,19 +85,5 @@ internal partial class FileSystemSecretStore(ILogger<FileSystemSecretStore> logg
             throw new KeyNotFoundException("One or more secrets in the input string were not found in the secret store.");
 
         return input;
-    }
-
-    protected virtual async Task<string> GetSecretsDirectoryPathAsync()
-    {
-        var path = Environment.GetEnvironmentVariable("QUACKVIEW_DIR") ?? string.Empty;
-
-        if (!string.IsNullOrWhiteSpace(path))
-            path = Path.Combine(path, "secrets");
-
-        await this.directory.CreateDirectoryAsync(path);
-
-        this.logger.LogDebug("Using secrets directory path: {Path}", path);
-
-        return path;
     }
 }

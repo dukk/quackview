@@ -1,9 +1,0 @@
-{
-    "DaysInFuture": 14,
-    "Accounts": [
-        {
-            "Account": "blah@example.com",
-            "Calendars": [""]
-        }
-    ]
-}

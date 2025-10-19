@@ -1,184 +1,147 @@
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Resources;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using TypoDukk.QuackView.QuackJob.Actions;
 using TypoDukk.QuackView.QuackJob.Jobs;
 using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob;
 
-internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger, IConsoleService console)
+interface IProgram
 {
+    Task<int> Run(string[] args);
+}
+
+internal class Program(
+    ILogger<Program> logger,
+    IServiceProvider serviceProvider,
+    IConsoleService console) 
+    : IProgram
+{
+    public static JsonSerializerOptions DefaultJsonSerializerOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
     public const string SOLUTION_NAME = "TDDashboard";
     public const string APP_NAME = "TDDQuackJob";
 
-    private readonly ILogger<Program> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IServiceProvider serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-    private readonly IConsoleService console = console ?? throw new ArgumentNullException(nameof(console));
+    protected readonly ILogger<Program> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IServiceProvider ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    protected readonly IConsoleService Console = console ?? throw new ArgumentNullException(nameof(console));
 
-    internal async Task Run(string[] args)
+    public virtual async Task<int> Run(string[] args)
     {
-        this.logger.LogInformation("Current working directory: {workingDirectory}", Environment.CurrentDirectory);
+        this.Logger.LogInformation("Current working directory: {workingDirectory}", Environment.CurrentDirectory);
 
+        var result = 0;
         var requestedAction = ((args.Length > 0 && !string.IsNullOrEmpty(args[0])) ? args[0] : "help").ToLower();
 
         if (requestedAction == "help" && args.Length > 1)
         {
             var requestedSubHelpAction = args[1].ToString();
-            var subHelpAction = getAction(requestedSubHelpAction);
+            var subHelpAction = this.GetAction(requestedSubHelpAction);
 
-            if (null != subHelpAction)
-            {
-                subHelpAction.DisplayHelp();
-                return;
-            }
-            else
+            if (null == subHelpAction)
             {
                 console.WriteError("Error: Unknown action.");
                 // Let this continue so it shows the main help display
+                result = 1;
             }
+            else
+                subHelpAction.DisplayHelp();
         }
-        
-        var action = getAction(requestedAction);
 
-        if (action == null)
+        var action = this.GetAction(requestedAction);
+
+        if (action == null) // null check is here
         {
-            console.WriteError("Error: Unknown action.");
-            action = getAction("help");
+            this.Console.WriteError("Error: Unknown action.");
+            action = this.GetAction("help") 
+                ?? throw new InvalidOperationException("Failed to find help action!!!");
+            result = 1;
         }
 
-        await action.ExecuteAsync(args[1..]);
+        try
+        {
+            await action.ExecuteAsync(args[1..]);
+        }
+        catch (Exception exception)
+        {
+            console.WriteError($"Error: {exception.Message}");
+            result = 1;
+        }
+
+        return result;
     }
 
-    private IAction getAction(string name)
+    protected virtual IAction? GetAction(string name)
     {
         name = name.ToLower();
 
-        var action = this.serviceProvider.GetServices<IAction>()
+        var action = this.ServiceProvider.GetServices<IAction>()
                 .FirstOrDefault(a => a.MatchesActionName(name));
 
-#pragma warning disable CS8603 // Possible null reference return.
         return action;
-#pragma warning restore CS8603 // Possible null reference return.
-    }
-
-    public string GetAppDataDirectory()
-    {
-        var appDataDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "TDDashboard", "TDDQuackJob");
-
-        Directory.CreateDirectory(appDataDirectory);
-
-        this.logger.LogDebug("Using app data directory {appDataDirectory}", appDataDirectory);
-
-        return appDataDirectory;
     }
 
     [ExcludeFromCodeCoverage]
     public static async Task<int> Main(string[] args)
     {
-#if DEBUG
-        Environment.SetEnvironmentVariable("QUACKVIEW_DIR",
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "QuackView"));
-#endif
-
         try
         {
             var host = Program.BuildApplication();
-            var program = new Program(
-                host.Services.GetRequiredService<IServiceProvider>(),
-                host.Services.GetRequiredService<ILogger<Program>>(),
-                host.Services.GetRequiredService<IConsoleService>()
-            );
+            var program = host.Services.GetRequiredService<IProgram>();
 
-            await program.Run(args);
+            return await program.Run(args);
         }
         catch (Exception exception)
         {
-            Console.Error.WriteLine("CRITICAL UNHANDLED EXCEPTION!!!");
-            Console.Error.WriteLine(exception.ToString());
+            System.Console.Error.WriteLine("CRITICAL UNHANDLED EXCEPTION!!!");
+            System.Console.Error.WriteLine(exception.ToString());
 
             return 1;
         }
-
-        return 0;
     }
-    // These static methods below are separated for easier testing
 
     internal static IHost BuildApplication()
     {
         var hostBuilder = Host.CreateApplicationBuilder();
 
-        hostBuilder.Configuration.AddJsonFile(Environment.ExpandEnvironmentVariables("%QUACKVIEW_DIR%config/quackjob.json"),
+        hostBuilder.Configuration.AddJsonFile(
+            Path.Combine(Environment.GetEnvironmentVariable("QUACKVIEW_DIR") ?? string.Empty, "config/quackjob.json"),
             optional: true, reloadOnChange: true);
 
         Program.ComposeServices(hostBuilder.Services);
         Program.ComposeActions(hostBuilder.Services);
         Program.ComposeJobRunners(hostBuilder.Services);
+        Program.ComposeDebugInjectionPoint(hostBuilder.Services);
 
-        var host = hostBuilder.Build();
-
-#if DEBUG
-        // Extra check to make sure I'm not being dumb...
-        Program.VerifyNoDuplicationActions(host);
-        Program.VerifyNoDuplicationJobs(host);
-#endif
-        return host;
-    }
-
-    [ExcludeFromCodeCoverage]
-    internal static void VerifyNoDuplicationActions(IHost host)
-    {
-        var actions = host.Services.GetService<IAction>();
-        var registeredActions = host.Services.GetServices<IAction>().ToList();
-        var duplicateActionGroups = registeredActions
-            .GroupBy(a => a.Name, StringComparer.OrdinalIgnoreCase)
-            .Where(g => g.Count() > 1)
-            .ToList();
-
-        if (duplicateActionGroups.Count > 0)
-        {
-            var details = string.Join("; ", duplicateActionGroups.Select(g =>
-                $"{g.Key}: {string.Join(", ", g.Select(a => a.GetType().FullName))}"));
-            throw new InvalidOperationException($"Duplicate action names detected: {details}");
-        }
-    }
-
-    [ExcludeFromCodeCoverage]
-    internal static void VerifyNoDuplicationJobs(IHost host)
-    {
-        var jobs = host.Services.GetService<IJobRunner>();
-        var registeredJobs = host.Services.GetServices<IJobRunner>().ToList();
-        var duplicateJobGroups = registeredJobs
-            .GroupBy(j => j.Name, StringComparer.OrdinalIgnoreCase)
-            .Where(g => g.Count() > 1)
-            .ToList();
-
-        if (duplicateJobGroups.Count > 0)
-        {
-            var details = string.Join("; ", duplicateJobGroups.Select(g =>
-                $"{g.Key}: {string.Join(", ", g.Select(a => a.GetType().FullName))}"));
-            throw new InvalidOperationException($"Duplicate job names detected: {details}");
-        }
+        return hostBuilder.Build();
     }
 
     internal static void ComposeServices(IServiceCollection services)
     {
+        services.AddSingleton<ISpecialDirectories, SpecialDirectories>();
         services.AddSingleton<IFileService, FileService>();
         services.AddSingleton<IDataFileService, DataFileService>();
         services.AddSingleton<IDirectoryService, DirectoryService>();
+        services.AddSingleton<IAlertService, AlertService>();
         services.AddSingleton<IDataDirectoryService, DataDirectoryService>();
         services.AddSingleton<IConsoleService, ConsoleService>();
         services.AddSingleton<ICommandLineParser, CommandLineParser>();
         services.AddSingleton<ICronScheduler, CronScheduler>();
         services.AddSingleton<ISecretStore, FileSystemSecretStore>();
-        services.AddSingleton<IGraphService, GraphService>();
+        services.AddSingleton<IMicrosoftGraphService, MicrosoftGraphService>();
         services.AddSingleton<IOutlookCalendarEventService, OutlookCalendarEventService>();
     }
 
@@ -195,5 +158,18 @@ internal class Program(IServiceProvider serviceProvider, ILogger<Program> logger
         services.AddSingleton<IJobRunner, OpenAiPromptJob>();
         services.AddSingleton<IJobRunner, UpcomingCalendarEventsJob>();
         services.AddSingleton<IJobRunner, BuildImageFileListJob>();
+    }
+
+    [Conditional("DEBUG")]
+    internal static void ComposeDebugInjectionPoint(IServiceCollection services,
+        [CallerFilePath] string sourceFilePath = "")
+    {
+        System.Console.WriteLine($"ComposeDebugInjectionPoint: sourceFilePath = '{sourceFilePath}'");
+
+        services.RemoveAll<IProgram>();
+        services.RemoveAll<ISpecialDirectories>();
+
+        services.AddSingleton<IProgram, ProgramInDebugMode>();
+        services.AddSingleton<ISpecialDirectories, DebugSpecialDirectories>();
     }
 }
