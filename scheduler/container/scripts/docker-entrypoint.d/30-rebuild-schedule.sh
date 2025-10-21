@@ -1,5 +1,4 @@
-#!/usr/bin/sh
-set -e
+#!/bin/sh
 
-/usr/bin/quackjob rebuild-schedule
-systemctl reload cron
+# echo "Rebuilding schedule"
+# /usr/bin/quackjob rebuild-schedule

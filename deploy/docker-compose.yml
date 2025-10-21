@@ -1,0 +1,14 @@
+services:
+  display:
+    image: ghcr.io/dukk/quackview-display:latest
+    volumes:
+      - ./shared/data:/quackview/data
+    ports:
+      - "8008:80"
+    depends_on:
+      - scheduler
+
+  scheduler:
+    image: ghcr.io/dukk/quackview-scheduler:latest
+    volumes:
+      - ./shared:/quackview
