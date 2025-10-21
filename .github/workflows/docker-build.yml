@@ -61,7 +61,6 @@ jobs:
           dotnet publish "${{ env.QUACKJOB_SOLUTION }}" \
             -c Release \
             -r "linux-x64" \
-            --no-incremental \
             -f "${{ env.FRAMEWORK }}" \
             /p:PublishSingleFile=false \
             /p:SelfContained=false \
