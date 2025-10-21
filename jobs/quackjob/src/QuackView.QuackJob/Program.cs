@@ -46,12 +46,15 @@ internal class Program(
 
     public virtual async Task<int> Run(string[] args)
     {
-        this.Logger.LogInformation("Current working directory: {workingDirectory}", Environment.CurrentDirectory);
+        const string HELP = "help";
+        this.Logger.LogDebug("Current working directory: {workingDirectory}", Environment.CurrentDirectory);
 
         var result = 0;
-        var requestedAction = ((args.Length > 0 && !string.IsNullOrEmpty(args[0])) ? args[0] : "help").ToLower();
+        var requestedAction = (args.Length < 1 || string.IsNullOrEmpty(args[0])) ? HELP : args[0];
 
-        if (requestedAction == "help" && args.Length > 1)
+        requestedAction = requestedAction.ToLower();
+        
+        if (requestedAction == HELP && args.Length > 1)
         {
             var requestedSubHelpAction = args[1].ToString();
             var subHelpAction = this.GetAction(requestedSubHelpAction);
@@ -63,22 +66,26 @@ internal class Program(
                 result = 1;
             }
             else
+            {
                 subHelpAction.DisplayHelp();
+            }
         }
 
         var action = this.GetAction(requestedAction);
 
-        if (action == null) // null check is here
+        if (action == null)
         {
             this.Console.WriteError("Error: Unknown action.");
-            action = this.GetAction("help") 
-                ?? throw new InvalidOperationException("Failed to find help action!!!");
+            action = this.GetAction(HELP) ?? throw new InvalidOperationException("Failed to find help action!!!");
             result = 1;
         }
 
         try
         {
-            await action.ExecuteAsync(args[1..]);
+            await action.ExecuteAsync(
+                (args.Length < 1) 
+                    ? [] 
+                    : args[1..]);
         }
         catch (Exception exception)
         {
@@ -125,6 +132,8 @@ internal class Program(
         hostBuilder.Configuration.AddJsonFile(
             Path.Combine(Environment.GetEnvironmentVariable("QUACKVIEW_DIR") ?? string.Empty, "config/quackjob.json"),
             optional: true, reloadOnChange: true);
+
+        hostBuilder.Services.AddSingleton<IProgram, Program>();
 
         Program.ComposeServices(hostBuilder.Services);
         Program.ComposeActions(hostBuilder.Services);

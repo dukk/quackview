@@ -29,26 +29,27 @@ internal class ProgramInDebugMode(
         // TODO: Should really move all of this to unit tests (or integration tests?)...
 
         // Run Jobs:
-        //args = ["run", "--job=\"build-image-file-list.json\""];
+        args = ["run", "--job=\"build-image-file-list.json\""];
         //args = ["run", "--job=\"open-ai-prompt.json\""];
         //args = ["run", "--job=\"upcoming-calendar-events.json\""];
         //args = ["run", "--job=\"dad-jokes.json\""];
         //args = ["run", "--job=\"clear-expired-alerts.json\""];
 
         // Rebuild Schedule:
-        args = ["rebuild-schedule"];
+        //args = ["rebuild-schedule"];
 
         // Help:
+        //args = [];
         //args = ["help"];
         //args = ["help", "run"];
         //args = ["help", "list"];
         //args = ["help", "new"];
 
         // List Job Runners (change to 'list-runners'?)
-        args = ["list"];
+        //args = ["list"];
 
         // New Jobs  (change to 'new-job'?)
-        args = ["new"];
+        //args = ["new"];
 
         System.Console.WriteLine($"ARGS: {string.Join(' ', args)}");
         System.Console.ResetColor();

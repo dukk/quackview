@@ -6,11 +6,12 @@ using System.Text.Json;
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
 internal class BuildImageFileListJob(ILogger<BuildImageFileListJob> logger, IDataFileService dataFileService,
-    IDataDirectoryService dataDirectoryService) : JobRunner
+    IDataDirectoryService dataDirectoryService, IConsoleService console) : JobRunner
 {
-    private readonly ILogger<BuildImageFileListJob> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IDataFileService dataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
-    private readonly IDataDirectoryService dataDirectoryService = dataDirectoryService ?? throw new ArgumentNullException(nameof(dataDirectoryService));
+    protected readonly ILogger<BuildImageFileListJob> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IDataFileService DataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
+    protected readonly IDataDirectoryService DataDirectoryService = dataDirectoryService ?? throw new ArgumentNullException(nameof(dataDirectoryService));
+    protected readonly IConsoleService Console = console ?? throw new ArgumentNullException(nameof(console));
 
     public override async Task ExecuteAsync(JsonElement? jsonConfig = null)
     {
@@ -20,9 +21,10 @@ internal class BuildImageFileListJob(ILogger<BuildImageFileListJob> logger, IDat
         if (string.IsNullOrWhiteSpace(config.DirectoryPath))
             throw new ArgumentException("Invalid job configuration. DirectoryPath is required.", nameof(config.DirectoryPath));
 
-        logger.LogInformation("Executing build file list job.");
+        this.Console.WriteLine($"Executing build file list job using directory '{config.DirectoryPath}', search pattern '{config.SearchPattern}'{(config.IncludeSubdirectories ? " and including subdirectories" : "")}.");
 
-        var files = await this.dataDirectoryService.EnumerateFilesAsync(config.DirectoryPath, config.SearchPattern, config.IncludeSubdirectories);
+        var files = await this.DataDirectoryService.EnumerateFilesAsync(
+            config.DirectoryPath, config.SearchPattern, config.IncludeSubdirectories);
         var imageFileList = new ImageFileList
         {
             Metadata = new ImageFileListMetadata
@@ -38,7 +40,8 @@ internal class BuildImageFileListJob(ILogger<BuildImageFileListJob> logger, IDat
             })]
         };
 
-        await this.dataFileService.WriteJsonFileAsync(config.OutputDataFile, imageFileList);
+        this.Console.WriteLine($"Writing output file: {config.OutputDataFile}");
+        await this.DataFileService.WriteJsonFileAsync(config.OutputDataFile, imageFileList);
     }
 }
 

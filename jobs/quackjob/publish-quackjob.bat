@@ -11,7 +11,7 @@ echo Publishing win-x64...
 
 dotnet publish "%SLN%" -c Release -r win-x64 ^
   /p:PublishSingleFile=true /p:SelfContained=true ^
-  /p:PublishTrimmed=true /p:UseAppHost=true
+  /p:PublishTrimmed=false /p:UseAppHost=true
 
 if not exist "%DIST_DIR%\quackjob\win-x64\" mkdir "%DIST_DIR%\quackjob\win-x64\"
 copy /Y "src\QuackView.QuackJob\bin\Release\net9.0\win-x64\publish\*" "%DIST_DIR%\quackjob\win-x64\"
@@ -21,8 +21,8 @@ del /Q "%DIST_DIR%\quackjob\win-x64\*.pdb"
 echo Publishing linux-x64...
 
 dotnet publish "%SLN%" -c Release -r linux-x64 ^
-  /p:PublishSingleFile=true /p:SelfContained=true ^
-  /p:PublishTrimmed=true /p:UseAppHost=true
+  /p:PublishSingleFile=false /p:SelfContained=false ^
+  /p:PublishTrimmed=false /p:UseAppHost=false
 
 if not exist "%DIST_DIR%\quackjob\linux-x64\" mkdir "%DIST_DIR%\quackjob\linux-x64\"
 copy /Y "src\QuackView.QuackJob\bin\Release\net9.0\linux-x64\publish\*" "%DIST_DIR%\quackjob\linux-x64\"

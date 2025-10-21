@@ -3,10 +3,12 @@
         "adduser",
         "appsettings",
         "cronie",
+        "crontabs",
         "Dukk",
         "msal",
         "quackjob",
         "quackview",
+        "Serilog",
         "svcacct"
     ]
 }

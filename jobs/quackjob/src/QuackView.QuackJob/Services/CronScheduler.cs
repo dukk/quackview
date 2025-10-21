@@ -39,14 +39,14 @@ internal class CronScheduler(ILogger<CronScheduler> logger, IFileService file, I
     {
         var crontabFile = await this.SpecialPaths.GetCrontabFilePathAsync();
 
-        await File.WriteAllTextAsync(crontabFile, await this.GetCrontabFileTemplate());
+        await this.File.WriteAllTextAsync(crontabFile, await this.GetCrontabFileTemplate());
     }
 
     public async Task ScheduleAsync(CronJob job)
     {
         var crontabFile = await this.SpecialPaths.GetCrontabFilePathAsync();
 
-        await File.AppendAllTextAsync(crontabFile, $"{job.Schedule} {job.Command}");
+        await this.File.AppendAllTextAsync(crontabFile, $"{job.Schedule} {job.Command}");
     }
 
     protected virtual async Task<string> GetCrontabFileTemplate()

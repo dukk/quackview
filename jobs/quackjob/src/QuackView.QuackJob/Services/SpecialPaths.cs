@@ -50,7 +50,14 @@ internal class SpecialPaths(ILogger<SpecialPaths> logger, IDirectoryService dire
 
     public virtual async Task<string> GetCrontabFilePathAsync()
     {
-        return Path.Combine(await this.GetConfigDirectoryPathAsync(), "crontab");
+        return await Task.Run(() =>
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                throw new PlatformNotSupportedException("Crontab is not supported on Windows platforms.");
+
+            //return Path.Combine(await this.GetConfigDirectoryPathAsync(), "crontab");
+            return Path.Combine("/etc/crontabs/quackjob");
+        });
     }
 
     public Task<string> GetQuackJobExecutablePathAsync()

@@ -6,10 +6,15 @@ using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
-internal class OpenAiPromptJob(ILogger<OpenAiPromptJob> logger, IDataFileService dataFileService) : JobRunner
+internal class OpenAiPromptJob(
+    ILogger<OpenAiPromptJob> logger,
+    IDataFileService dataFileService,
+    IConsoleService console) 
+    : JobRunner
 {
-    private readonly ILogger<OpenAiPromptJob> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IDataFileService dataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
+    protected readonly ILogger<OpenAiPromptJob> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IDataFileService DataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
+    protected readonly IConsoleService Console = console ?? throw new ArgumentNullException(nameof(console));
 
     public override async Task ExecuteAsync(JsonElement? jsonConfig = null)
     {
@@ -19,7 +24,7 @@ internal class OpenAiPromptJob(ILogger<OpenAiPromptJob> logger, IDataFileService
         if (string.IsNullOrWhiteSpace(config.Prompt))
             throw new ArgumentNullException(nameof(config), "Invalid job configuration.");
 
-        logger.LogInformation("Executing OpenAI Prompt job.");
+        this.Console.WriteLine("Executing OpenAI Prompt job.");
 
         var apiKey = config.ApiKey ??Environment.GetEnvironmentVariable("OPENAI_API_KEY");
 
@@ -33,7 +38,8 @@ internal class OpenAiPromptJob(ILogger<OpenAiPromptJob> logger, IDataFileService
             });
         var responseText = response.GetOutputText();
 
-        await this.dataFileService.WriteFileAsync(config.OutputFileName, responseText);
+        this.Console.WriteLine($"Writing output file: {config.OutputFileName}");
+        await this.DataFileService.WriteFileAsync(config.OutputFileName, responseText);
 
 #pragma warning restore OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     }

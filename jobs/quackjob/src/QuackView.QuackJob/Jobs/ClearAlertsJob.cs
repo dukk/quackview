@@ -5,15 +5,15 @@ using System.Text.Json;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
-internal class ClearExpiredAlertsJob(IAlertService alertService, ILogger<ClearExpiredAlertsJob> logger) : JobRunner
+internal class ClearExpiredAlertsJob(IAlertService alertService, ILogger<ClearExpiredAlertsJob> logger, IConsoleService console) : JobRunner
 {
-    private readonly IAlertService alertService = alertService ?? throw new ArgumentNullException(nameof(alertService));
-    private readonly ILogger<ClearExpiredAlertsJob> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IAlertService AlertService = alertService ?? throw new ArgumentNullException(nameof(alertService));
+    protected readonly ILogger<ClearExpiredAlertsJob> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IConsoleService Console = console ?? throw new ArgumentNullException(nameof(console));
 
     public override async Task ExecuteAsync(JsonElement? jsonConfig = null)
     {
-        logger.LogInformation("Executing clear expired alerts.");
-
-        await this.alertService.ClearExpiredAlertsAsync();
+        this.Console.WriteLine("Clearing expired alerts.");
+        await this.AlertService.ClearExpiredAlertsAsync();
     }
 }

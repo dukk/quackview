@@ -9,11 +9,13 @@ namespace TypoDukk.QuackView.QuackJob.Jobs;
 internal class UpcomingCalendarEventsJob(
     ILogger<UpcomingCalendarEventsJob> logger,
     IOutlookCalendarEventService outlookCalendarEventService,
-    IDataFileService dataFileService) : JobRunner
+    IDataFileService dataFileService,
+    IConsoleService console) : JobRunner
 {
-    private readonly ILogger<UpcomingCalendarEventsJob> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IOutlookCalendarEventService outlookCalendarEventService = outlookCalendarEventService ?? throw new ArgumentNullException(nameof(outlookCalendarEventService));
-    private readonly IDataFileService dataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
+    protected readonly ILogger<UpcomingCalendarEventsJob> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IOutlookCalendarEventService OutlookCalendarEventService = outlookCalendarEventService ?? throw new ArgumentNullException(nameof(outlookCalendarEventService));
+    protected readonly IDataFileService DataFileService = dataFileService ?? throw new ArgumentNullException(nameof(dataFileService));
+    protected readonly IConsoleService Console = console ?? throw new ArgumentNullException(nameof(console));
 
     public override async Task ExecuteAsync(JsonElement? jsonConfig = null)
     {
@@ -23,20 +25,21 @@ internal class UpcomingCalendarEventsJob(
         if (config.Accounts.IsNullOrEmpty())
             throw new ArgumentException("Invalid job configuration. No accounts specified.", nameof(config));
 
-        logger.LogInformation("Executing Upcoming Calendar Events job.");
+        this.Console.WriteLine("Executing Upcoming Calendar Events job.");
         
         var allEvents = new List<CalendarEvent>();
 
         foreach (var account in config.Accounts)
         {
-            allEvents.AddRange(await this.outlookCalendarEventService.GetEventsAsync(
+            allEvents.AddRange(await this.OutlookCalendarEventService.GetEventsAsync(
                 account.Account,
                 account.Calendars,
                 DateTime.UtcNow,
                 DateTime.UtcNow.AddDays(config.DaysInFuture)));
         }
 
-        await this.dataFileService.WriteJsonFileAsync(config.OutputFileName, allEvents.OrderBy(e => e.Start));
+        this.Console.WriteLine($"Writing output file: {config.OutputFileName}");
+        await this.DataFileService.WriteJsonFileAsync(config.OutputFileName, allEvents.OrderBy(e => e.Start));
 
         return;
     }

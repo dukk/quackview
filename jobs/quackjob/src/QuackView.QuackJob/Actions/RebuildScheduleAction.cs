@@ -46,7 +46,7 @@ internal class RebuildScheduleAction(
 
                 if (jobFile == null || string.IsNullOrWhiteSpace(jobFile.Metadata.Schedule))
                 {
-                    this.Logger.LogWarning("Invalid or missing schedule in job file: {File}", file);
+                    this.Console.WriteError($"Invalid or missing schedule in job file: {file}");
                     continue;
                 }
 
@@ -56,12 +56,11 @@ internal class RebuildScheduleAction(
                     Command = $"{quackjobPath} run --job=\"{file}\""
                 });
 
-                this.Logger.LogInformation("Scheduled job {Name} from {File} with schedule {Schedule}",
-                    jobFile.Metadata.Name, file, jobFile.Metadata.Schedule);
+                this.Console.WriteLine($"Scheduled job {jobFile.Metadata.Name} from {file} with schedule {jobFile.Metadata.Schedule}");
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Failed to schedule job from file: {File}", file);
+                this.Console.WriteError($"Failed to schedule job from file: {file} - {ex.Message}");
             }
         }
     }
