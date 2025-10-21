@@ -48,11 +48,19 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Clean build artifacts
+        run: dotnet clean --verbosity minimal
+
+      - name: Kill lingering dotnet processes
+        run: |
+          pkill -f dotnet || true
+
       - name: Publish QuackJob linux-x64
         run: |
           dotnet publish "${{ env.QUACKJOB_SOLUTION }}" \
             -c Release \
             -r "linux-x64" \
+            --no-incremental \
             -f "${{ env.FRAMEWORK }}" \
             /p:PublishSingleFile=false \
             /p:SelfContained=false \
