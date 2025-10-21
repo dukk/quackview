@@ -2,7 +2,7 @@
     "job": {
         "name": "Refresh photo list every 6 hours",
         "description": "Generates a list of photos and saves them to a JSON file.",
-        "type": "open-ai-prompt",
+        "runner": "build-image-file-list",
         "schedule": "0 /6 * * *"
     },
     "config": {
