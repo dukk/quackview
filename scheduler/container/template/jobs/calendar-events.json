@@ -2,8 +2,8 @@
     "job": {
         "name": "Refresh calendar events every Saturday morning",
         "description": "Generates a list of calendar events and saves them to a JSON file.",
-        "type": "",
-        "schedule": "*/30 * * * *"
+        "type": "upcoming-calendar-events",
+        "schedule": "*/60 * * * *"
     },
     "config": {
         "daysInFuture": 14,
