@@ -1,3 +1,4 @@
 **dist/
 *.secret
 *.cobertura.xml
+**debug/
