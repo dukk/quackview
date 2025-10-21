@@ -53,7 +53,11 @@ jobs:
           dotnet publish "${{ env.QUACKJOB_SOLUTION }}" \
             -c Release \
             -r "linux-x64" \
-            -f "${{ env.FRAMEWORK }}"
+            -f "${{ env.FRAMEWORK }}" \
+            /p:PublishSingleFile=false \
+            /p:SelfContained=false \
+            /p:PublishTrimmed=false \
+            /p:UseAppHost=false
 
       - name: Copy files to dist so the rest of the script can find them
         run: |
