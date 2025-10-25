@@ -5,7 +5,8 @@ RUN apk add --no-cache \
         ca-certificates \
         curl \
         cronie \
-        nano
+        nano \
+        rsync
 
 ENV QUACKVIEW_DIR=/quackview/
 
@@ -22,7 +23,7 @@ COPY container/template/ /quackview-template/
 COPY dist/bin/appsettings.json /quackview-template/config/quackjob.json
 COPY dist/bin/* /usr/share/quackjob/
 RUN chown -R quackjob:quackjob /quackview-template
-RUN echo "dotnet /usr/share/quackjob/quackjob.dll $@" > /usr/bin/quackjob && \
+RUN echo "dotnet /usr/share/quackjob/quackjob.dll \$@" > /usr/bin/quackjob && \
     chmod +x /usr/bin/quackjob
 
 VOLUME ["/quackview/"]
