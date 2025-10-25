@@ -30,11 +30,14 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore
-        run: dotnet restore "${{ env.QUACKJOB_SOLUTION }}"
+      - name: Restore win-x64
+        run: dotnet restore "${{ env.QUACKJOB_SOLUTION }}" -p:RuntimeIdentifiers="win-x64"
+
+      - name: Restore linux-x64
+        run: dotnet restore "${{ env.QUACKJOB_SOLUTION }}" -p:RuntimeIdentifiers="linux-x64"
 
       - name: Run unit tests
-        run: dotnet test "${{ env.QUACKJOB_SOLUTION }}" -c Release --logger "trx;LogFileName=test-results.trx"
+        run: dotnet test "${{ env.QUACKJOB_SOLUTION }}" -c Release --no-restore --logger "trx;LogFileName=test-results.trx"
 
       - name: Upload test results
         if: always()
@@ -100,19 +103,15 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./display
-
-      - name: Build and push quackview-display image
-        uses: docker/build-push-action@v5
-        with:          file: ./display/container/Dockerfile
-          context: ./display
-          file: ./display/container/Dockerfiletory_owner }}/quackview-display:latest
+          file: ./display/container/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/quackview-display:latest quackview-scheduler image
+          tags: ghcr.io/${{ github.repository_owner }}/quackview-display:latest
 
       - name: Build and push quackview-scheduler image
         uses: docker/build-push-action@v5
-        with:          file: ./scheduler/container/Dockerfile
+        with:
           context: ./scheduler
-          file: ./scheduler/container/Dockerfiletory_owner }}/quackview-scheduler:latest
+          file: ./scheduler/container/Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/quackview-scheduler:latest
+
