@@ -5,7 +5,8 @@
 
 if [ -d /quackview-template ]; then
     echo "Copying template files to /quackview"
-    cp -rnv /quackview-template/* /quackview
+    rsync -av --backup --suffix=".new" /quackview-template/ /quackview
+    #cp -rnv /quackview-template/* /quackview
 else
     echo "No /quackview-template directory found; skipping template copy"
 fi
