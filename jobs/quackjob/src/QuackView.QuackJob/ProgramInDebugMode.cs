@@ -16,10 +16,9 @@ internal class ProgramInDebugMode(
     ISpecialPaths SpecialPaths) 
     : Program(logger, serviceProvider, console)
 {
-    protected readonly string QuackviewOverridePath = ProgramInDebugMode.GetQuackviewOverridePath();
     protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
-    public override Task<int> Run(string[] args)
+    public async override Task<int> Run(string[] args)
     {
         System.Console.BackgroundColor = ConsoleColor.Red;
         System.Console.ForegroundColor = ConsoleColor.Black;
@@ -54,32 +53,26 @@ internal class ProgramInDebugMode(
         System.Console.WriteLine($"ARGS: {string.Join(' ', args)}");
         System.Console.ResetColor();
 
-        this.EnsureDebugFiles();
+        await this.EnsureDebugFiles();
 
-        return base.Run(args);
+        return await base.Run(args);
     }
 
-    public void EnsureDebugFiles()
+    public async Task EnsureDebugFiles()
     {
-        if (!Directory.Exists(this.QuackviewOverridePath))
-            Directory.CreateDirectory(this.QuackviewOverridePath);
+        var quackviewOverridePath = await this.SpecialPaths.GetQuackViewDirectoryAsync();
+        var configPath = await this.SpecialPaths.GetConfigDirectoryPathAsync();
+        var dataPath = await this.SpecialPaths.GetDataDirectoryPathAsync();
+        var photosPath = Path.Combine(dataPath, "photos");
+        var calendarPath = Path.Combine(dataPath, "calendar");
+        var jobsPath = await this.SpecialPaths.GetJobsDirectoryPathAsync();
+        var secretsPath = await this.SpecialPaths.GetSecretsDirectoryPathAsync();
 
-        var configPath = Path.Combine(this.QuackviewOverridePath, "config");
-        var dataPath = Path.Combine(this.QuackviewOverridePath, "data");
-        var jobsPath = Path.Combine(this.QuackviewOverridePath, "jobs");
-        var secretsPath = Path.Combine(this.QuackviewOverridePath, "secrets");
-
-        if (!Directory.Exists(configPath))
-            Directory.CreateDirectory(configPath);
-
-        if (!Directory.Exists(dataPath))
-            Directory.CreateDirectory(dataPath);
-
-        if (!Directory.Exists(jobsPath))
-            Directory.CreateDirectory(jobsPath);
-
-        if (!Directory.Exists(secretsPath))
-            Directory.CreateDirectory(secretsPath);
+        foreach (var path in new string[] { quackviewOverridePath, configPath, dataPath, photosPath, calendarPath, jobsPath, secretsPath })
+        {
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+        }
 
         var buildImageFileListJobPath = Path.Combine(jobsPath, "build-image-file-list.json");
         if (!File.Exists(buildImageFileListJobPath))
@@ -97,7 +90,7 @@ internal class ProgramInDebugMode(
                 {
                     DirectoryPath = "photos",
                     IncludeSubdirectories = false,
-                    SearchPattern = "*.jpg",
+                    SearchPattern = "*.png",
                     OutputDataFile = "photos/list.json"
                 }
             }, options: Program.DefaultJsonSerializerOptions);

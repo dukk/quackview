@@ -89,7 +89,7 @@ internal class Program(
         }
         catch (Exception exception)
         {
-            console.WriteError($"Error: {exception.Message}");
+            console.WriteError($"Error while executing action: {exception.Message}");
             result = 1;
         }
 
@@ -186,5 +186,11 @@ internal class Program(
 
         services.AddSingleton<IProgram, ProgramInDebugMode>();
         services.AddSingleton<ISpecialPaths, DebugSpecialPaths>();
+
+        System.Console.WriteLine($"Services:");
+        foreach (var service in services)
+        {
+            System.Console.WriteLine($" - {service.ImplementationType?.FullName} -> {service.ServiceType.FullName}");
+        }
     }
 }

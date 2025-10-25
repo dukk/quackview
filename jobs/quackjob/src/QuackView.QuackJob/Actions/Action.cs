@@ -56,3 +56,37 @@ internal abstract partial class Action(ILogger<Action> logger, IConsoleService c
         return match;
     }
 }
+
+// Not going to go this far right now... maybe later..
+// [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+// internal class ActionAttribute(string? name = null, string? description = null, string? shorthand = null) : Attribute
+// {
+//     public string? Name { get; } = name;
+//     public string? Description { get; } = description;
+//     public string? Shorthand { get; } = shorthand;
+// }
+
+// [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, Inherited = false)]
+// internal class ActionFlagAttribute(string? name = null, string? description = null, bool defaultValue = false, string? shorthand = null) : Attribute
+// {
+//     public string? Name { get; } = name;
+//     public string? Description { get; } = description;
+//     public bool DefaultValue { get; } = defaultValue;
+//     public string? Shorthand { get; } = shorthand;
+// }
+
+// [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, Inherited = false)]
+// internal class ActionParameterAttribute(
+//     string? name = null,
+//     string? description = null,
+//     string? defaultValue = null,
+//     bool isRequired = false,
+//     string? shorthand = null) 
+//     : Attribute
+// {
+//     public string? Name { get; } = name;
+//     public string? Description { get; } = description;
+//     public string? DefaultValue { get; } = defaultValue;
+//     public bool IsRequired { get; } = isRequired;
+//     public string? Shorthand { get; } = shorthand;
+// }

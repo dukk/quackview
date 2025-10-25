@@ -7,13 +7,14 @@ using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Actions;
 
+// [Action]
 internal class RunAction(
     ILogger<RunAction> logger,
     ICommandLineParser commandLineParser,
     IServiceProvider serviceProvider,
     IFileService file,
     IConsoleService console,
-    ISpecialPaths SpecialPaths) 
+    ISpecialPaths SpecialPaths)
     : Action(logger, console)
 {
     protected readonly new ILogger<RunAction> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -22,20 +23,32 @@ internal class RunAction(
     protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
     protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
+    // [ActionParameter(name: "job", isRequired: true)]
+    public string? JobFile { get; set; }
+
     public override async Task ExecuteAsync(string[] args)
     {
+        this.Logger.LogDebug("Executing RunAction with args: {args}", string.Join(' ', args));
+
         var runnerName = string.Empty;
         JsonElement? jsonConfig = null;
         var parsedArgs = this.CommandLineParser.ParseArgs(args);
 
-        if (parsedArgs.TryGetValue("job", out var jobPath))
+        this.Logger.LogDebug("Parsed arguments: {parsedArgs}", string.Join(", ", parsedArgs.Select(kv => $"{kv.Key}={kv.Value}")));
+
+        if (!parsedArgs.ContainsKey("job"))
+            throw new Exception("Error: Job file parameter '--job' is required.");
+
+        var jobPath = parsedArgs["job"];
+
+        if (String.IsNullOrWhiteSpace(jobPath))
+            throw new Exception($"Invalid job file '{jobPath}'.");
+
+        if (!await this.File.ExistsAsync(jobPath))
         {
-            this.Console.WriteLine($"Using job file: {jobPath}");
+            if (!jobPath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                jobPath += ".json";
 
-            if (String.IsNullOrWhiteSpace(jobPath))
-                throw new Exception($"Invalid job file '{jobPath}'.");
-
-            // If no directory is specified and the file doesn't exist look for it in the job directory too
             if (!await this.File.ExistsAsync(jobPath))
             {
                 var jobDirectory = Path.GetDirectoryName(jobPath);
@@ -46,31 +59,19 @@ internal class RunAction(
                     jobPath = Path.Combine(jobDirectory, jobPath);
                 }
             }
-
-            var jobFileContent = await this.File.ReadAllTextAsync(jobPath);
-            var jobFile = JsonDocument.Parse(jobFileContent);
-            var jobMetadata = jobFile.RootElement.GetProperty("metadata");
-
-            runnerName = jobMetadata.GetProperty("runner").GetString();
-            jsonConfig = jobFile.RootElement.GetProperty("config");
         }
-        else
-        {
-            if (!parsedArgs.TryGetValue("runner", out runnerName) || string.IsNullOrEmpty(runnerName))
-                throw new Exception("No job runner specified. Use --runner <runner-name> to specify a job runner to run.");
 
-            string? configPath = null!;
+        this.Console.WriteLine($"Using job file: {jobPath}");
 
-            if (parsedArgs.TryGetValue("config", out configPath))
-            {
-                this.Console.WriteLine($"Using config file: {configPath}");
+        if (!await this.File.ExistsAsync(jobPath))
+            throw new FileNotFoundException($"Job file '{jobPath}' does not exist.");
 
-                if (String.IsNullOrWhiteSpace(configPath))
-                    throw new Exception($"Invalid config file path '{configPath}'.");
+        var jobFileContent = await this.File.ReadAllTextAsync(jobPath);
+        var jobFile = JsonDocument.Parse(jobFileContent);
+        var jobMetadata = jobFile.RootElement.GetProperty("metadata");
 
-                jsonConfig = JsonDocument.Parse(await this.File.ReadAllTextAsync(configPath)).RootElement;
-            }
-        }
+        runnerName = jobMetadata.GetProperty("runner").GetString();
+        jsonConfig = jobFile.RootElement.GetProperty("config");
 
         if (runnerName.IsNullOrEmpty())
             throw new Exception("Error: Unspecified job runner.");
@@ -82,7 +83,7 @@ internal class RunAction(
 
         if (jobRunner == null)
             throw new Exception($"Job runner '{runnerName}' not found.");
-        
+
         await jobRunner.ExecuteAsync(jsonConfig);
     }
 }

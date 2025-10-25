@@ -5,13 +5,14 @@ using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Actions;
 
+// [Action()]
 internal class RebuildScheduleAction(
     ILogger<RebuildScheduleAction> logger,
     ICronScheduler cronScheduler,
     IConsoleService console,
     IDirectoryService directory,
     IFileService file,
-    ISpecialPaths SpecialPaths) 
+    ISpecialPaths SpecialPaths)
     : Action(logger, console)
 {
     protected readonly new ILogger<RebuildScheduleAction> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -64,7 +65,7 @@ internal class RebuildScheduleAction(
             }
         }
     }
-    
+
     protected virtual string GetQuackjobExecutablePath()
     {
         return Environment.ProcessPath

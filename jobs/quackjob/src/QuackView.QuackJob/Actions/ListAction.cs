@@ -7,10 +7,11 @@ using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Actions;
 
+// [Action(shorthand: "ls")]
 internal class ListAction(
     ILogger<ListAction> logger,
     IConsoleService console,
-    IServiceProvider serviceProvider) 
+    IServiceProvider serviceProvider)
     : Action(logger, console)
 {
     protected readonly new ILogger<ListAction> Logger = logger ?? throw new ArgumentNullException(nameof(logger));

@@ -23,8 +23,16 @@ internal class BuildImageFileListJob(ILogger<BuildImageFileListJob> logger, IDat
 
         this.Console.WriteLine($"Executing build file list job using directory '{config.DirectoryPath}', search pattern '{config.SearchPattern}'{(config.IncludeSubdirectories ? " and including subdirectories" : "")}.");
 
-        var files = await this.DataDirectoryService.EnumerateFilesAsync(
-            config.DirectoryPath, config.SearchPattern, config.IncludeSubdirectories);
+        var fullFileList = new List<string>();
+        
+        foreach (var searchPattern in config.SearchPattern.Split('|'))
+        {
+            var files = await this.DataDirectoryService.EnumerateFilesAsync(
+                config.DirectoryPath, searchPattern, config.IncludeSubdirectories);
+
+            fullFileList.AddRange(files);
+        }
+        
         var imageFileList = new ImageFileList
         {
             Metadata = new ImageFileListMetadata
@@ -34,10 +42,10 @@ internal class BuildImageFileListJob(ILogger<BuildImageFileListJob> logger, IDat
                 Sources = new List<string> { config.DirectoryPath },
                 SearchPattern = config.SearchPattern
             },
-            Images = [.. files.Select(f => new ImageFile
+            Images = [.. fullFileList.Select(f => new ImageFile
             {
                 Url = f.Replace("\\", "/")
-            })]
+            }).OrderBy(f => f.Url)]
         };
 
         this.Console.WriteLine($"Writing output file: {config.OutputDataFile}");
