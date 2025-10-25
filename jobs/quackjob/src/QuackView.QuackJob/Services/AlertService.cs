@@ -10,7 +10,7 @@ internal interface IAlertService
 
     Task ClearExpiredAlertsAsync();
 
-    IEnumerable<Alert> GetAlerts();
+    Task<IEnumerable<Alert>> GetAlertsAsync();
 }
 
 internal class AlertService(IDataFileService dataFileService) : IAlertService
@@ -25,18 +25,21 @@ internal class AlertService(IDataFileService dataFileService) : IAlertService
         await this.dataFileService.AppendToJsonListFileAsync<Alert>(AlertService.AlertsFile, alert);
     }
 
-    public Task ClearAlertsAsync()
+    public async Task ClearAlertsAsync()
     {
-        throw new NotImplementedException();
+        await this.dataFileService.DeleteAllJsonListItemsAsync<Alert>(AlertService.AlertsFile);
     }
 
-    public Task ClearExpiredAlertsAsync()
+    public async Task ClearExpiredAlertsAsync()
     {
-        throw new NotImplementedException();
+        await this.dataFileService.DeleteJsonListItemsAsync<Alert>(AlertService.AlertsFile,
+            alert => alert.Expires < DateTime.UtcNow);
     }
 
-    public IEnumerable<Alert> GetAlerts()
+    public async Task<IEnumerable<Alert>> GetAlertsAsync()
     {
-        throw new NotImplementedException();
+        var alertsFile = await this.dataFileService.ReadJsonListFileAsync<Alert>(AlertService.AlertsFile);
+
+        return alertsFile.List;
     }
 }

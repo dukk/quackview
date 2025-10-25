@@ -19,13 +19,21 @@ internal interface IDataFileService
     Task AppendToJsonListFileAsync<T>(string path, T content);
 
     Task DeleteFileAsync(string path);
+
+    Task DeleteAllJsonListItemsAsync<T>(string path);
+
+    Task DeleteJsonListItemsAsync<T>(string path, Func<T, bool> itemsToDelete);
+
+    Task<string> ReadAllTextAsync(string path);
+
+    Task<JsonListFile<T>> ReadJsonListFileAsync<T>(string path);
 }
 
 internal class DataFileService(
     ILogger<DataFileService> logger,
     IFileService file,
     IDataDirectoryService directory,
-    ISpecialPaths SpecialPaths) 
+    ISpecialPaths SpecialPaths)
     : IDataFileService
 {
     public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = Program.DefaultJsonSerializerOptions;
@@ -70,10 +78,10 @@ internal class DataFileService(
 
         try
         {
-            path = await this.GetFullPathAsync(path);
+            var fullPath = await this.GetFullPathAsync(path);
 
-            await this.File.WriteAllTextAsync(path, content);
-            logger.LogInformation("Data file written to {Path}", path);
+            await this.File.WriteAllTextAsync(fullPath, content);
+            logger.LogInformation("Data file written to {fullPath}", fullPath);
         }
         catch (Exception ex)
         {
@@ -84,7 +92,7 @@ internal class DataFileService(
     public async Task AppendToFileAsync(string path, string content)
     {
         // TODO: Add file locking
-        
+
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(content);
 
@@ -101,6 +109,89 @@ internal class DataFileService(
         catch (Exception ex)
         {
             throw new Exception($"Failed to append data file to {path}", ex);
+        }
+    }
+
+    public async Task<JsonListFile<T>> ReadJsonListFileAsync<T>(string path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+
+        if (Path.IsPathRooted(path))
+            throw new ArgumentException("Path must be relative.", nameof(path));
+
+        path = await this.GetFullPathAsync(path);
+
+        try
+        {
+            var json = await this.File.ReadAllTextAsync(path);
+            var jsonList = JsonSerializer.Deserialize<JsonListFile<T>>(json, DataFileService.DefaultJsonSerializerOptions);
+
+            return jsonList ?? throw new InvalidOperationException("Failed to deserialize JSON list file.");
+        }
+        catch (Exception exception)
+        {
+            throw new FileLoadException("Failed to load JSON list file.", exception);
+        }
+    }
+
+    public async Task DeleteAllJsonListItemsAsync<T>(string path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+
+        if (Path.IsPathRooted(path))
+            throw new ArgumentException("Path must be relative.", nameof(path));
+
+        path = await this.GetFullPathAsync(path);
+
+        try
+        {
+            var json = await this.File.ReadAllTextAsync(path);
+            var jsonList = JsonSerializer.Deserialize<JsonListFile<T>>(json, DataFileService.DefaultJsonSerializerOptions);
+
+            if (jsonList != null)
+            {
+                jsonList.List = [];
+                jsonList.Metadata.LastUpdated = DateTime.UtcNow;
+
+                var updatedJson = JsonSerializer.Serialize(jsonList, DataFileService.DefaultJsonSerializerOptions);
+
+                await this.File.WriteAllTextAsync(path, updatedJson);
+            }
+        }
+        catch (Exception exception)
+        {
+            throw new FileLoadException("Failed to load JSON list file.", exception);
+        }
+    }
+
+    public async Task DeleteJsonListItemsAsync<T>(string path, Func<T, bool> itemsToDelete)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(itemsToDelete);
+
+        if (Path.IsPathRooted(path))
+            throw new ArgumentException("Path must be relative.", nameof(path));
+
+        path = await this.GetFullPathAsync(path);
+
+        try
+        {
+            var json = await this.File.ReadAllTextAsync(path);
+            var jsonList = JsonSerializer.Deserialize<JsonListFile<T>>(json, DataFileService.DefaultJsonSerializerOptions);
+
+            if (jsonList != null)
+            {
+                jsonList.List = [.. jsonList.List.Where(item => !itemsToDelete(item))];
+                jsonList.Metadata.LastUpdated = DateTime.UtcNow;
+
+                var updatedJson = JsonSerializer.Serialize(jsonList, DataFileService.DefaultJsonSerializerOptions);
+
+                await this.File.WriteAllTextAsync(path, updatedJson);
+            }
+        }
+        catch (Exception exception)
+        {
+            throw new FileLoadException("Failed to load JSON list file.", exception);
         }
     }
 
@@ -142,7 +233,8 @@ internal class DataFileService(
                 jsonArrayFile = new JsonListFile<T>();
             }
 
-            jsonArrayFile?.List.Add(content);
+            jsonArrayFile!.List.Add(content);
+            jsonArrayFile!.Metadata.LastUpdated = DateTime.UtcNow;
 
             var json = JsonSerializer.Serialize(jsonArrayFile, DataFileService.DefaultJsonSerializerOptions);
             await File.WriteAllTextAsync(path, json);
@@ -188,5 +280,23 @@ internal class DataFileService(
             throw new ArgumentException("Path must be relative", nameof(path));
 
         return Path.Combine(await this.SpecialPaths.GetDataDirectoryPathAsync(), path);
+    }
+
+    public async Task<string> ReadAllTextAsync(string path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+
+        if (Path.IsPathRooted(path))
+            throw new ArgumentException("Path must be relative.", nameof(path));
+
+        try
+        {
+            path = await this.GetFullPathAsync(path);
+            return await this.File.ReadAllTextAsync(path);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to read data file at {path}", ex);
+        }
     }
 }

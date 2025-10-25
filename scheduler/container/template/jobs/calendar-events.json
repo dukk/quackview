@@ -1,8 +1,8 @@
 {
-    "job": {
+    "metadata": {
         "name": "Refresh calendar events every Saturday morning",
         "description": "Generates a list of calendar events and saves them to a JSON file.",
-        "type": "upcoming-calendar-events",
+        "runner": "upcoming-calendar-events",
         "schedule": "*/60 * * * *"
     },
     "config": {
@@ -13,6 +13,6 @@
                 "calendars": ["Family", "School Calendar", "United States holidays"]
             }
         ],
-        "outputFileName": "calendar/upcoming-events.json"
+        "outputDataFilePath": "calendar/upcoming-events.json"
     }
 }

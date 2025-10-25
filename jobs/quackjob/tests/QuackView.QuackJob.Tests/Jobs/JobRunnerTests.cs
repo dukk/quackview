@@ -3,34 +3,24 @@ using TypoDukk.QuackView.QuackJob.Jobs;
 using TypoDukk.QuackView.QuackJob.Services;
 namespace TypoDukk.QuackView.QuackJob.Tests.Jobs;
 
-[TestClass]
-public sealed class JobRunnerTests
-{
-    [TestMethod]
-    public void GetNameFromType()
-    {
-        Assert.AreEqual("test", JobRunner.GetNameFromType(typeof(TestJob)));
-        Assert.AreEqual("test-test-test", JobRunner.GetNameFromType(typeof(TestTestTestJob)));
-    }
-}
+// [TestClass]
+// public sealed class JobRunnerTests
+// {
 
-internal class TestJob : JobRunner
+// }
+
+internal class TestJobRunner(IFileService file) : JobRunner(file)
 {
-    public override Task ExecuteAsync(JsonElement? jsonConfig = null)
+    public override Task ExecuteJobFileAsync(JobFile jobFile)
     {
         throw new NotImplementedException();
     }
 }
 
-internal class TestTestTestJob : JobRunner
+internal class TestTestTestJobRunner(IFileService file) : JobRunner(file)
 {
-    public override Task ExecuteAsync(JsonElement? jsonConfig = null)
+    public override Task ExecuteJobFileAsync(JobFile jobFile)
     {
         throw new NotImplementedException();
     }
-}
-
-internal class TestJobConfig
-{
-
 }

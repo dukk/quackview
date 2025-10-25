@@ -31,7 +31,6 @@ internal class RunAction(
         this.Logger.LogDebug("Executing RunAction with args: {args}", string.Join(' ', args));
 
         var runnerName = string.Empty;
-        JsonElement? jsonConfig = null;
         var parsedArgs = this.CommandLineParser.ParseArgs(args);
 
         this.Logger.LogDebug("Parsed arguments: {parsedArgs}", string.Join(", ", parsedArgs.Select(kv => $"{kv.Key}={kv.Value}")));
@@ -67,23 +66,26 @@ internal class RunAction(
             throw new FileNotFoundException($"Job file '{jobPath}' does not exist.");
 
         var jobFileContent = await this.File.ReadAllTextAsync(jobPath);
+
+        this.Logger.LogDebug("Job file content: {jobFileContent}", jobFileContent);
+
         var jobFile = JsonDocument.Parse(jobFileContent);
         var jobMetadata = jobFile.RootElement.GetProperty("metadata");
 
         runnerName = jobMetadata.GetProperty("runner").GetString();
-        jsonConfig = jobFile.RootElement.GetProperty("config");
 
         if (runnerName.IsNullOrEmpty())
             throw new Exception("Error: Unspecified job runner.");
 
         this.Console.WriteLine($"Using job runner: {runnerName}");
 
-        var jobRunner = this.ServiceProvider.GetServices<IJobRunner>()
-            .FirstOrDefault(j => j.Name.Equals(runnerName, StringComparison.OrdinalIgnoreCase));
+        var jobRunners = this.ServiceProvider.GetServices<IJobRunner>();
 
-        if (jobRunner == null)
-            throw new Exception($"Job runner '{runnerName}' not found.");
+        this.Logger.LogDebug("Available job runners: {jobRunners}", string.Join(", ", jobRunners.Select(r => r.Name)));
 
-        await jobRunner.ExecuteAsync(jsonConfig);
+        var jobRunner = jobRunners.FirstOrDefault(j => j.Name.Equals(runnerName, StringComparison.OrdinalIgnoreCase))
+            ?? throw new Exception($"Job runner '{runnerName}' not found.");
+
+        await jobRunner.ExecuteJobFileAsync(jobPath);
     }
 }

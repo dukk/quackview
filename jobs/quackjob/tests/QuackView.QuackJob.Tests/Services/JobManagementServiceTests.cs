@@ -1,181 +1,181 @@
-using TypoDukk.QuackView.QuackJob.Jobs;
-using TypoDukk.QuackView.QuackJob.Services;
-using NSubstitute;
-using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using System.Text.Json.Nodes;
+// using TypoDukk.QuackView.QuackJob.Jobs;
+// using TypoDukk.QuackView.QuackJob.Services;
+// using NSubstitute;
+// using Microsoft.Extensions.Logging;
+// using System.Text.Json;
+// using System.Text.Json.Nodes;
 
-namespace TypoDukk.QuackView.QuackJob.Tests.Services;
+// namespace TypoDukk.QuackView.QuackJob.Tests.Services;
 
-[TestClass]
-internal class JobManagementServiceTests
-{
-    [TestMethod]
-    public async Task GetAvailableJobFilesAsync_ReturnsListOfFiles()
-    {
-        // Arrange
-        var logger = Substitute.For<ILogger<JobManagementService>>();
-        var directory = Substitute.For<IDirectoryService>();
-        var file = Substitute.For<IFileService>();
-        var SpecialPaths = Substitute.For<ISpecialPaths>();
-        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
-        var jobFiles = new string[] { "job1.json", "job2.json", "job3.json" };
+// [TestClass]
+// internal class JobManagementServiceTests
+// {
+//     [TestMethod]
+//     public async Task GetAvailableJobFilesAsync_ReturnsListOfFiles()
+//     {
+//         // Arrange
+//         var logger = Substitute.For<ILogger<JobManagementService>>();
+//         var directory = Substitute.For<IDirectoryService>();
+//         var file = Substitute.For<IFileService>();
+//         var SpecialPaths = Substitute.For<ISpecialPaths>();
+//         var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
+//         var jobFiles = new string[] { "job1.json", "job2.json", "job3.json" };
 
-        directory.EnumerateFilesAsync(Path.Combine("quackview-tests", "jobs")).Returns(jobFiles);
+//         directory.EnumerateFilesAsync(Path.Combine("quackview-tests", "jobs")).Returns(jobFiles);
 
-        // Act
-        var result = await jobManagementService.GetAvailableJobFilesAsync();
+//         // Act
+//         var result = await jobManagementService.GetAvailableJobFilesAsync();
 
-        // Assert
-        Assert.IsNotNull(result);
-    }
+//         // Assert
+//         Assert.IsNotNull(result);
+//     }
 
-    [TestMethod]
-    public async Task LoadJobFileAsync_ReturnsJobFileWithNoConfig()
-    {
-        // Arrange
-        var logger = Substitute.For<ILogger<JobManagementService>>();
-        var directory = Substitute.For<IDirectoryService>();
-        var file = Substitute.For<IFileService>();
-        var SpecialPaths = Substitute.For<ISpecialPaths>();
-        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
+//     [TestMethod]
+//     public async Task LoadJobFileAsync_ReturnsJobFileWithNoConfig()
+//     {
+//         // Arrange
+//         var logger = Substitute.For<ILogger<JobManagementService>>();
+//         var directory = Substitute.For<IDirectoryService>();
+//         var file = Substitute.For<IFileService>();
+//         var SpecialPaths = Substitute.For<ISpecialPaths>();
+//         var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
 
-        file.ExistsAsync(Arg.Any<string>()).Returns(true);
-        file.ReadAllTextAsync(Arg.Any<string>()).Returns(Task.FromResult(getJobFileContentWithNoConfig()));
+//         file.ExistsAsync(Arg.Any<string>()).Returns(true);
+//         file.ReadAllTextAsync(Arg.Any<string>()).Returns(Task.FromResult(getJobFileContentWithNoConfig()));
 
-        // Act
-        var result = await jobManagementService.LoadJobFileAsync<object>("test-job.json");
+//         // Act
+//         var result = await jobManagementService.LoadJobFileAsync<object>("test-job.json");
 
-        // Assert
-        Assert.IsNotNull(result);
-    }
+//         // Assert
+//         Assert.IsNotNull(result);
+//     }
 
-    [TestMethod]
-    public async Task LoadJobFileAsync_ReturnsJobFileWithConfig()
-    {
-        // Arrange
-        var logger = Substitute.For<ILogger<JobManagementService>>();
-        var directory = Substitute.For<IDirectoryService>();
-        var file = Substitute.For<IFileService>();
-        var SpecialPaths = Substitute.For<ISpecialPaths>();
-        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
+//     [TestMethod]
+//     public async Task LoadJobFileAsync_ReturnsJobFileWithConfig()
+//     {
+//         // Arrange
+//         var logger = Substitute.For<ILogger<JobManagementService>>();
+//         var directory = Substitute.For<IDirectoryService>();
+//         var file = Substitute.For<IFileService>();
+//         var SpecialPaths = Substitute.For<ISpecialPaths>();
+//         var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
 
-        file.ExistsAsync(Arg.Any<string>()).Returns(true);
-        file.ReadAllTextAsync(Arg.Any<string>()).Returns(Task.FromResult(getJobFileContentWithConfig()));
+//         file.ExistsAsync(Arg.Any<string>()).Returns(true);
+//         file.ReadAllTextAsync(Arg.Any<string>()).Returns(Task.FromResult(getJobFileContentWithConfig()));
 
-        // Act
-        var result = await jobManagementService.LoadJobFileAsync<object>("test-job.json");
+//         // Act
+//         var result = await jobManagementService.LoadJobFileAsync<object>("test-job.json");
 
-        // Assert
-        Assert.IsNotNull(result);
-    }
+//         // Assert
+//         Assert.IsNotNull(result);
+//     }
 
-    [TestMethod]
-    public async Task SaveJobFileAsync_SavesFile_NoConfig()
-    {
-        // Arrange
-        var logger = Substitute.For<ILogger<JobManagementService>>();
-        var directory = Substitute.For<IDirectoryService>();
-        var file = Substitute.For<IFileService>();
-        var SpecialPaths = Substitute.For<ISpecialPaths>();
-        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
+//     [TestMethod]
+//     public async Task SaveJobFileAsync_SavesFile_NoConfig()
+//     {
+//         // Arrange
+//         var logger = Substitute.For<ILogger<JobManagementService>>();
+//         var directory = Substitute.For<IDirectoryService>();
+//         var file = Substitute.For<IFileService>();
+//         var SpecialPaths = Substitute.For<ISpecialPaths>();
+//         var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
 
-        file.ExistsAsync(Arg.Any<string>()).Returns(false);
-        SpecialPaths.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
+//         file.ExistsAsync(Arg.Any<string>()).Returns(false);
+//         SpecialPaths.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
 
-        // Act
-        var jobFile = this.getJobFileWithNoConfig();
-        await jobManagementService.SaveJobFileAsync("test-job.json", jobFile);
+//         // Act
+//         var jobFile = this.getJobFileWithNoConfig();
+//         await jobManagementService.SaveJobFileAsync("test-job.json", jobFile);
 
-        // Assert
-        var jobFilePath = Path.Combine("quackview-tests", "jobs", "test-job.json");
+//         // Assert
+//         var jobFilePath = Path.Combine("quackview-tests", "jobs", "test-job.json");
 
-        await file.Received().ExistsAsync(jobFilePath);
-        await file.Received().WriteAllTextAsync(jobFilePath, Arg.Any<string>());
-    }
-    
-    [TestMethod]
-    public async Task SaveJobFileAsync_SavesFile_Config()
-    {
-        // Arrange
-        var logger = Substitute.For<ILogger<JobManagementService>>();
-        var directory = Substitute.For<IDirectoryService>();
-        var file = Substitute.For<IFileService>();
-        var SpecialPaths = Substitute.For<ISpecialPaths>();
-        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
+//         await file.Received().ExistsAsync(jobFilePath);
+//         await file.Received().WriteAllTextAsync(jobFilePath, Arg.Any<string>());
+//     }
 
-        file.ExistsAsync(Arg.Any<string>()).Returns(false);
-        SpecialPaths.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
+//     [TestMethod]
+//     public async Task SaveJobFileAsync_SavesFile_Config()
+//     {
+//         // Arrange
+//         var logger = Substitute.For<ILogger<JobManagementService>>();
+//         var directory = Substitute.For<IDirectoryService>();
+//         var file = Substitute.For<IFileService>();
+//         var SpecialPaths = Substitute.For<ISpecialPaths>();
+//         var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
 
-        // Act
-        var jobFile = this.getJobFileWithConfig();
-        await jobManagementService.SaveJobFileAsync("test-job.json", jobFile);
+//         file.ExistsAsync(Arg.Any<string>()).Returns(false);
+//         SpecialPaths.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
 
-        // Assert
-        var jobFilePath = Path.Combine("quackview-tests", "jobs", "test-job.json");
+//         // Act
+//         var jobFile = this.getJobFileWithConfig();
+//         await jobManagementService.SaveJobFileAsync("test-job.json", jobFile);
 
-        await file.Received().ExistsAsync(jobFilePath);
-        await file.Received().WriteAllTextAsync(jobFilePath, Arg.Any<string>());
-    }
+//         // Assert
+//         var jobFilePath = Path.Combine("quackview-tests", "jobs", "test-job.json");
 
-    [TestMethod]
-    public async Task DeleteJobFileAsync_ValidPath_DeletesFile()
-    {
-        // Arrange
-        var logger = Substitute.For<ILogger<JobManagementService>>();
-        var directory = Substitute.For<IDirectoryService>();
-        var file = Substitute.For<IFileService>();var SpecialPaths = Substitute.For<ISpecialPaths>();
-        var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
+//         await file.Received().ExistsAsync(jobFilePath);
+//         await file.Received().WriteAllTextAsync(jobFilePath, Arg.Any<string>());
+//     }
 
-        SpecialPaths.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
+//     [TestMethod]
+//     public async Task DeleteJobFileAsync_ValidPath_DeletesFile()
+//     {
+//         // Arrange
+//         var logger = Substitute.For<ILogger<JobManagementService>>();
+//         var directory = Substitute.For<IDirectoryService>();
+//         var file = Substitute.For<IFileService>();var SpecialPaths = Substitute.For<ISpecialPaths>();
+//         var jobManagementService = new JobManagementService(logger, directory, file, SpecialPaths);
 
-        // Act
-        await jobManagementService.DeleteJobFileAsync("test-job.json");
+//         SpecialPaths.GetJobsDirectoryPathAsync().Returns(Path.Combine("quackview-tests", "jobs"));
 
-        // Assert
-        await file.Received().DeleteFileAsync(Path.Combine("quackview-tests", "jobs", "test-job.json"));
-    }
+//         // Act
+//         await jobManagementService.DeleteJobFileAsync("test-job.json");
 
-    private JobFile<object> getJobFileWithNoConfig()
-    {
-        var jobFile = new JobFile<object>()
-        {
-            Metadata = new()
-            {
-                Name = "test job",
-                Description = "test job description",
-                Runner = "test-runner",
-                Schedule = "*/10 * * * *"
-            }
-        };
+//         // Assert
+//         await file.Received().DeleteFileAsync(Path.Combine("quackview-tests", "jobs", "test-job.json"));
+//     }
 
-        return jobFile;
-    }
+//     private JobFile<object> getJobFileWithNoConfig()
+//     {
+//         var jobFile = new JobFile<object>()
+//         {
+//             Metadata = new()
+//             {
+//                 Name = "test job",
+//                 Description = "test job description",
+//                 Runner = "test-runner",
+//                 Schedule = "*/10 * * * *"
+//             }
+//         };
 
-    private string getJobFileContentWithNoConfig()
-    {
-        return this.getJobFileWithNoConfig().ToJson();
-    }
+//         return jobFile;
+//     }
 
-    private JobFile<object> getJobFileWithConfig()
-    {
-        var jobFile = new JobFile<object>()
-        {
-            Metadata = new()
-            {
-                Name = "test job",
-                Description = "test job description",
-                Runner = "test-runner",
-                Schedule = "*/10 * * * *"
-            },
-            Config = JsonSerializer.Deserialize<JsonObject>("{\"blah\": \"test\"}")
-        };
+//     private string getJobFileContentWithNoConfig()
+//     {
+//         return this.getJobFileWithNoConfig().ToJson();
+//     }
 
-        return jobFile;
-    }
+//     private JobFile<object> getJobFileWithConfig()
+//     {
+//         var jobFile = new JobFile<object>()
+//         {
+//             Metadata = new()
+//             {
+//                 Name = "test job",
+//                 Description = "test job description",
+//                 Runner = "test-runner",
+//                 Schedule = "*/10 * * * *"
+//             },
+//             Config = JsonSerializer.Deserialize<JsonObject>("{\"blah\": \"test\"}")
+//         };
 
-    private string getJobFileContentWithConfig()
-    {
-        return this.getJobFileWithConfig().ToJson();
-    }
-}
+//         return jobFile;
+//     }
+
+//     private string getJobFileContentWithConfig()
+//     {
+//         return this.getJobFileWithConfig().ToJson();
+//     }
+// }

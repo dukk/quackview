@@ -38,6 +38,11 @@ internal class SpecialPaths(ILogger<SpecialPaths> logger, IDirectoryService dire
         return await this.EnsureExistsAndReturn(Path.Combine(await GetQuackViewDirectoryAsync(), SpecialPaths.DataDirectoryName));
     }
 
+    public virtual string GetDataDirectoryUrl()
+    {
+        return "/data/";
+    }
+
     public virtual async Task<string> GetConfigDirectoryPathAsync()
     {
         return await this.EnsureExistsAndReturn(Path.Combine(await GetQuackViewDirectoryAsync(), SpecialPaths.ConfigDirectoryName));

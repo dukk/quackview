@@ -1,14 +1,14 @@
 {
-    "job": {
-        "name": "Refresh dad jokes every Saturday morning",
-        "description": "Generates a list of dad jokes and saves them to a JSON file.",
-        "type": "open-ai-prompt",
-        "schedule": "0 6 * * 6"
-    },
-    "config": {
-        "model": "gpt-4",
-        "prompt": "Generate a list of 30 unique dad jokes in JSON format with the fields 'joke' and 'punchline'. Ensure the joke is family-friendly and suitable for all ages. Each joke should be concise, ideally under 20 words. Jokes should be relevant to the current season or popular culture.",
-        "apiKey": "$^{open-ai-api-key}",
-        "outputDataFile": "dad-jokes.json"
-    }
+	"metadata": {
+		"name": "Refresh dad jokes every Saturday morning",
+		"description": "Generates a list of dad jokes and saves them to a JSON file.",
+		"runner": "open-ai-prompt",
+		"schedule": "0 6 * * 6"
+	},
+	"config": {
+		"model": "gpt-4",
+		"prompt": "Generate a list of 30 unique dad jokes in JSON format with the fields 'joke' and 'punchline'. Ensure the joke is family-friendly and suitable for all ages. Each joke should be concise, ideally under 20 words. Jokes should be relevant to the current season or popular culture.",
+		"apiKey": "$^{open-ai-api-key}",
+		"outputDataFilePath": "dad-jokes.json"
+	}
 }

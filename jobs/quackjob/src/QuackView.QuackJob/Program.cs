@@ -22,7 +22,7 @@ interface IProgram
 internal class Program(
     ILogger<Program> logger,
     IServiceProvider serviceProvider,
-    IConsoleService console) 
+    IConsoleService console)
     : IProgram
 {
     public static JsonSerializerOptions DefaultJsonSerializerOptions = new()
@@ -53,7 +53,7 @@ internal class Program(
         var requestedAction = (args.Length < 1 || string.IsNullOrEmpty(args[0])) ? HELP : args[0];
 
         requestedAction = requestedAction.ToLower();
-        
+
         if (requestedAction == HELP && args.Length > 1)
         {
             var requestedSubHelpAction = args[1].ToString();
@@ -83,13 +83,18 @@ internal class Program(
         try
         {
             await action.ExecuteAsync(
-                (args.Length < 1) 
-                    ? [] 
+                (args.Length < 1)
+                    ? []
                     : args[1..]);
         }
         catch (Exception exception)
         {
             console.WriteError($"Error while executing action: {exception.Message}");
+            this.Logger.LogDebug(
+                "Error while executing action: {actionName}, Exception: {exceptionMessage}, StackTrace: {stackTrace}",
+                action.Name,
+                exception.Message,
+                exception.StackTrace);
             result = 1;
         }
 
@@ -169,9 +174,10 @@ internal class Program(
 
     internal static void ComposeJobRunners(IServiceCollection services)
     {
-        services.AddSingleton<IJobRunner, OpenAiPromptJob>();
-        services.AddSingleton<IJobRunner, UpcomingCalendarEventsJob>();
-        services.AddSingleton<IJobRunner, BuildImageFileListJob>();
+        services.AddSingleton<IJobRunner, ClearExpiredAlertsJobRunner>();
+        services.AddSingleton<IJobRunner, OpenAiPromptJobRunner>();
+        services.AddSingleton<IJobRunner, UpcomingCalendarEventsJobRunner>();
+        services.AddSingleton<IJobRunner, BuildImageFileListJobRunner>();
     }
 
     [Conditional("DEBUG")]

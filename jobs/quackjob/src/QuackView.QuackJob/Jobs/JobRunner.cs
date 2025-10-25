@@ -1,5 +1,9 @@
+using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.FileProviders;
+using TypoDukk.QuackView.QuackJob.Data;
+using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;
 
@@ -7,49 +11,74 @@ internal interface IJobRunner
 {
     string Name { get; }
     string Description { get; }
-    Task ExecuteAsync(JsonElement? jsonConfig);
+    Task ExecuteJobFileAsync(string filePath);
+    Task CreateNewJobFileAsync(string filePath);
 }
 
-internal abstract partial class JobRunner : IJobRunner
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+internal sealed class JobRunnerAttribute(string name, string description) : Attribute
 {
-    [GeneratedRegex("([A-Z])")]
-    private static partial Regex nameRegex();
+    public string Name { get; set; } = name;
+    public string Description { get; set; } = description;
+}
 
-    public virtual string Name => JobRunner.GetNameFromType(this.GetType());
+internal abstract class JobRunner(IFileService file) : JobRunner<JobFile>(file)
+{
+}
 
-    public string Description { get; protected set; } = "No description available.";
-
-    internal static string GetNameFromType(Type type)
+internal abstract class JobRunner<TJobFile>(IFileService file) : IJobRunner
+    where TJobFile : class, new()
+{
+    public string Name
     {
-        return JobRunner.GetNameFromType(type.Name);
+        get
+        {
+            var runnerAttribute = this.GetType().GetCustomAttributes<JobRunnerAttribute>().FirstOrDefault();
+            return runnerAttribute?.Name ?? throw new InvalidOperationException("JobRunner is missing required JobRunnerAttribute.");
+        }
     }
 
-    internal static string GetNameFromType(string typeName)
+    public string Description
     {
-        const string ending = "job";
-        var name = nameRegex().Replace(typeName, "-$1").ToLower();
-        if (name.EndsWith(ending))
-            name = name[..^3];
-        return name.Trim('-');
+        get
+        {
+            var runnerAttribute = this.GetType().GetCustomAttributes<JobRunnerAttribute>().FirstOrDefault();
+            return runnerAttribute?.Description ?? throw new InvalidOperationException("JobRunner is missing required JobRunnerAttribute.");
+        }
     }
 
-    public abstract Task ExecuteAsync(JsonElement? jsonConfig = null);
+    protected IFileService File = file ?? throw new ArgumentNullException(nameof(file));
 
-    protected virtual TConfig LoadJsonConfig<TConfig>(JsonElement? jsonConfig, JsonSerializerOptions? options = null)
+    public virtual async Task ExecuteJobFileAsync(string filePath)
     {
-        if (!jsonConfig.HasValue)
-            throw new ArgumentNullException(nameof(jsonConfig));
+        if (!await this.File.ExistsAsync(filePath))
+            throw new FileNotFoundException();
 
-        return this.LoadJsonConfig<TConfig>(jsonConfig.Value, options);
+        var json = await this.File.ReadAllTextAsync(filePath);
+        var jobFile = JsonSerializer.Deserialize<TJobFile>(json, Program.DefaultJsonSerializerOptions);
+
+        if (null == jobFile)
+            throw new InvalidOperationException("Failed to load job file.");
+
+        await this.ExecuteJobFileAsync(jobFile);
     }
 
-    protected virtual TConfig LoadJsonConfig<TConfig>(JsonElement jsonConfig, JsonSerializerOptions? options = null)
+
+    public abstract Task ExecuteJobFileAsync(TJobFile jobFile);
+
+    public virtual async Task CreateNewJobFileAsync(string filePath)
     {
-        options ??= Program.DefaultJsonSerializerOptions;
+        var jobFile = new JobFile<TJobFile>()
+        {
+            Metadata = new JobMetadata()
+            {
+                Description = "Describe the job here.",
+                Runner = this.Name,
+            }
+        };
 
-        var config = JsonSerializer.Deserialize<TConfig>(jsonConfig, options)
-            ?? throw new InvalidOperationException($"Failed to deserialize config JSON.");
+        var json = jobFile.ToJson(Program.DefaultJsonSerializerOptions);
 
-        return config;
+        await this.File.WriteAllTextAsync(filePath, json);
     }
 }
