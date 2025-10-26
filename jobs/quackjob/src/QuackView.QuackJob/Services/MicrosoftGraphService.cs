@@ -22,9 +22,9 @@ internal class MicrosoftGraphService(ILogger<MicrosoftGraphService> logger, IAle
     private static readonly string[] DefaultClientScopes = new string[] { "User.Read" };
     private const string DefaultAccountName = "_default_";
 
-    private readonly ILogger<MicrosoftGraphService> logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly IAlertService alertService = alertService ?? throw new ArgumentNullException(nameof(alertService));
-    private readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
+    protected readonly ILogger<MicrosoftGraphService> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    protected readonly IAlertService AlertService = alertService ?? throw new ArgumentNullException(nameof(alertService));
+    protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
     public async Task<T> ExecuteInContextAsync<T>(Func<GraphServiceClient, Task<T>> action, string? accountUserName = null, string[]? scopes = null)
     {
@@ -39,14 +39,14 @@ internal class MicrosoftGraphService(ILogger<MicrosoftGraphService> logger, IAle
         var auth = await this.GetAccessToken(pca, accountUserName, scopes);
         var httpClient = new HttpClient();
         var clientRequestId = Guid.NewGuid().ToString();
-        
+
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", auth.AccessToken);
         httpClient.DefaultRequestHeaders.Add("client-request-id", clientRequestId);
 
         var graphClient = new GraphServiceClient(httpClient);
 
-        this.logger.LogDebug("Executing action in Graph context for account: {Account} using client-request-id: {ClientRequestId}",
-            accountUserName, clientRequestId);
+        this.Logger.LogDebug("Executing action in Graph context for account: {Account} using client-request-id: {ClientRequestId} and scopes: {Scopes}",
+            accountUserName, clientRequestId, string.Join(", ", scopes ?? []));
 
         return await action(graphClient);
     }
@@ -60,14 +60,29 @@ internal class MicrosoftGraphService(ILogger<MicrosoftGraphService> logger, IAle
         var cacheFile = String.IsNullOrWhiteSpace(accountUserName)
             ? "msal_graph_tokens.secret"
             : $"msal_graph_tokens_{accountUserName}.secret".Replace('@', '_');
-        var storageProperties = new StorageCreationPropertiesBuilder(cacheFile, cacheDir).Build();
+        var storagePropertiesBuilder = new StorageCreationPropertiesBuilder(cacheFile, cacheDir);
+
+        // TODO: Add configuration around the token storage security...
+
+        // storagePropertiesBuilder.WithUnprotectedFile();
+
+        storagePropertiesBuilder.WithLinuxUnprotectedFile();
+
+        // storagePropertiesBuilder.WithMacKeyChain();
+
+        // storagePropertiesBuilder.WithLinuxKeyring("org.dukk.quackview.quackjob", "quackjob", "Quackjob Secrets",
+        //     new KeyValuePair<string, string>("a", "1"), new KeyValuePair<string, string>("b", "2"));
+
+        var storageProperties = storagePropertiesBuilder.Build();
         var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties);
 
         cacheHelper.RegisterCache(pca.UserTokenCache);
 
+        this.Logger.LogDebug("Attempting to acquire token silently for account: {Account} using cache file: {CacheFile}", accountUserName, cacheFile);
+
         AuthenticationResult? result = null;
 
-        this.logger.LogDebug("Looking for cached graph accounts to authenticate silently");
+        this.Logger.LogDebug("Looking for cached graph accounts to authenticate silently");
 
         var accounts = await pca.GetAccountsAsync();
 
@@ -79,29 +94,28 @@ internal class MicrosoftGraphService(ILogger<MicrosoftGraphService> logger, IAle
             if (!matchesRequestedAccount)
                 continue;
 
-            this.logger.LogDebug("Trying cached account: {Account}", account.Username);
+            this.Logger.LogDebug("Trying cached account: {Account}", account.Username);
 
             try
             {
                 result = await pca.AcquireTokenSilent(scopes, account).ExecuteAsync();
-                this.logger.LogInformation("Acquired token silently from cached account: {Account}", account.Username);
+                this.Logger.LogInformation("Acquired token silently from cached account: {Account}", account.Username);
                 break;
             }
             catch (MsalUiRequiredException)
             {
-                this.logger.LogWarning("Failed to acquire token silently from cached account: {Account}", account.Username);
+                this.Logger.LogDebug("Failed to acquire token silently from cached account: {Account}", account.Username);
             }
         }
 
         if (result == null)
         {
-            this.logger.LogWarning("Silent token acquisition failed. Falling back to device code flow.");
+            this.Logger.LogDebug("Silent token acquisition failed. Falling back to device code flow.");
 
             result = await pca.AcquireTokenWithDeviceCode(scopes, callback =>
             {
-                this.logger.LogCritical(callback.Message);
-
-                alertService.AddAlertAsync(new Alert()
+                this.Logger.LogDebug(callback.Message);
+                this.AlertService.AddAlertAsync(new Alert()
                 {
                     Title = "Device Authentication Code",
                     Message = callback.Message,
