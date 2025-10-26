@@ -25,7 +25,7 @@ internal partial class FileSystemSecretStore(
     public static bool IsInvalidKey(string key) => !KeyValidationRegex().IsMatch(key);
     public static void ThrowIfInvalidKey(string key)
     {
-        if (IsInvalidKey(key)) 
+        if (IsInvalidKey(key))
             throw new ArgumentException("Key contains invalid characters. Only alphanumeric characters, underscores, and hyphens are allowed.", nameof(key));
     }
 
@@ -47,7 +47,11 @@ internal partial class FileSystemSecretStore(
         if (!await this.File.ExistsAsync(secretFilePath))
             throw new KeyNotFoundException("Unknown secret.");
 
-        return await this.File.ReadAllTextAsync(secretFilePath);
+        var secretValue = await this.File.ReadAllTextAsync(secretFilePath);
+
+        secretValue = secretValue.Trim('\n', '\r', ' ');
+
+        return secretValue;
     }
 
     public async Task SetSecretAsync(string key, string value, bool overwrite = false)
