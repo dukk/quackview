@@ -4,8 +4,8 @@
 # mkdir -p /quackview/config/ /quackview/jobs/ /quackview/data/ /quackview/secrets/ /quackview/logs/
 
 if [ -d /quackview-template ]; then
-    #echo "Copying template files to /quackview"
-    #rsync -av --backup --suffix=".new" /quackview-template/ /quackview
+    echo "Copying template files to /quackview"
+    rsync --ignore-existing -avcr /quackview-template/ /quackview
     #cp -rnv /quackview-template/* /quackview
 else
     echo "No /quackview-template directory found; skipping template copy"
