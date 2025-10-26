@@ -49,7 +49,7 @@ internal partial class FileSystemSecretStore(
 
         var secretValue = await this.File.ReadAllTextAsync(secretFilePath);
 
-        secretValue = secretValue.Trim('\n', '\r', ' ');
+        secretValue = secretValue.Trim('\n', '\r', ' ', '\t');
 
         return secretValue;
     }

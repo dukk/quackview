@@ -65,8 +65,6 @@ internal class MicrosoftGraphService(
         var cacheFile = String.IsNullOrWhiteSpace(accountUserName)
             ? "msal_graph_tokens.secret"
             : $"msal_graph_tokens_{accountUserName}.secret".Replace('@', '_').Replace('.', '_');
-
-        cacheFile = Regex.Replace(cacheFile, @"\w", "_");
         var storagePropertiesBuilder = new StorageCreationPropertiesBuilder(cacheFile, cacheDir);
 
         // TODO: Add configuration around the token storage security...
