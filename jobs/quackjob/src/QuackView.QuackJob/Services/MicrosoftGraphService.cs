@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
@@ -15,8 +16,11 @@ internal interface IMicrosoftGraphService
     Task<T> ExecuteInContextAsync<T>(Func<GraphServiceClient, Task<T>> action, string? accountUserName = null, string[]? scopes = null);
 }
 
-internal class MicrosoftGraphService(ILogger<MicrosoftGraphService> logger, IAlertService alertService,
-    ISpecialPaths SpecialPaths) : IMicrosoftGraphService
+internal class MicrosoftGraphService(
+    ILogger<MicrosoftGraphService> logger,
+    IAlertService alertService,
+    ISpecialPaths SpecialPaths)
+    : IMicrosoftGraphService
 {
     private const string DefaultClientID = "27bc410e-75a4-4bdc-9281-921f446aef52";
     private static readonly string[] DefaultClientScopes = new string[] { "User.Read" };
@@ -55,11 +59,14 @@ internal class MicrosoftGraphService(ILogger<MicrosoftGraphService> logger, IAle
         string? accountUserName = null, string[]? scopes = null)
     {
         scopes ??= MicrosoftGraphService.DefaultClientScopes;
+        accountUserName ??= MicrosoftGraphService.DefaultAccountName;
 
         var cacheDir = await this.SpecialPaths.GetSecretsDirectoryPathAsync();
         var cacheFile = String.IsNullOrWhiteSpace(accountUserName)
             ? "msal_graph_tokens.secret"
-            : $"msal_graph_tokens_{accountUserName}.secret".Replace('@', '_');
+            : $"msal_graph_tokens_{accountUserName}.secret".Replace('@', '_').Replace('.', '_');
+
+        cacheFile = Regex.Replace(cacheFile, @"\w", "_");
         var storagePropertiesBuilder = new StorageCreationPropertiesBuilder(cacheFile, cacheDir);
 
         // TODO: Add configuration around the token storage security...

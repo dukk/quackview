@@ -21,7 +21,10 @@ internal class CalendarEventCalendar
     public string? Name { get; set; }
 }
 
-internal class OutlookCalendarEventService(ILogger<OutlookCalendarEventService> logger, IMicrosoftGraphService graphService) : IOutlookCalendarEventService
+internal class OutlookCalendarEventService(
+    ILogger<OutlookCalendarEventService> logger,
+    IMicrosoftGraphService graphService)
+    : IOutlookCalendarEventService
 {
     private static readonly string[] DefaultGraphScopes = new string[] { "User.Read", "Calendars.Read" };
 
@@ -83,19 +86,19 @@ internal class OutlookCalendarEventService(ILogger<OutlookCalendarEventService> 
                 this.logger.LogInformation("Found {EventCount} events in calendar '{CalendarName}'", eventsResponse.Value.Count, calendar.Name);
 
                 return eventsResponse.Value.Select(eventResponse => new CalendarEvent
-                    {
-                        Subject = eventResponse.Subject,
-                        Location = eventResponse.Location?.DisplayName,
-                        Start = eventResponse.Start?.DateTime,
-                        End = eventResponse.End?.DateTime,
-                        IsAllDay = eventResponse.IsAllDay ?? false,
-                        BodyPreview = eventResponse.BodyPreview,
-                        Calendar = calendar.Name,
-                        Account = accountName
-                    }).ToList();
+                {
+                    Subject = eventResponse.Subject,
+                    Location = eventResponse.Location?.DisplayName,
+                    Start = eventResponse.Start?.DateTime,
+                    End = eventResponse.End?.DateTime,
+                    IsAllDay = eventResponse.IsAllDay ?? false,
+                    BodyPreview = eventResponse.BodyPreview,
+                    Calendar = calendar.Name,
+                    Account = accountName
+                }).ToList();
             }, accountName, OutlookCalendarEventService.DefaultGraphScopes));
         }
-            
+
         return allEvents.ToImmutableArray();
     }
 
@@ -103,4 +106,4 @@ internal class OutlookCalendarEventService(ILogger<OutlookCalendarEventService> 
     {
         return await GetEventsAsync(accountName, [calendarName], start, end);
     }
-}   
+}
