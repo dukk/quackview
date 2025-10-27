@@ -34,6 +34,38 @@ public sealed class FileSystemSecretStoreTests
     }
 
     [TestMethod]
+    public async Task GetSecret_ExistingKeyWithNewLines_ReturnsTrimmedValue()
+    {
+        // Arrange
+        var logger = Substitute.For<ILogger<FileSystemSecretStore>>();
+        var directory = Substitute.For<IDirectoryService>();
+        var file = Substitute.For<IFileService>();
+        var SpecialPaths = Substitute.For<ISpecialPaths>();
+        var store = new FileSystemSecretStore(logger, directory, file, SpecialPaths);
+
+        SpecialPaths.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
+
+        file.ExistsAsync(Path.Combine("quackview-test", "secrets", "MyKey.secret")).Returns(true);
+        file.ReadAllTextAsync(Path.Combine("quackview-test", "secrets", "MyKey.secret")).Returns("MyValue\r\n");
+
+        file.ExistsAsync(Path.Combine("quackview-test", "secrets", "MyKey2.secret")).Returns(true);
+        file.ReadAllTextAsync(Path.Combine("quackview-test", "secrets", "MyKey2.secret")).Returns("MyValue\n");
+
+        file.ExistsAsync(Path.Combine("quackview-test", "secrets", "MyKey3.secret")).Returns(true);
+        file.ReadAllTextAsync(Path.Combine("quackview-test", "secrets", "MyKey3.secret")).Returns("MyValue\t\n");
+
+        // Act
+        var value = await store.GetSecretAsync("MyKey");
+        var value2 = await store.GetSecretAsync("MyKey2");
+        var value3 = await store.GetSecretAsync("MyKey3");
+
+        // Assert
+        Assert.AreEqual("MyValue", value);
+        Assert.AreEqual("MyValue", value2);
+        Assert.AreEqual("MyValue", value3);
+    }
+
+    [TestMethod]
     public async Task GetSecret_NonExistingKey_ThrowsKeyNotFoundException()
     {
         // Arrange
@@ -173,7 +205,7 @@ public sealed class FileSystemSecretStoreTests
         var input = "This is $^{MissingKey}.";
 
         SpecialPaths.GetSecretsDirectoryPathAsync().Returns(Path.Combine("quackview-test", "secrets"));
-        
+
         // Act & Assert
         await Assert.ThrowsExceptionAsync<KeyNotFoundException>(async () => await store.ExpandSecretsAsync(input));
     }
