@@ -24,7 +24,7 @@ internal class OpenAiPromptJobRunner(
     {
         var config = jobFile.Config ?? throw new ArgumentException("Invalid job configuration.", nameof(jobFile));
 
-        if (string.IsNullOrWhiteSpace(config.Prompt))
+        if (config.Prompt == null || config.Prompt.Count == 0)
             throw new ArgumentNullException(nameof(config), "Invalid job configuration.");
 
         this.Console.WriteLine("Executing OpenAI Prompt job.");
@@ -38,14 +38,19 @@ internal class OpenAiPromptJobRunner(
 
         var apiKey = await this.SecretStore.ExpandSecretsAsync(rawApiKey!);
 
+        var fullPrompt = string.Join(Environment.NewLine, config.Prompt);
+
+        if (string.IsNullOrWhiteSpace(fullPrompt))
+            throw new ArgumentNullException(nameof(config.Prompt), "Invalid job configuration. Prompt is empty.");
+
 #pragma warning disable OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
-        OpenAIResponseClient client = new(model: config.Model, apiKey: apiKey);
-        OpenAIResponse response = await client.CreateResponseAsync(config.Prompt,
-            options: new ResponseCreationOptions()
-            {
-                Instructions = "Response must be a valid JSON object."
-            });
+        var client = new OpenAIResponseClient(model: config.Model, apiKey: apiKey);
+        var result = await client.CreateResponseAsync(fullPrompt, new ResponseCreationOptions()
+        {
+            ParallelToolCallsEnabled = true
+        });
+        var response = result.Value;
         var responseText = response.GetOutputText();
 
         this.Console.WriteLine($"Writing output file: {config.OutputDataFilePath}");
@@ -67,7 +72,7 @@ internal class OpenAiPromptJobRunner(
             },
             Config = new()
             {
-                Prompt = "Give me a list of US presidents in a JSON array.",
+                Prompt = ["Give me a list of US presidents in a JSON array."],
                 ApiKey = "$^{open-ai-api-key}"
             }
         }, options: Program.DefaultJsonSerializerOptions);
@@ -83,7 +88,9 @@ internal class OpenAiPromptJobConfig : FileOutputJobConfig
         this.OutputDataFilePath = "openai-prompt-output.json";
     }
 
-    public string Prompt { get; set; } = string.Empty;
+    public List<string> Prompt { get; set; } = [];
+
+    //public List<string> Instructions { get; set; } = [];
 
     public string Model { get; set; } = "gpt-4.1";
 
