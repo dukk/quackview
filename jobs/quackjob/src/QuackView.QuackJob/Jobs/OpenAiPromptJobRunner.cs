@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using OpenAI;
 using OpenAI.Responses;
 using TypoDukk.QuackView.QuackJob.Services;
 

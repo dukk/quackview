@@ -1,9 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Graph.Education.Classes.Item.Assignments.Item.SetUpFeedbackResourcesFolder;
 using NSubstitute;
 using TypoDukk.QuackView.QuackJob.Actions;
-using TypoDukk.QuackView.QuackJob.Jobs;
 using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Tests.Actions;

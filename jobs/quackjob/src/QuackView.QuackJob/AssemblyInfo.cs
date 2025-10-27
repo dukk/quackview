@@ -1,6 +1,5 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.Versioning;
 
 [assembly: AssemblyTitle("Quack View - Quack Job")]
 [assembly: AssemblyDescription("")]

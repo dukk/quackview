@@ -1,8 +1,5 @@
 using System.Reflection;
 using System.Text.Json;
-using System.Text.RegularExpressions;
-using Microsoft.Extensions.FileProviders;
-using TypoDukk.QuackView.QuackJob.Data;
 using TypoDukk.QuackView.QuackJob.Services;
 
 namespace TypoDukk.QuackView.QuackJob.Jobs;

@@ -1,10 +1,7 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
-using TypoDukk.QuackView.QuackJob;
 using TypoDukk.QuackView.QuackJob.Actions;
 using TypoDukk.QuackView.QuackJob.Jobs;
 using TypoDukk.QuackView.QuackJob.Services;

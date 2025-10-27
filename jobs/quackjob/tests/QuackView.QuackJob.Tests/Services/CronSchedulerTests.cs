@@ -1,5 +1,3 @@
-using TypoDukk.QuackView.QuackJob.Services;
-
 namespace TypoDukk.QuackView.QuackJob.Tests.Services;
 
 [TestClass]

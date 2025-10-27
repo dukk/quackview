@@ -1,6 +1,4 @@
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client;
 using TypoDukk.QuackView.QuackJob.Jobs;
 
 namespace TypoDukk.QuackView.QuackJob.Services;

@@ -1,12 +1,9 @@
-﻿using Castle.Core.Logging;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using TypoDukk.QuackView.QuackJob;
 using TypoDukk.QuackView.QuackJob.Actions;
 using TypoDukk.QuackView.QuackJob.Jobs;
 using TypoDukk.QuackView.QuackJob.Services;
-using TypoDukk.QuackView.QuackJob.Tests;
 
 namespace TypoDukk.QuackView.QuackJob.Tests;
 

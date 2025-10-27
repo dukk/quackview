@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.Extensions.Logging;
 using TypoDukk.QuackView.QuackJob.Services;
 

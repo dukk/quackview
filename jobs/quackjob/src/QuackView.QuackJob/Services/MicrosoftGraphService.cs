@@ -1,6 +1,4 @@
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
