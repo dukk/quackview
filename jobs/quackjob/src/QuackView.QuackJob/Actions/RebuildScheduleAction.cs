@@ -54,7 +54,7 @@ internal class RebuildScheduleAction(
                 await this.CronScheduler.ScheduleAsync(new CronJob()
                 {
                     Schedule = jobFile.Metadata.Schedule,
-                    Command = $"{quackjobPath} run --job=\"{file}\""
+                    Command = $"{quackjobPath} run \"{file}\""
                 });
 
                 this.Console.WriteLine($"Scheduled job {jobFile.Metadata.Name} from {file} with schedule {jobFile.Metadata.Schedule}");

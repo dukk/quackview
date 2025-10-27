@@ -43,7 +43,8 @@ internal class RunActionTests
     public async Task ExecuteAsync_NoArgs_ThrowsException()
     {
         // Arrange
-        var runAction = new RunAction(this.Logger, this.CommandLineParser, this.ServiceProvider, this.FileService, this.ConsoleService, this.SpecialPaths);
+        var runAction = new RunAction(this.Logger, this.CommandLineParser, this.ServiceProvider,
+        this.FileService, this.ConsoleService, this.SpecialPaths);
 
         // Act
         await Assert.ThrowsExceptionAsync<Exception>(async () => await runAction.ExecuteAsync([]));

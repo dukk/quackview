@@ -8,8 +8,4 @@ Usage:
   quackjob <action> [options]
 
 Examples:
-  quackjob run upcoming-calendar-events:outlook-calendar-import.json
-
-
-Future concepts:
-  quackjob run upcoming-calendar-events --account=... --calendar=... --days-in-future=14 --append
+  quackjob run outlook-calendar-import.json

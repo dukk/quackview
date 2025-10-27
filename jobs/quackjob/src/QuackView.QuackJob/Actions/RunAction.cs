@@ -23,22 +23,15 @@ internal class RunAction(
     protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
     protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
-    // [ActionParameter(name: "job", isRequired: true)]
-    public string? JobFile { get; set; }
-
     public override async Task ExecuteAsync(string[] args)
     {
+        if (args.Length < 1)
+            throw new Exception("Error: No job file specified.");
+
         this.Logger.LogDebug("Executing RunAction with args: {args}", string.Join(' ', args));
 
         var runnerName = string.Empty;
-        var parsedArgs = this.CommandLineParser.ParseArgs(args);
-
-        this.Logger.LogDebug("Parsed arguments: {parsedArgs}", string.Join(", ", parsedArgs.Select(kv => $"{kv.Key}={kv.Value}")));
-
-        if (!parsedArgs.ContainsKey("job"))
-            throw new Exception("Error: Job file parameter '--job' is required.");
-
-        var jobPath = parsedArgs["job"];
+        var jobPath = args[0];
 
         if (String.IsNullOrWhiteSpace(jobPath))
             throw new Exception($"Invalid job file '{jobPath}'.");
