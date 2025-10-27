@@ -29,27 +29,37 @@ internal class ProgramInDebugMode(
         // TODO: Should really move all of this to unit tests (or integration tests?)...
 
         // Run Jobs:
-        //args = ["run", "--job=\"build-image-file-list.json\""];
-        //args = ["run", "--job=\"open-ai-prompt.json\""];
-        //args = ["run", "--job=\"upcoming-calendar-events.json\""];
-        //args = ["run", "--job=\"dad-jokes.json\""];
-        args = ["run", "--job=\"clear-expired-alerts.json\""];
+        // args = ["run", "build-image-file-list.json"];
+        // args = ["run", "open-ai-prompt.json"];
+        // args = ["run", "upcoming-calendar-events.json"];
+        // args = ["run", "dad-jokes.json"];
+        // args = ["run", "ai-dad-jokes.json"];
+        // args = ["run", "clear-expired-alerts.json"];
+        // args = ["run", "ai-current-weather.json"]; // doesn't work
+        // args = ["run", "ai-forecast-weather.json"];
+        // args = ["run", "ai-local-news.json"];
+        // args = ["run", "ai-us-news.json"];
+        // args = ["run", "ai-world-news.json"];
+        // args = ["run", "current-weather-owm.json"];
+        args = ["run", "rss-world-news.json"];
+        // args = ["run", "rss-us-news.json"];
+        // args = ["run", "rss-local-news.json"];
 
         // Rebuild Schedule:
-        //args = ["rebuild-schedule"];
+        // args = ["rebuild-schedule"];
 
         // Help:
-        //args = [];
-        //args = ["help"];
-        //args = ["help", "run"];
-        //args = ["help", "list"];
-        //args = ["help", "new"];
+        // args = [];
+        // args = ["help"];
+        // args = ["help", "run"];
+        // args = ["help", "list"];
+        // args = ["help", "new"];
 
         // List Job Runners (change to 'list-runners'?)
-        //args = ["list"];
+        // args = ["list"];
 
         // New Jobs  (change to 'new-job'?)
-        //args = ["new"];
+        // args = ["new"];
 
         System.Console.WriteLine($"ARGS: {string.Join(' ', args)}");
         System.Console.ResetColor();

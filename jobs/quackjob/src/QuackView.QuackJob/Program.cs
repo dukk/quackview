@@ -166,6 +166,8 @@ internal class Program(
 
     internal static void ComposeActions(IServiceCollection services)
     {
+        // TODO: Just loop the assembly and add all the IActions...
+
         services.AddSingleton<IAction, HelpAction>();
         services.AddSingleton<IAction, RunAction>();
         services.AddSingleton<IAction, ListAction>();
@@ -174,10 +176,14 @@ internal class Program(
 
     internal static void ComposeJobRunners(IServiceCollection services)
     {
+        // TODO: Just loop the assembly and add all the IJobRunners...
+
         services.AddSingleton<IJobRunner, ClearExpiredAlertsJobRunner>();
         services.AddSingleton<IJobRunner, OpenAiPromptJobRunner>();
         services.AddSingleton<IJobRunner, UpcomingCalendarEventsJobRunner>();
         services.AddSingleton<IJobRunner, BuildImageFileListJobRunner>();
+        services.AddSingleton<IJobRunner, CurrentWeatherOWMJobRunner>();
+        services.AddSingleton<IJobRunner, RssNewsJobRunner>();
     }
 
     [Conditional("DEBUG")]
