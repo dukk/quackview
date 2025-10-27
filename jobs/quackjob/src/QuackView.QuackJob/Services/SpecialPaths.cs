@@ -13,7 +13,7 @@ internal interface ISpecialPaths
     Task<string> GetQuackJobExecutablePathAsync();
 }
 
-internal class SpecialPaths(ILogger<SpecialPaths> logger, IDirectoryService directory) : ISpecialPaths
+internal class SpecialPaths(ILogger<SpecialPaths> logger, IDiskIOService disk) : ISpecialPaths
 {
     public const string SecretsDirectoryName = "secrets";
     public const string DataDirectoryName = "data";
@@ -21,7 +21,7 @@ internal class SpecialPaths(ILogger<SpecialPaths> logger, IDirectoryService dire
     public const string JobsDirectoryName = "jobs";
 
     protected readonly ILogger<SpecialPaths> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
+    protected readonly IDiskIOService Disk = disk ?? throw new ArgumentNullException(nameof(disk));
 
     public virtual async Task<string> GetQuackViewDirectoryAsync()
     {
@@ -70,10 +70,10 @@ internal class SpecialPaths(ILogger<SpecialPaths> logger, IDirectoryService dire
         return Task.FromResult(Environment.ProcessPath
             ?? throw new InvalidOperationException("Unable to determine the path of the current executable."));
     }
-    
+
     protected virtual async Task<string> EnsureExistsAndReturn(string directory)
     {
-        await this.Directory.CreateDirectoryAsync(directory);
+        await this.Disk.CreateDirectoryAsync(directory);
 
         return directory;
     }

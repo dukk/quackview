@@ -9,7 +9,7 @@ namespace TypoDukk.QuackView.QuackJob.Tests.Jobs;
 
 // }
 
-internal class TestJobRunner(IFileService file) : JobRunner(file)
+internal class TestJobRunner(IDiskIOService file) : JobRunner(file)
 {
     public override Task ExecuteJobFileAsync(JobFile jobFile)
     {
@@ -17,7 +17,7 @@ internal class TestJobRunner(IFileService file) : JobRunner(file)
     }
 }
 
-internal class TestTestTestJobRunner(IFileService file) : JobRunner(file)
+internal class TestTestTestJobRunner(IDiskIOService file) : JobRunner(file)
 {
     public override Task ExecuteJobFileAsync(JobFile jobFile)
     {

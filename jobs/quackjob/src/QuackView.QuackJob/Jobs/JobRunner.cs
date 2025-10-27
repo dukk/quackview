@@ -22,11 +22,11 @@ internal sealed class JobRunnerAttribute(string name, string description) : Attr
     public string Description { get; set; } = description;
 }
 
-internal abstract class JobRunner(IFileService file) : JobRunner<JobFile>(file)
+internal abstract class JobRunner(IDiskIOService disk) : JobRunner<JobFile>(disk)
 {
 }
 
-internal abstract class JobRunner<TJobFile>(IFileService file) : IJobRunner
+internal abstract class JobRunner<TJobFile>(IDiskIOService disk) : IJobRunner
     where TJobFile : class, new()
 {
     public string Name
@@ -47,14 +47,14 @@ internal abstract class JobRunner<TJobFile>(IFileService file) : IJobRunner
         }
     }
 
-    protected IFileService File = file ?? throw new ArgumentNullException(nameof(file));
+    protected IDiskIOService Disk = disk ?? throw new ArgumentNullException(nameof(disk));
 
     public virtual async Task ExecuteJobFileAsync(string filePath)
     {
-        if (!await this.File.ExistsAsync(filePath))
+        if (!await this.Disk.FileExistsAsync(filePath))
             throw new FileNotFoundException();
 
-        var json = await this.File.ReadAllTextAsync(filePath);
+        var json = await this.Disk.ReadAllTextAsync(filePath);
         var jobFile = JsonSerializer.Deserialize<TJobFile>(json, Program.DefaultJsonSerializerOptions);
 
         if (null == jobFile)
@@ -79,6 +79,6 @@ internal abstract class JobRunner<TJobFile>(IFileService file) : IJobRunner
 
         var json = jobFile.ToJson(Program.DefaultJsonSerializerOptions);
 
-        await this.File.WriteAllTextAsync(filePath, json);
+        await this.Disk.WriteAllTextAsync(filePath, json);
     }
 }

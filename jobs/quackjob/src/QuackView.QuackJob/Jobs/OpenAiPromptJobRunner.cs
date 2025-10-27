@@ -12,7 +12,7 @@ internal class OpenAiPromptJobRunner(
     IDataFileService dataFileService,
     IConsoleService console,
     ISecretStore secretStore,
-    IFileService file)
+    IDiskIOService file)
     : JobRunner<JobFile<OpenAiPromptJobConfig>>(file)
 {
     protected readonly ILogger<OpenAiPromptJobRunner> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -77,7 +77,7 @@ internal class OpenAiPromptJobRunner(
             }
         }, options: Program.DefaultJsonSerializerOptions);
 
-        await this.File.AppendAllTextAsync(filePath, content);
+        await this.Disk.AppendAllTextAsync(filePath, content);
     }
 }
 

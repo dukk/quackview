@@ -13,7 +13,7 @@ internal class UpcomingCalendarEventsJobRunner(
     IDataFileService dataFileService,
     IConsoleService console,
     ISecretStore secretStore,
-    IFileService file)
+    IDiskIOService file)
     : JobRunner<JobFile<UpcomingCalendarEventsJobConfig>>(file)
 {
     protected readonly ILogger<UpcomingCalendarEventsJobRunner> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -76,7 +76,7 @@ internal class UpcomingCalendarEventsJobRunner(
             }
         }, options: Program.DefaultJsonSerializerOptions);
 
-        await this.File.WriteAllTextAsync(filePath, content);
+        await this.Disk.WriteAllTextAsync(filePath, content);
     }
 }
 

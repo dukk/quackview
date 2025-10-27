@@ -11,7 +11,7 @@ internal class BuildImageFileListJobRunner(
     IDataFileService dataFileService,
     IDataDirectoryService dataDirectoryService,
     IConsoleService console,
-    IFileService file)
+    IDiskIOService file)
     : JobRunner<JobFile<BuildImageFileListJobConfig>>(file)
 {
     protected readonly ILogger<BuildImageFileListJobRunner> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -78,7 +78,7 @@ internal class BuildImageFileListJobRunner(
     //         }
     //     }, options: Program.DefaultJsonSerializerOptions);
 
-    //     await this.File.AppendAllTextAsync(filePath, content);
+    //     await this.Disk.AppendAllTextAsync(filePath, content);
     // }
 }
 

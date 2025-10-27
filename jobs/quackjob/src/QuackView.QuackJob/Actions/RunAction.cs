@@ -12,7 +12,7 @@ internal class RunAction(
     ILogger<RunAction> logger,
     ICommandLineParser commandLineParser,
     IServiceProvider serviceProvider,
-    IFileService file,
+    IDiskIOService disk,
     IConsoleService console,
     ISpecialPaths SpecialPaths)
     : Action(logger, console)
@@ -20,7 +20,7 @@ internal class RunAction(
     protected readonly new ILogger<RunAction> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     protected readonly ICommandLineParser CommandLineParser = commandLineParser ?? throw new ArgumentNullException(nameof(commandLineParser));
     protected readonly IServiceProvider ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-    protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly IDiskIOService Disk = disk ?? throw new ArgumentNullException(nameof(disk));
     protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
     public override async Task ExecuteAsync(string[] args)
@@ -36,12 +36,12 @@ internal class RunAction(
         if (String.IsNullOrWhiteSpace(jobPath))
             throw new Exception($"Invalid job file '{jobPath}'.");
 
-        if (!await this.File.ExistsAsync(jobPath))
+        if (!await this.Disk.FileExistsAsync(jobPath))
         {
             if (!jobPath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
                 jobPath += ".json";
 
-            if (!await this.File.ExistsAsync(jobPath))
+            if (!await this.Disk.FileExistsAsync(jobPath))
             {
                 var jobDirectory = Path.GetDirectoryName(jobPath);
 
@@ -55,10 +55,10 @@ internal class RunAction(
 
         this.Console.WriteLine($"Using job file: {jobPath}");
 
-        if (!await this.File.ExistsAsync(jobPath))
+        if (!await this.Disk.FileExistsAsync(jobPath))
             throw new FileNotFoundException($"Job file '{jobPath}' does not exist.");
 
-        var jobFileContent = await this.File.ReadAllTextAsync(jobPath);
+        var jobFileContent = await this.Disk.ReadAllTextAsync(jobPath);
 
         this.Logger.LogDebug("Job file content: {jobFileContent}", jobFileContent);
 

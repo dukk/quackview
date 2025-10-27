@@ -139,8 +139,8 @@ internal class DebugSpecialPaths : SpecialPaths
 {
     protected readonly string QuackviewOverridePath;
 
-    public DebugSpecialPaths(ILogger<SpecialPaths> logger, IDirectoryService directory)
-        : base(logger, directory)
+    public DebugSpecialPaths(ILogger<SpecialPaths> logger, IDiskIOService disk)
+        : base(logger, disk)
     {
         /* Cannot use the primary constructor here because the code generation will 
             show this call coming from a library and not this file. */

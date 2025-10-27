@@ -31,19 +31,17 @@ internal interface IDataFileService
 
 internal class DataFileService(
     ILogger<DataFileService> logger,
-    IFileService file,
+    IDiskIOService disk,
     IDataDirectoryService dataDirectory,
-    IDirectoryService directory,
-    ISpecialPaths SpecialPaths)
+    ISpecialPaths specialPaths)
     : IDataFileService
 {
     public static readonly JsonSerializerOptions DefaultJsonSerializerOptions = Program.DefaultJsonSerializerOptions;
 
     protected readonly ILogger<DataFileService> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly IDiskIOService Disk = disk ?? throw new ArgumentNullException(nameof(disk));
     protected readonly IDataDirectoryService DataDirectory = dataDirectory ?? throw new ArgumentNullException(nameof(dataDirectory));
-    protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
-    protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
+    protected readonly ISpecialPaths SpecialPaths = specialPaths ?? throw new ArgumentNullException(nameof(specialPaths));
 
     public async Task<bool> ExistsAsync(string path)
     {
@@ -54,7 +52,7 @@ internal class DataFileService(
 
         path = await this.GetFullPathAsync(path);
 
-        return await this.File.ExistsAsync(path);
+        return await this.Disk.FileExistsAsync(path);
     }
 
     public async Task WriteJsonFileAsync<T>(string path, T content)
@@ -83,10 +81,10 @@ internal class DataFileService(
             var fullPath = await this.GetFullPathAsync(path);
             var directory = Path.GetDirectoryName(fullPath);
 
-            if (directory != null && !await this.Directory.ExistsAsync(directory))
-                await this.Directory.CreateDirectoryAsync(directory);
+            if (directory != null && !await this.Disk.DirectoryExistsAsync(directory))
+                await this.Disk.CreateDirectoryAsync(directory);
 
-            await this.File.WriteAllTextAsync(fullPath, content);
+            await this.Disk.WriteAllTextAsync(fullPath, content);
             logger.LogInformation("Data file written to {fullPath}", fullPath);
         }
         catch (Exception ex)
@@ -109,7 +107,7 @@ internal class DataFileService(
         {
             path = await this.GetFullPathAsync(path);
 
-            await this.File.AppendAllTextAsync(path, content);
+            await this.Disk.AppendAllTextAsync(path, content);
             this.Logger.LogInformation("Appended line to {Path}", path);
         }
         catch (Exception ex)
@@ -129,7 +127,7 @@ internal class DataFileService(
 
         try
         {
-            var json = await this.File.ReadAllTextAsync(path);
+            var json = await this.Disk.ReadAllTextAsync(path);
             var jsonList = JsonSerializer.Deserialize<JsonListFile<T>>(json, DataFileService.DefaultJsonSerializerOptions);
 
             return jsonList ?? throw new InvalidOperationException("Failed to deserialize JSON list file.");
@@ -151,7 +149,7 @@ internal class DataFileService(
 
         try
         {
-            var json = await this.File.ReadAllTextAsync(path);
+            var json = await this.Disk.ReadAllTextAsync(path);
             var jsonList = JsonSerializer.Deserialize<JsonListFile<T>>(json, DataFileService.DefaultJsonSerializerOptions);
 
             if (jsonList != null)
@@ -161,7 +159,7 @@ internal class DataFileService(
 
                 var updatedJson = JsonSerializer.Serialize(jsonList, DataFileService.DefaultJsonSerializerOptions);
 
-                await this.File.WriteAllTextAsync(path, updatedJson);
+                await this.Disk.WriteAllTextAsync(path, updatedJson);
             }
         }
         catch (Exception exception)
@@ -182,7 +180,7 @@ internal class DataFileService(
 
         try
         {
-            var json = await this.File.ReadAllTextAsync(path);
+            var json = await this.Disk.ReadAllTextAsync(path);
             var jsonList = JsonSerializer.Deserialize<JsonListFile<T>>(json, DataFileService.DefaultJsonSerializerOptions);
 
             if (jsonList != null)
@@ -192,7 +190,7 @@ internal class DataFileService(
 
                 var updatedJson = JsonSerializer.Serialize(jsonList, DataFileService.DefaultJsonSerializerOptions);
 
-                await this.File.WriteAllTextAsync(path, updatedJson);
+                await this.Disk.WriteAllTextAsync(path, updatedJson);
             }
         }
         catch (Exception exception)
@@ -217,9 +215,9 @@ internal class DataFileService(
 
             JsonListFile<T>? jsonArrayFile = null;
 
-            if (await this.File.ExistsAsync(path))
+            if (await this.Disk.FileExistsAsync(path))
             {
-                var existingContent = await this.File.ReadAllTextAsync(path);
+                var existingContent = await this.Disk.ReadAllTextAsync(path);
                 if (!string.IsNullOrWhiteSpace(existingContent))
                 {
                     try
@@ -243,7 +241,7 @@ internal class DataFileService(
             jsonArrayFile!.Metadata.LastUpdated = DateTime.UtcNow;
 
             var json = JsonSerializer.Serialize(jsonArrayFile, DataFileService.DefaultJsonSerializerOptions);
-            await File.WriteAllTextAsync(path, json);
+            await Disk.WriteAllTextAsync(path, json);
 
             this.Logger.LogInformation("Appended item to JSON array file at {Path}", path);
         }
@@ -264,9 +262,9 @@ internal class DataFileService(
         {
             path = await this.GetFullPathAsync(path);
 
-            if (await this.File.ExistsAsync(path))
+            if (await this.Disk.FileExistsAsync(path))
             {
-                await this.File.DeleteFileAsync(path);
+                await this.Disk.DeleteFileAsync(path);
                 this.Logger.LogInformation("Deleted file {Path}", path);
             }
             else
@@ -298,7 +296,7 @@ internal class DataFileService(
         try
         {
             path = await this.GetFullPathAsync(path);
-            return await this.File.ReadAllTextAsync(path);
+            return await this.Disk.ReadAllTextAsync(path);
         }
         catch (Exception ex)
         {

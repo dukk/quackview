@@ -10,11 +10,11 @@ namespace TypoDukk.QuackView.QuackJob.Jobs;
 [JobRunner("open-weather-map-current-weather", "")]
 internal class CurrentWeatherOWMJobRunner(
     ILogger<CurrentWeatherOWMJobRunner> logger,
-    IFileService file,
+    IDiskIOService disk,
     IDataFileService dataFile,
     IConsoleService console,
     ISecretStore secretStore)
-    : JobRunner<JobFile<CurrentWeatherOpenWeatherMapConfig>>(file)
+    : JobRunner<JobFile<CurrentWeatherOpenWeatherMapConfig>>(disk)
 {
     protected readonly ILogger<CurrentWeatherOWMJobRunner> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     protected readonly IDataFileService DataFile = dataFile ?? throw new ArgumentNullException(nameof(dataFile));

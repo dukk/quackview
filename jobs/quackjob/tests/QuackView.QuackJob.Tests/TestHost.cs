@@ -13,14 +13,12 @@ namespace TypoDukk.QuackView.QuackJob.Tests;
 
 internal static class TestHost
 {
-    public static readonly Func<IFileService> DefaultFileServiceConstruction = () => Substitute.For<IFileService>();
-    public static readonly Func<IDirectoryService> DefaultDirectoryServiceConstruction = () => Substitute.For<IDirectoryService>();
+    public static readonly Func<IDiskIOService> DefaultDiskIOServiceConstruction = () => Substitute.For<IDiskIOService>();
     public static readonly Func<IConsoleService> DefaultConsoleServiceConstruction = () => Substitute.For<IConsoleService>();
 
     public static IHost CreateHost(Type[]? excludeServiceTypes = null,
         bool expandActions = false, bool expandJobs = false,
-        Func<IFileService>? fileConstructor = null,
-        Func<IDirectoryService>? directoryConstructor = null,
+        Func<IDiskIOService>? diskConstructor = null,
         Func<IConsoleService>? consoleConstructor = null)
     {
         var hostBuilder = Host.CreateDefaultBuilder();
@@ -35,16 +33,13 @@ internal static class TestHost
         {
             Program.ComposeServices(services);
 
-            services.RemoveAll<IFileService>();
-            services.RemoveAll<IDirectoryService>();
+            services.RemoveAll<IDiskIOService>();
             services.RemoveAll<IConsoleService>();
 
-            var fileService = (fileConstructor ?? TestHost.DefaultFileServiceConstruction)();
-            var directoryService = (directoryConstructor ?? TestHost.DefaultDirectoryServiceConstruction)();
+            var diskService = (diskConstructor ?? TestHost.DefaultDiskIOServiceConstruction)();
             var consoleService = (consoleConstructor ?? TestHost.DefaultConsoleServiceConstruction)();
 
-            services.AddSingleton(fileService);
-            services.AddSingleton(directoryService);
+            services.AddSingleton(diskService);
             services.AddSingleton(consoleService);
 
             Program.ComposeActions(services);

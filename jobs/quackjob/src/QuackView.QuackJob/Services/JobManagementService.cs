@@ -15,17 +15,18 @@ internal interface IJobManagementService
     Task DeleteJobAsync(string jobName);
 }
 
-internal class JobManagementService(ILogger<JobManagementService> logger,
-    IDirectoryService directory, IFileService file, ISpecialPaths SpecialPaths) : IJobManagementService
+internal class JobManagementService(
+    ILogger<JobManagementService> logger,
+    IDiskIOService disk,
+    ISpecialPaths SpecialPaths) : IJobManagementService
 {
     protected readonly ILogger<JobManagementService> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
-    protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly IDiskIOService Disk = disk ?? throw new ArgumentNullException(nameof(disk));
     protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
     public async Task<IEnumerable<string>> GetAvailableJobsAsync()
     {
-        var jobFiles = await this.Directory.EnumerateFilesAsync(await this.SpecialPaths.GetJobsDirectoryPathAsync(), "*.json");
+        var jobFiles = await this.Disk.EnumerateFilesAsync(await this.SpecialPaths.GetJobsDirectoryPathAsync(), "*.json");
 
         return jobFiles.Select(f => Path.GetFileNameWithoutExtension(f));
     }
@@ -34,7 +35,7 @@ internal class JobManagementService(ILogger<JobManagementService> logger,
     {
         var jobFilePath = Path.Combine(await this.SpecialPaths.GetJobsDirectoryPathAsync(), jobName + ".json");
 
-        if (!await this.File.ExistsAsync(jobFilePath))
+        if (!await this.Disk.FileExistsAsync(jobFilePath))
             throw new ArgumentException($"Unable to find job named '{jobName}'", nameof(jobName));
 
         return jobFilePath;
@@ -48,7 +49,7 @@ internal class JobManagementService(ILogger<JobManagementService> logger,
         var jobFilePath = Path.Combine(await this.SpecialPaths.GetJobsDirectoryPathAsync(), jobName + ".json");
         var json = jobFile.ToJson();
 
-        await this.File.WriteAllTextAsync(jobFilePath, json);
+        await this.Disk.WriteAllTextAsync(jobFilePath, json);
     }
 
     public async Task DeleteJobAsync(string jobName)
@@ -57,6 +58,6 @@ internal class JobManagementService(ILogger<JobManagementService> logger,
 
         var jobFilePath = Path.Combine(await this.SpecialPaths.GetJobsDirectoryPathAsync(), jobName + ".json");
 
-        await this.File.DeleteFileAsync(jobFilePath);
+        await this.Disk.DeleteFileAsync(jobFilePath);
     }
 }

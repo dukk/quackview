@@ -16,10 +16,10 @@ internal class CronJob
     public string Command { get; set; } = string.Empty;
 }
 
-internal class CronScheduler(ILogger<CronScheduler> logger, IFileService file, ISpecialPaths specialPaths) : ICronScheduler
+internal class CronScheduler(ILogger<CronScheduler> logger, IDiskIOService disk, ISpecialPaths specialPaths) : ICronScheduler
 {
     protected readonly ILogger<CronScheduler> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly IDiskIOService Disk = disk ?? throw new ArgumentNullException(nameof(disk));
     protected readonly ISpecialPaths SpecialPaths = specialPaths ?? throw new ArgumentNullException(nameof(specialPaths));
 
     public async Task<string> BackupSchedule()
@@ -29,7 +29,7 @@ internal class CronScheduler(ILogger<CronScheduler> logger, IFileService file, I
         var crontabFile = await this.SpecialPaths.GetCrontabFilePathAsync();
         var backupFile = $"{crontabFile}.{DateTime.Now:yyyyMMddHHmmss}.bak";
 
-        await this.File.CopyAsync(crontabFile, backupFile);
+        await this.Disk.CopyAsync(crontabFile, backupFile);
         this.Logger.LogInformation("Crontab file backed up to {BackupFile}", backupFile);
 
         return backupFile;
@@ -39,29 +39,44 @@ internal class CronScheduler(ILogger<CronScheduler> logger, IFileService file, I
     {
         var crontabFile = await this.SpecialPaths.GetCrontabFilePathAsync();
 
-        await this.File.WriteAllTextAsync(crontabFile, await this.GetCrontabFileTemplate());
+        await this.Disk.WriteAllTextAsync(crontabFile, await this.GetCrontabFileTemplate());
     }
 
     public async Task ScheduleAsync(CronJob job)
     {
         var crontabFile = await this.SpecialPaths.GetCrontabFilePathAsync();
 
-        await this.File.AppendAllTextAsync(crontabFile, $"{job.Schedule} {job.Command}");
+        await this.Disk.AppendAllTextAsync(crontabFile, $"{job.Schedule} {job.Command}");
     }
 
     protected virtual async Task<string> GetCrontabFileTemplate()
     {
         var assembly = typeof(CronScheduler).Assembly;
+
+        if (this.Logger.IsEnabled(LogLevel.Debug))
+        {
+            foreach (var resourceName in assembly.GetManifestResourceNames())
+                this.Logger.LogDebug("Embedded resource name: {ResourceName}", resourceName);
+        }
+
         using var stream = assembly.GetManifestResourceStream("CronTemplate") ?? throw new Exception("Cron template not found.");
         using var reader = new StreamReader(stream);
+
         var template = await reader.ReadToEndAsync();
+
+        this.Logger.LogDebug("CronTemplate:{NewLine}{Template}", Environment.NewLine, template);
+
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         var quackjobPath = await this.SpecialPaths.GetQuackJobExecutablePathAsync();
         var jobsDir = Path.Combine(Environment.GetEnvironmentVariable("QUACKVIEW_DIR")
             ?? throw new InvalidOperationException("QUACKVIEW_DIR environment variable is not set."), "jobs");
 
-        return template.Replace("${timestamp}", timestamp, StringComparison.OrdinalIgnoreCase)
+        var formattedTemplate = template.Replace("${timestamp}", timestamp, StringComparison.OrdinalIgnoreCase)
             .Replace("${quackjob}", quackjobPath, StringComparison.OrdinalIgnoreCase)
             .Replace("${jobs_dir}", jobsDir, StringComparison.OrdinalIgnoreCase);
+
+        this.Logger.LogDebug("CronTemplate Formatted:{NewLine}{Template}", Environment.NewLine, formattedTemplate);
+
+        return formattedTemplate;
     }
 }

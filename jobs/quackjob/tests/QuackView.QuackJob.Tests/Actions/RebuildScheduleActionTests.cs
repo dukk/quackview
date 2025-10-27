@@ -18,15 +18,14 @@ public class RebuildScheduleActionTests
         var logger = Substitute.For<ILogger<RebuildScheduleAction>>();
         var cronScheduler = Substitute.For<ICronScheduler>();
         var console = Substitute.For<IConsoleService>();
-        var directory = Substitute.For<IDirectoryService>();
-        var file = Substitute.For<IFileService>();
+        var disk = Substitute.For<IDiskIOService>();
         var specialPaths = Substitute.For<ISpecialPaths>();
-        var action = new RebuildScheduleAction(logger, cronScheduler, console, directory, file, specialPaths);
+        var action = new RebuildScheduleAction(logger, cronScheduler, console, disk, specialPaths);
 
-        directory.ExistsAsync("test-jobs").Returns(true);
-        directory.EnumerateFilesAsync("test-jobs", "*.json").Returns(["job1.json", "job2.json"]);
-        file.ReadAllTextAsync("job1.json").Returns(new JobFile() { Metadata = new() { Name = "Job 1", Schedule = "* * * * *" } }.ToJson());
-        file.ReadAllTextAsync("job2.json").Returns(new JobFile() { Metadata = new() { Name = "Job 2", Schedule = "* * * * *" } }.ToJson());
+        disk.DirectoryExistsAsync("test-jobs").Returns(true);
+        disk.EnumerateFilesAsync("test-jobs", "*.json").Returns(["job1.json", "job2.json"]);
+        disk.ReadAllTextAsync("job1.json").Returns(new JobFile() { Metadata = new() { Name = "Job 1", Schedule = "* * * * *" } }.ToJson());
+        disk.ReadAllTextAsync("job2.json").Returns(new JobFile() { Metadata = new() { Name = "Job 2", Schedule = "* * * * *" } }.ToJson());
         specialPaths.GetJobsDirectoryPathAsync().Returns("test-jobs");
         specialPaths.GetQuackJobExecutablePathAsync().Returns("test-quackjob");
         specialPaths.GetCrontabFilePathAsync().Returns("test-crontab");

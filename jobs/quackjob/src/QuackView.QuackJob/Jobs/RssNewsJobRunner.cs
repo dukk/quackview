@@ -9,9 +9,9 @@ namespace TypoDukk.QuackView.QuackJob.Jobs;
 [JobRunner("rss-news", "")]
 internal class RssNewsJobRunner(
     ILogger<RssNewsJobRunner> logger,
-    IFileService file,
+    IDiskIOService disk,
     IDataFileService dataFile)
-    : JobRunner<JobFile<RssNewsJobConfig>>(file)
+    : JobRunner<JobFile<RssNewsJobConfig>>(disk)
 {
     protected readonly ILogger<RssNewsJobRunner> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     protected readonly IDataFileService DataFile = dataFile ?? throw new ArgumentNullException(nameof(dataFile));

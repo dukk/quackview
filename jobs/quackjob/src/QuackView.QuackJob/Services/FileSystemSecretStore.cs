@@ -13,9 +13,8 @@ internal interface ISecretStore
 
 internal partial class FileSystemSecretStore(
     ILogger<FileSystemSecretStore> logger,
-    IDirectoryService directory,
-    IFileService file,
-    ISpecialPaths SpecialPaths) : ISecretStore
+    IDiskIOService disk,
+    ISpecialPaths specialPaths) : ISecretStore
 {
     // This isn't great security but it's better than nothing...
 
@@ -30,9 +29,8 @@ internal partial class FileSystemSecretStore(
     }
 
     protected readonly ILogger<FileSystemSecretStore> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
-    protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
-    protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
+    protected readonly IDiskIOService Disk = disk ?? throw new ArgumentNullException(nameof(disk));
+    protected readonly ISpecialPaths SpecialPaths = specialPaths ?? throw new ArgumentNullException(nameof(specialPaths));
 
 
     public async Task<string> GetSecretAsync(string key)
@@ -44,10 +42,10 @@ internal partial class FileSystemSecretStore(
 
         var secretFilePath = Path.Combine(await this.SpecialPaths.GetSecretsDirectoryPathAsync(), $"{key}.secret");
 
-        if (!await this.File.ExistsAsync(secretFilePath))
+        if (!await this.Disk.FileExistsAsync(secretFilePath))
             throw new KeyNotFoundException("Unknown secret.");
 
-        var secretValue = await this.File.ReadAllTextAsync(secretFilePath);
+        var secretValue = await this.Disk.ReadAllTextAsync(secretFilePath);
 
         secretValue = secretValue.Trim('\n', '\r', ' ', '\t');
 
@@ -64,10 +62,10 @@ internal partial class FileSystemSecretStore(
 
         var secretFilePath = Path.Combine(await this.SpecialPaths.GetSecretsDirectoryPathAsync(), $"{key}.secret");
 
-        if (!overwrite && await this.File.ExistsAsync(secretFilePath))
+        if (!overwrite && await this.Disk.FileExistsAsync(secretFilePath))
             throw new ArgumentException("Secret already exists and overwrite is set to false.", nameof(key));
 
-        await this.File.WriteAllTextAsync(secretFilePath, value);
+        await this.Disk.WriteAllTextAsync(secretFilePath, value);
     }
 
     public async Task<string> ExpandSecretsAsync(string input)
@@ -75,12 +73,12 @@ internal partial class FileSystemSecretStore(
         if (string.IsNullOrEmpty(input))
             return input;
 
-        var files = await this.Directory.EnumerateFilesAsync(await this.SpecialPaths.GetSecretsDirectoryPathAsync());
+        var files = await this.Disk.EnumerateFilesAsync(await this.SpecialPaths.GetSecretsDirectoryPathAsync());
 
         foreach (var file in files)
         {
             var secretName = Path.GetFileNameWithoutExtension(file);
-            var secretValue = await this.File.ReadAllTextAsync(file);
+            var secretValue = await this.Disk.ReadAllTextAsync(file);
 
             input = input.Replace($"$^{{{secretName}}}", secretValue, StringComparison.OrdinalIgnoreCase);
         }

@@ -13,10 +13,10 @@ internal interface IDataDirectoryService
     Task<IEnumerable<string>> EnumerateFilesAsync(string path, string searchPattern = "*", bool includeSubdirectories = false);
 }
 
-internal class DataDirectoryService(ILogger<DataDirectoryService> logger, IDirectoryService directory, ISpecialPaths specialPaths) : IDataDirectoryService
+internal class DataDirectoryService(ILogger<DataDirectoryService> logger, IDiskIOService disk, ISpecialPaths specialPaths) : IDataDirectoryService
 {
     protected readonly ILogger<DataDirectoryService> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
+    protected readonly IDiskIOService Disk = disk ?? throw new ArgumentNullException(nameof(disk));
     protected readonly ISpecialPaths SpecialPaths = specialPaths ?? throw new ArgumentNullException(nameof(specialPaths));
 
     public async Task<bool> ExistsAsync(string path)
@@ -27,7 +27,7 @@ internal class DataDirectoryService(ILogger<DataDirectoryService> logger, IDirec
             throw new ArgumentException("Path must be relative.", nameof(path));
 
         var resolvedPath = Path.Combine(await this.SpecialPaths.GetDataDirectoryPathAsync(), path);
-        return await this.Directory.ExistsAsync(resolvedPath);
+        return await this.Disk.DirectoryExistsAsync(resolvedPath);
     }
 
     public async Task<IEnumerable<string>> EnumerateFilesAsync(string path, string searchPattern = "*", bool includeSubdirectories = false)
@@ -40,7 +40,7 @@ internal class DataDirectoryService(ILogger<DataDirectoryService> logger, IDirec
 
         var dataDir = await this.SpecialPaths.GetDataDirectoryPathAsync();
         var resolvedPath = Path.Combine(dataDir, path);
-        var files = await this.Directory.EnumerateFilesAsync(resolvedPath, searchPattern, includeSubdirectories);
+        var files = await this.Disk.EnumerateFilesAsync(resolvedPath, searchPattern, includeSubdirectories);
         return files.Select(f =>
              f[dataDir.Length..].TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
     }

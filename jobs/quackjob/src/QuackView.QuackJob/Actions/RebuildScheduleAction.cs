@@ -10,23 +10,21 @@ internal class RebuildScheduleAction(
     ILogger<RebuildScheduleAction> logger,
     ICronScheduler cronScheduler,
     IConsoleService console,
-    IDirectoryService directory,
-    IFileService file,
+    IDiskIOService disk,
     ISpecialPaths SpecialPaths)
     : Action(logger, console)
 {
     protected readonly new ILogger<RebuildScheduleAction> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
     protected readonly ICronScheduler CronScheduler = cronScheduler ?? throw new ArgumentNullException(nameof(cronScheduler));
     protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
-    protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
+    protected readonly IDiskIOService Disk = disk ?? throw new ArgumentNullException(nameof(disk));
 
     public async override Task ExecuteAsync(string[] args)
     {
         var jobsDir = await this.SpecialPaths.GetJobsDirectoryPathAsync();
         var quackjobPath = await this.SpecialPaths.GetQuackJobExecutablePathAsync();
 
-        if (string.IsNullOrWhiteSpace(jobsDir) || !await this.Directory.ExistsAsync(jobsDir))
+        if (string.IsNullOrWhiteSpace(jobsDir) || !await this.Disk.DirectoryExistsAsync(jobsDir))
             throw new DirectoryNotFoundException("Jobs directory not found.");
 
         var backupFile = await this.CronScheduler.BackupSchedule();
@@ -38,11 +36,11 @@ internal class RebuildScheduleAction(
 
         await this.CronScheduler.ClearAllJobsAsync();
 
-        foreach (var file in await this.Directory.EnumerateFilesAsync(jobsDir, "*.json"))
+        foreach (var file in await this.Disk.EnumerateFilesAsync(jobsDir, "*.json"))
         {
             try
             {
-                var json = await this.File.ReadAllTextAsync(file);
+                var json = await this.Disk.ReadAllTextAsync(file);
                 var jobFile = JsonSerializer.Deserialize<JobFile>(json, Program.DefaultJsonSerializerOptions);
 
                 if (jobFile == null || string.IsNullOrWhiteSpace(jobFile.Metadata.Schedule))

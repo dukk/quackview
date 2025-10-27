@@ -151,9 +151,8 @@ internal class Program(
     internal static void ComposeServices(IServiceCollection services)
     {
         services.AddSingleton<ISpecialPaths, SpecialPaths>();
-        services.AddSingleton<IFileService, FileService>();
+        services.AddSingleton<IDiskIOService, DiskIOService>();
         services.AddSingleton<IDataFileService, DataFileService>();
-        services.AddSingleton<IDirectoryService, DirectoryService>();
         services.AddSingleton<IAlertService, AlertService>();
         services.AddSingleton<IDataDirectoryService, DataDirectoryService>();
         services.AddSingleton<IConsoleService, ConsoleService>();

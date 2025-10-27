@@ -10,7 +10,7 @@ internal class ClearExpiredAlertsJobRunner(
     IAlertService alertService,
     ILogger<ClearExpiredAlertsJobRunner> logger,
     IConsoleService console,
-    IFileService file)
+    IDiskIOService file)
     : JobRunner(file)
 {
     protected readonly IAlertService AlertService = alertService ?? throw new ArgumentNullException(nameof(alertService));
@@ -36,6 +36,6 @@ internal class ClearExpiredAlertsJobRunner(
             }
         }, options: Program.DefaultJsonSerializerOptions);
 
-        await this.File.AppendAllTextAsync(filePath, content);
+        await this.Disk.AppendAllTextAsync(filePath, content);
     }
 }
