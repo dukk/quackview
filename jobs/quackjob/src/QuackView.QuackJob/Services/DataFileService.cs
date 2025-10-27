@@ -32,7 +32,8 @@ internal interface IDataFileService
 internal class DataFileService(
     ILogger<DataFileService> logger,
     IFileService file,
-    IDataDirectoryService directory,
+    IDataDirectoryService dataDirectory,
+    IDirectoryService directory,
     ISpecialPaths SpecialPaths)
     : IDataFileService
 {
@@ -40,7 +41,8 @@ internal class DataFileService(
 
     protected readonly ILogger<DataFileService> Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     protected readonly IFileService File = file ?? throw new ArgumentNullException(nameof(file));
-    protected readonly IDataDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
+    protected readonly IDataDirectoryService DataDirectory = dataDirectory ?? throw new ArgumentNullException(nameof(dataDirectory));
+    protected readonly IDirectoryService Directory = directory ?? throw new ArgumentNullException(nameof(directory));
     protected readonly ISpecialPaths SpecialPaths = SpecialPaths ?? throw new ArgumentNullException(nameof(SpecialPaths));
 
     public async Task<bool> ExistsAsync(string path)
@@ -79,6 +81,10 @@ internal class DataFileService(
         try
         {
             var fullPath = await this.GetFullPathAsync(path);
+            var directory = Path.GetDirectoryName(fullPath);
+
+            if (directory != null && !await this.Directory.ExistsAsync(directory))
+                await this.Directory.CreateDirectoryAsync(directory);
 
             await this.File.WriteAllTextAsync(fullPath, content);
             logger.LogInformation("Data file written to {fullPath}", fullPath);
