@@ -59,22 +59,22 @@
         }
 
         main {
-            flex: 1 1 auto;
+            /* Fix the main area to a strict height and prevent expansion */
+            flex: 0 0 auto;
+            height: calc(var(--main-height) - var(--display-correction));
+            min-height: 0; /* critical: allow flex children to shrink */
             padding: var(--gutter);
-            overflow: hidden;
+            overflow: hidden; /* nothing escapes the main area */
             display: flex;
             flex-direction: column;
-            
         }
 
         header, header div {
             height: calc(var(--header-height));
         }
 
-        main, main section, main section div {
-            height: calc(var(--main-height) - var(--display-correction));
-            margin-bottom: var(--display-correction);
-        }
+        /* Ensure direct children of main cannot grow main; they must fit inside */
+        main > * { flex: 1 1 auto; min-height: 0; max-height: 100%; overflow: hidden; }
 
         footer {
             height: var(--footer-height);
@@ -142,6 +142,8 @@
             display: block;
             flex: 1 1 auto;
             width: 100%;
+            height: 100%; /* fill main but not exceed it */
+            max-height: 100%;
         }
 
     </style>
@@ -169,15 +171,18 @@
     </header>
     <main>
         
-        <section-carousel default-interval="5000" slide-duration="10000">
+        <section-carousel autoplay fade-in fade-out 
+            slide-duration="2s" 
+            slide-direction="right-to-left" 
+            display-duration="15s">
 
-            <section slot="section" data-interval="8000">
+            <section>
                 <random-simple-joke src="data/dad-jokes.json" interval="5000" punchline-reveal="2000" transition-time="1000"></random-simple-joke>
             </section>
 
-            <section class="golden-left-layout" slot="section" data-interval="30000">
+            <section class="golden-left-layout">
                 <div class="column-left">
-                    <vertical-bounce-back speed="100" delay="2000" class="main-height-fix">
+                    <vertical-bounce-back speed="100" delay="2000" class="">
                         <random-image src="data/photos/list.json" interval="10000"></random-image>
                         <random-image src="data/photos/list.json" interval="30000"></random-image>
                         <random-image src="data/photos/list.json" interval="20000"></random-image>
@@ -189,19 +194,19 @@
                 </div>
             </section>
 
-            <section class="three-column-layout" slot="section" data-interval="10000">
+            <section class="three-column-layout">
                 <div class="column-left">
                     <calendar-month select-today="true" url="data/calendar/upcoming-events.json" refresh="5"></calendar-month>
                 </div>
                 <div class="column-center">
-                     <vertical-bounce-back speed="80" delay="2000" class="main-height-fix">
+                     <vertical-bounce-back speed="80" delay="2000" class="">
                         <calendar-agenda-view id="family-calendar-events" external-scroll
                             url="data/calendar/upcoming-events.json" refresh="5"
                             day-format="D dddd" time-format="h:mma"></calendar-agenda-view>
                     </vertical-bounce-back>
                 </div>
                 <div class="column-right">
-                    <vertical-bounce-back speed="50" delay="2000" class="main-height-fix">
+                    <vertical-bounce-back speed="50" delay="2000" class="">
                         <random-image src="data/photos/list.json" interval="10000"></random-image>
                         <random-image src="data/photos/list.json" interval="30000"></random-image>
                         <random-image src="data/photos/list.json" interval="20000"></random-image>
@@ -210,7 +215,7 @@
                 </div>
             </section>
 
-            <section slot="section" data-interval="10000">
+            <section>
                 <random-image src="data/photos/list.json" interval="5000"></random-image>
             </section>
 

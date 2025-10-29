@@ -1,244 +1,308 @@
 class SectionCarousel extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-
-        this.currentIndex = 0;
-        this.slots = [];
-        this.timer = null;
-        this.isAnimating = false;
-
-        const style = document.createElement('style');
-        style.textContent = `
-            :host{ display:block; position:relative; overflow:hidden; }
-            .viewport { display:flex; width:100%; height:100%; transition: transform 0.6s cubic-bezier(.2,.9,.4,1); }
-            ::slotted([slot="section"]),
-            ::slotted([slot="carousel-clone"]) {
-                flex:0 0 100%;
-                height:100%;
-                box-sizing:border-box;
-                opacity: 1;
-                transition: opacity 0.6s ease-in-out;
+            constructor() {
+                super();
+                this.currentIndex = 0;
+                this.sections = [];
+                this.timer = null;
+                this.isTransitioning = false;
+                this.lastShown = [];
             }
-        `;
 
-        this.viewport = document.createElement('div');
-        this.viewport.className = 'viewport';
+            connectedCallback() {
+                // Small delay to ensure children are fully parsed
+                requestAnimationFrame(() => {
+                    this.initialize();
+                });
+            }
 
-        this.slotElement = document.createElement('slot');
-        this.slotElement.name = 'section';
+            initialize() {
+                // Collect all <section> children
+                this.sections = Array.from(this.querySelectorAll(':scope > section'));
 
-        this.cloneSlot = document.createElement('slot');
-        this.cloneSlot.name = 'carousel-clone';
+                console.log('Section carousel initialized with', this.sections.length, 'sections');
 
-        this.shadowRoot.append(style, this.viewport);
-        this.viewport.append(this.slotElement, this.cloneSlot);
+                if (this.sections.length === 0) return;
 
-        this.slotElement.addEventListener('slotchange', () => this.handleSlotChange());
-        this.cloneSlot.addEventListener('slotchange', () => this.updateHeight());
+                const direction = this.getAttribute('slide-direction') || 'right-to-left';
+                const fadeIn = this.hasAttribute('fade-in');
 
-        this.cloneLightNode = null;
-    }
+                // Determine eligible slides based on optional condition attribute
+                const eligible = this._getEligibleIndices();
+                if (eligible.length === 0) {
+                    console.warn('SectionCarousel: No eligible slides based on conditions');
+                }
 
-    static get observedAttributes() {
-        return ['slide-duration'];
-    }
+                // If current index is not eligible, pick the first eligible as start
+                if (eligible.length > 0 && !eligible.includes(this.currentIndex)) {
+                    this.currentIndex = eligible[0];
+                }
 
-    connectedCallback() {
-        // Default per-section interval (ms) when not specified on the child: 60_000ms (1 minute)
-        this.defaultInterval = (parseInt(this.getAttribute('default-interval')) || 60000);
-        this.slideDuration = Math.min(Math.max(parseInt(this.getAttribute('slide-duration')) || 3000, 100), 3000); // 100ms..3000ms
+                // Initialize lastShown tracking to match sections
+                this.lastShown = new Array(this.sections.length).fill(0);
 
-        // Update the opacity transition to match slide duration
-        const style = this.shadowRoot.querySelector('style');
-        style.textContent = style.textContent.replace('opacity 0.6s', `opacity ${this.slideDuration}ms`);
+                // Prepare all slides in absolute layout; current at center, others off-screen
+                this.sections.forEach((section, idx) => {
+                    section.style.willChange = 'transform, opacity';
+                    section.style.transition = 'none';
+                    // Set initial positions
+                    if (idx === this.currentIndex) {
+                        section.style.transform = 'translate(0, 0)';
+                        section.style.opacity = '1';
+                        this.lastShown[idx] = Date.now();
+                    } else {
+                        section.style.transform = this._offscreenTransform(direction, +1);
+                        // If slide is ineligible, keep it hidden; otherwise follow fade-in preference
+                        const isEligible = eligible.length === 0 ? true : eligible.includes(idx);
+                        section.style.opacity = isEligible ? (fadeIn ? '0' : '1') : '0';
+                    }
+                });
 
-        this.refreshSlots();
+                // Start autoplay if enabled
+                if (this.hasAttribute('autoplay')) {
+                    this.startAutoplay();
+                }
+            }
 
-        // Resize observer to keep height consistent
-        this.resizeObserver = new ResizeObserver(() => this.updateHeight());
-        this.resizeObserver.observe(this);
+            disconnectedCallback() {
+                this.stopAutoplay();
+            }
 
-        this.updateHeight();
+            startAutoplay() {
+                this.stopAutoplay();
+                const delay = this.getCurrentDisplayDuration();
+                this.timer = setTimeout(() => {
+                    this.next();
+                }, delay);
+            }
 
-        // Pause on hover/focus
-        this.addEventListener('mouseenter', () => this.pause());
-        this.addEventListener('mouseleave', () => this.resume());
-        this.addEventListener('focusin', () => this.pause());
-        this.addEventListener('focusout', () => this.resume());
+            stopAutoplay() {
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                }
+            }
 
-        this.start();
-    }
+            getCurrentDisplayDuration() {
+                const currentSection = this.sections[this.currentIndex];
+                // Check section-specific display-duration
+                if (currentSection && currentSection.hasAttribute('display-duration')) {
+                    return this.parseDuration(currentSection.getAttribute('display-duration'));
+                }
+                // Fall back to carousel display-duration
+                if (this.hasAttribute('display-duration')) {
+                    return this.parseDuration(this.getAttribute('display-duration'));
+                }
+                // Default to 5 seconds
+                return 5000;
+            }
 
-    disconnectedCallback() {
-        this.stop();
-        this.resizeObserver?.disconnect();
-        if (this._processHash) window.removeEventListener('hashchange', this._processHash);
-        if (this.cloneLightNode) {
-            this.cloneLightNode.remove();
-            this.cloneLightNode = null;
-        }
-    }
+            parseDuration(value) {
+                if (!value) return 5000;
+                const match = value.match(/^(\d+(?:\.\d+)?)(ms|s)?$/);
+                if (!match) return 5000;
+                const num = parseFloat(match[1]);
+                const unit = match[2] || 's';
+                return unit === 'ms' ? num : num * 1000;
+            }
 
-    updateHeight() {
-        // Match host height to tallest section to avoid jumpiness
-        let max = 0;
-        this.slots.forEach(node => {
-            const rect = node.getBoundingClientRect();
-            if (rect.height > max) max = rect.height;
-        });
-        if (this.cloneLightNode) {
-            const rect = this.cloneLightNode.getBoundingClientRect();
-            if (rect.height > max) max = rect.height;
-        }
-        if (max === 0) max = this.clientHeight || 300;
-        this.style.height = max + 'px';
-    }
+            async next() {
+                if (this.isTransitioning || this.sections.length === 0) return;
+                this.isTransitioning = true;
+                const currentSection = this.sections[this.currentIndex];
+                const eligible = this._getEligibleIndices();
 
-    start() {
-        if (this.timer) return;
-        if (!this.slots.length) return;
-        this.scheduleNext();
-    }
+                // If nothing is eligible, just reschedule and bail
+                if (eligible.length === 0) {
+                    this.isTransitioning = false;
+                    if (this.hasAttribute('autoplay')) this.startAutoplay();
+                    return;
+                }
 
-    stop() {
-        clearTimeout(this.timer);
-        this.timer = null;
-    }
+                // Find the next eligible index after current
+                const nextIndex = this._findNextEligibleIndex(this.currentIndex, eligible);
+                // If only one eligible slide, keep showing it and reschedule
+                if (nextIndex === this.currentIndex || nextIndex === -1) {
+                    this.isTransitioning = false;
+                    if (this.hasAttribute('autoplay')) this.startAutoplay();
+                    return;
+                }
+                const nextSection = this.sections[nextIndex];
 
-    pause() {
-        this.stop();
-    }
+                const slideDuration = this.parseDuration(this.getAttribute('slide-duration') || '1s');
+                const fadeOut = this.hasAttribute('fade-out');
+                const fadeIn = this.hasAttribute('fade-in');
+                const direction = this.getAttribute('slide-direction') || 'right-to-left';
 
-    resume() {
-        if (!this.timer) this.scheduleNext();
-    }
+                // Ensure initial positions (current at center, next off-screen on the incoming side)
+                currentSection.style.transition = 'none';
+                nextSection.style.transition = 'none';
+                currentSection.style.transform = 'translate(0, 0)';
+                nextSection.style.transform = this._offscreenTransform(direction, +1);
+                nextSection.style.opacity = fadeIn ? '0' : '1';
+                currentSection.style.opacity = '1';
 
-    scheduleNext() {
-        if (!this.slots.length) return;
-        const currentNode = this.slots[this.currentIndex] || this.slots[0];
-        const interval = currentNode?._carouselInterval || this.defaultInterval;
+                // Manage stacking order so incoming is above during slide
+                currentSection.style.zIndex = '1';
+                nextSection.style.zIndex = '2';
 
-        this.timer = setTimeout(() => this.advance(), interval);
-    }
+                // Force reflow to apply initial styles before transitioning
+                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                void currentSection.offsetHeight;
+                void nextSection.offsetHeight;
 
-    async advance() {
-        if (this.isAnimating || this.slots.length === 0) return;
-        this.isAnimating = true;
+                // Apply transitions
+                const base = `transform ${slideDuration}ms ease-in-out`;
+                currentSection.style.transition = fadeOut ? `${base}, opacity ${slideDuration}ms ease-in-out` : base;
+                nextSection.style.transition = fadeIn ? `${base}, opacity ${slideDuration}ms ease-in-out` : base;
 
-        const currentSection = this.slots[this.currentIndex];
-        const nextIndex = (this.currentIndex + 1) % this.slots.length;
-        const nextSection = this.slots[nextIndex];
+                // Start animations in next frame
+                await new Promise(resolve => requestAnimationFrame(resolve));
 
-        // Start fade out current section
-        if (currentSection) {
-            currentSection.style.opacity = '0';
-        }
+                // Move both: current goes out (-1), next comes in (0)
+                currentSection.style.transform = this._offscreenTransform(direction, -1);
+                if (fadeOut) currentSection.style.opacity = '0';
 
-        // animate by updating transform
-        this.viewport.style.transition = `transform ${this.slideDuration}ms cubic-bezier(.3,0,.7,1)`;
-        this.viewport.style.transform = `translateX(-${(this.currentIndex + 1) * 100}%)`;
+                nextSection.style.transform = 'translate(0, 0)';
+                if (fadeIn) nextSection.style.opacity = '1';
 
-        // Wait for transition to finish
-        await new Promise(res => setTimeout(res, this.slideDuration + 20));
+                // Wait for both transitions to finish
+                await Promise.race([
+                    this._waitForTransitionEnd(currentSection, slideDuration + 50),
+                    this._waitForTransitionEnd(nextSection, slideDuration + 50)
+                ]);
 
-        this.currentIndex++;
+                // Set end-state styles
+                currentSection.style.transition = 'none';
+                currentSection.style.transform = this._offscreenTransform(direction, +1); // park off-screen to the incoming side
+                // Keep it hidden if fading out was requested
+                if (fadeOut) currentSection.style.opacity = '0';
 
-        // Reset opacity for all sections
-        this.slots.forEach(section => {
-            section.style.opacity = '1';
-        });
+                nextSection.style.transition = 'none';
+                nextSection.style.transform = 'translate(0, 0)';
+                nextSection.style.opacity = '1';
 
-        // If we've reached the clone (wrap), reset to 0 without animation
-        if (this.currentIndex >= this.slots.length) {
-            this.viewport.style.transition = 'none';
-            this.viewport.style.transform = 'translateX(0)';
-            this.currentIndex = 0;
-            // Force reflow
-            this.viewport.getBoundingClientRect();
-        }
+                // Reset stacking
+                currentSection.style.zIndex = '';
+                nextSection.style.zIndex = '';
 
-        this.isAnimating = false;
-        this.scheduleNext();
-    }
+                // Update shown timestamp and current index
+                this.lastShown[nextIndex] = Date.now();
+                this.currentIndex = nextIndex;
+                this.isTransitioning = false;
 
-    // Jump to a specific section index (0-based). If pause=true, pause rotation.
-    goTo(index, pause = false) {
-        if (!Number.isFinite(index) || index < 0 || index >= this.slots.length) return;
-        this.stop();
-        this.currentIndex = index;
-        // translate to the requested index
-        this.viewport.style.transition = 'none';
-        this.viewport.style.transform = `translateX(-${index * 100}%)`;
-        // force reflow
-        this.viewport.getBoundingClientRect();
-        if (pause) {
-            this.pausedByHash = true;
-            return;
-        }
-        // resume normally
-        this.scheduleNext();
-    }
+                // Continue autoplay
+                if (this.hasAttribute('autoplay')) {
+                    this.startAutoplay();
+                }
+            }
 
-    handleSlotChange() {
-        this.refreshSlots();
-        this.updateHeight();
-    }
+            _getEligibleIndices() {
+                const list = [];
+                for (let i = 0; i < this.sections.length; i++) {
+                    if (this._evaluateCondition(this.sections[i], i)) list.push(i);
+                }
+                return list;
+            }
 
-    refreshSlots() {
-        const assigned = this.slotElement.assignedElements({ flatten: true });
-        this.slots = assigned;
+            _findNextEligibleIndex(fromIdx, eligible) {
+                if (!eligible || eligible.length === 0) return -1;
+                const n = this.sections.length;
+                for (let step = 1; step <= n; step++) {
+                    const idx = (fromIdx + step) % n;
+                    if (eligible.includes(idx)) return idx;
+                }
+                return -1;
+            }
 
-        this.slots.forEach(node => {
-            const ms = parseInt(node.getAttribute && node.getAttribute('data-interval')) || this.defaultInterval;
-            node._carouselInterval = ms;
-        });
+            _evaluateCondition(section, index) {
+                const expr = section.getAttribute('condition');
+                if (!expr) return true;
+                try {
+                    const ctx = this._buildConditionContext(index);
+                    // Evaluate expression in a restricted scope of provided context
+                    const fn = new Function('ctx',
+                        'const { now, nowMs, hour, minute, second, day, date, month, isWeekend, isWeekday, index, count, param, matchesMedia, random, lastShownAtMs, lastShownAgoMs, lastShownAgoMinutes, neverShown } = ctx;\n' +
+                        'return !!(' + expr + ');'
+                    );
+                    return !!fn(ctx);
+                } catch (err) {
+                    console.warn('SectionCarousel condition error:', err);
+                    return false;
+                }
+            }
 
-        this.slotIds = this.slots.map((node, i) => {
-            const id = (node.id && node.id.trim()) || (node.getAttribute && node.getAttribute('data-id')) || `section-${i+1}`;
-            return id;
-        });
+            _buildConditionContext(index) {
+                const now = new Date();
+                const nowMs = Date.now();
+                const day = now.getDay();
+                const url = new URL(window.location.href);
+                const lastShownAtMs = this.lastShown?.[index] ?? 0;
+                const neverShown = !lastShownAtMs;
+                const lastShownAgoMs = neverShown 
+                    ? Number.POSITIVE_INFINITY 
+                    : (nowMs - lastShownAtMs);
+                const lastShownAgoSeconds = lastShownAgoMs / 1000;
+                const lastShownAgoMinutes = lastShownAgoMs / 60000;
+                const lastShownAgoHours = lastShownAgoMs / 3600000;
+                return {
+                    now,
+                    nowMs,
+                    hour: now.getHours(),
+                    minute: now.getMinutes(),
+                    second: now.getSeconds(),
+                    day, // 0=Sun..6=Sat
+                    date: now.getDate(), // 1..31
+                    month: now.getMonth() + 1, // 1..12
+                    isWeekend: day === 0 || day === 6,
+                    isWeekday: !(day === 0 || day === 6),
+                    index,
+                    count: this.sections.length,
+                    param: (name) => url.searchParams.get(name),
+                    matchesMedia: (q) => window.matchMedia(q).matches,
+                    random: Math.random(),
+                    lastShownAtMs,
+                    lastShownAgoMs,
+                    lastShownAgoSeconds,
+                    lastShownAgoMinutes,
+                    lastShownAgoHours,
+                    neverShown
+                };
+            }
 
-        this.dataset.slotIds = this.slotIds.join(',');
+            _offscreenTransform(direction, sign) {
+                switch (direction) {
+                    case 'left-to-right':
+                        return `translateX(${sign * -100}%)`;
+                    case 'bottom-to-top':
+                        return `translateY(${sign * 100}%)`;
+                    case 'top-to-bottom':
+                        return `translateY(${sign * -100}%)`;
+                    case 'right-to-left':
+                    default:
+                        return `translateX(${sign * 100}%)`;
+                }
+            }
 
-        this.ensureClone();
+            _waitForTransitionEnd(el, timeoutMs) {
+                return new Promise(resolve => {
+                    let done = false;
+                    const onEnd = () => {
+                        if (done) return;
+                        done = true;
+                        el.removeEventListener('transitionend', onEnd);
+                        resolve();
+                    };
+                    el.addEventListener('transitionend', onEnd, { once: true });
+                    setTimeout(onEnd, timeoutMs);
+                });
+            }
 
-        this.viewport.style.transition = `transform ${this.slideDuration}ms cubic-bezier(.3,0,.7,1)`;
-        this.currentIndex = Math.min(this.currentIndex, Math.max(0, this.slots.length - 1));
-        this.viewport.style.transform = `translateX(-${this.currentIndex * 100}%)`;
-
-        this.stop();
-        this.start();
-    }
-
-    ensureClone() {
-        if (this.cloneLightNode) {
-            this.cloneLightNode.remove();
-            this.cloneLightNode = null;
-        }
-
-        if (this.slots.length > 0) {
-            const clone = this.slots[0].cloneNode(true);
-            clone.setAttribute('slot', 'carousel-clone');
-            clone.setAttribute('data-carousel-clone', 'true');
-            clone.setAttribute('aria-hidden', 'true');
-            if (clone.hasAttribute('id')) clone.removeAttribute('id');
-            clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-            this.appendChild(clone);
-            this.cloneLightNode = clone;
-        }
-    }
-
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'slide-duration' && oldValue !== newValue) {
-            this.slideDuration = Math.min(Math.max(parseInt(newValue) || 3000, 100), 3000);
-            // Update the opacity transition to match new slide duration
-            const style = this.shadowRoot.querySelector('style');
-            if (style) {
-                style.textContent = style.textContent.replace(/opacity \d+ms/, `opacity ${this.slideDuration}ms`);
+            previous() {
+                if (this.isTransitioning || this.sections.length === 0) return;
+                const prevIndex = (this.currentIndex - 1 + this.sections.length) % this.sections.length;
+                this.currentIndex = prevIndex;
+                this.next();
             }
         }
-    }
-}
 
-customElements.define('section-carousel', SectionCarousel);
+        customElements.define('section-carousel', SectionCarousel);

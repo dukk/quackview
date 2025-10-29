@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section Carousel Test</title>
+    <style>
+         /* Carousel container */
+        section-carousel {
+            display: block;
+            overflow: hidden;
+        }
+
+        /* Sections inside carousel */
+        section-carousel > section {
+            width: 100%;
+            height: 50%;
+            box-sizing: border-box;
+            position: absolute; /* Stack all slides; we'll animate transforms */
+            top: 0;
+            left: 0;
+        }
+
+        /* Example styling for carousel content */
+        section-carousel > section.ad {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            font-weight: bold;
+        }
+
+        section-carousel > section:not(.ad) {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            font-weight: bold;
+        }
+    </style>
+    <script src="section-carousel.js" defer></script>
+</head>
+<body>
+
+    <section-carousel autoplay fade-in fade-out 
+            slide-duration="1s" 
+            slide-direction="bottom-to-top" 
+            display-duration="2s">
+
+        <section>
+            Blah
+        </section>
+
+        <section class="ad" condition="param('show-ads')">
+            Ad
+        </section>
+
+        <section class="ad" condition="lastShownAgoMinutes >= 5">
+            Fancy Ad that only shows at most every 5 minutes
+        </section>
+
+        <section condition="minute % 2 === 0">
+            Even minute
+        </section>
+
+        <section condition="!(minute % 2 === 0)">
+            Odd minute
+        </section>
+
+        <section condition="isWeekend">
+            It's the weekend!!!
+        </section>
+
+        <section condition="!isWeekend">
+            It's a weekday...
+        </section>
+
+    </section-carousel>
+    
+
+</body>
+</html>
