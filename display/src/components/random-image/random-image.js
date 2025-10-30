@@ -269,7 +269,15 @@ class RandomImage extends HTMLElement {
 				if (entry.target !== this) continue;
 				if (entry.isIntersecting) {
 					this._log('observer: intersecting, resume autoplay');
-					if (this.hasAttribute('autoplay')) this._startAutoplay();
+					// If refresh-on-screen-enter is set, pick a new image before resuming
+					if (this.hasAttribute('refresh-on-screen-enter')) {
+						this._log('refresh-on-screen-enter: picking new image');
+						this.next().then(() => {
+							if (this.hasAttribute('autoplay')) this._startAutoplay();
+						});
+					} else {
+						if (this.hasAttribute('autoplay')) this._startAutoplay();
+					}
 				} else {
 					this._log('observer: not intersecting, pause autoplay');
 					this._stopAutoplay();
