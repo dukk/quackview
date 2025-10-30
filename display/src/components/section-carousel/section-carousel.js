@@ -6,6 +6,7 @@ class SectionCarousel extends HTMLElement {
                 this.timer = null;
                 this.isTransitioning = false;
                 this.lastShown = [];
+                this._handleKeyDown = this._handleKeyDown.bind(this);
             }
 
             connectedCallback() {
@@ -13,6 +14,8 @@ class SectionCarousel extends HTMLElement {
                 requestAnimationFrame(() => {
                     this.initialize();
                 });
+                // Add keyboard navigation
+                document.addEventListener('keydown', this._handleKeyDown);
             }
 
             initialize() {
@@ -65,6 +68,20 @@ class SectionCarousel extends HTMLElement {
 
             disconnectedCallback() {
                 this.stopAutoplay();
+                document.removeEventListener('keydown', this._handleKeyDown);
+            }
+
+            _handleKeyDown(event) {
+                // Only handle arrow keys
+                if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    this.stopAutoplay(); // Stop autoplay when manually navigating
+                    this.next();
+                } else if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    this.stopAutoplay(); // Stop autoplay when manually navigating
+                    this.previous();
+                }
             }
 
             startAutoplay() {
@@ -108,7 +125,6 @@ class SectionCarousel extends HTMLElement {
             async next() {
                 if (this.isTransitioning || this.sections.length === 0) return;
                 this.isTransitioning = true;
-                const currentSection = this.sections[this.currentIndex];
                 const eligible = this._getEligibleIndices();
 
                 // If nothing is eligible, just reschedule and bail
@@ -120,80 +136,14 @@ class SectionCarousel extends HTMLElement {
 
                 // Find the next eligible index after current
                 const nextIndex = this._findNextEligibleIndex(this.currentIndex, eligible);
-                // If only one eligible slide, keep showing it and reschedule
-                if (nextIndex === this.currentIndex || nextIndex === -1) {
+                // If we couldn't find a next index (shouldn't happen with wrap-around), bail
+                if (nextIndex === -1) {
                     this.isTransitioning = false;
                     if (this.hasAttribute('autoplay')) this.startAutoplay();
                     return;
                 }
-                const nextSection = this.sections[nextIndex];
 
-                const slideDuration = this.parseDuration(this.getAttribute('slide-duration') || '1s');
-                const fadeOut = this.hasAttribute('fade-out');
-                const fadeIn = this.hasAttribute('fade-in');
-                const direction = this.getAttribute('slide-direction') || 'right-to-left';
-
-                // Ensure initial positions (current at center, next off-screen on the incoming side)
-                currentSection.style.transition = 'none';
-                nextSection.style.transition = 'none';
-                currentSection.style.transform = 'translate(0, 0)';
-                nextSection.style.transform = this._offscreenTransform(direction, +1);
-                nextSection.style.opacity = fadeIn ? '0' : '1';
-                currentSection.style.opacity = '1';
-
-                // Manage stacking order so incoming is above during slide
-                currentSection.style.zIndex = '1';
-                nextSection.style.zIndex = '2';
-
-                // Force reflow to apply initial styles before transitioning
-                // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-                void currentSection.offsetHeight;
-                void nextSection.offsetHeight;
-
-                // Apply transitions
-                const base = `transform ${slideDuration}ms ease-in-out`;
-                currentSection.style.transition = fadeOut ? `${base}, opacity ${slideDuration}ms ease-in-out` : base;
-                nextSection.style.transition = fadeIn ? `${base}, opacity ${slideDuration}ms ease-in-out` : base;
-
-                // Start animations in next frame
-                await new Promise(resolve => requestAnimationFrame(resolve));
-
-                // Move both: current goes out (-1), next comes in (0)
-                currentSection.style.transform = this._offscreenTransform(direction, -1);
-                if (fadeOut) currentSection.style.opacity = '0';
-
-                nextSection.style.transform = 'translate(0, 0)';
-                if (fadeIn) nextSection.style.opacity = '1';
-
-                // Wait for both transitions to finish
-                await Promise.race([
-                    this._waitForTransitionEnd(currentSection, slideDuration + 50),
-                    this._waitForTransitionEnd(nextSection, slideDuration + 50)
-                ]);
-
-                // Set end-state styles
-                currentSection.style.transition = 'none';
-                currentSection.style.transform = this._offscreenTransform(direction, +1); // park off-screen to the incoming side
-                // Keep it hidden if fading out was requested
-                if (fadeOut) currentSection.style.opacity = '0';
-
-                nextSection.style.transition = 'none';
-                nextSection.style.transform = 'translate(0, 0)';
-                nextSection.style.opacity = '1';
-
-                // Reset stacking
-                currentSection.style.zIndex = '';
-                nextSection.style.zIndex = '';
-
-                // Update shown timestamp and current index
-                this.lastShown[nextIndex] = Date.now();
-                this.currentIndex = nextIndex;
-                this.isTransitioning = false;
-
-                // Continue autoplay
-                if (this.hasAttribute('autoplay')) {
-                    this.startAutoplay();
-                }
+                await this._slideTo(nextIndex, false);
             }
 
             _getEligibleIndices() {
@@ -209,6 +159,16 @@ class SectionCarousel extends HTMLElement {
                 const n = this.sections.length;
                 for (let step = 1; step <= n; step++) {
                     const idx = (fromIdx + step) % n;
+                    if (eligible.includes(idx)) return idx;
+                }
+                return -1;
+            }
+
+            _findPreviousEligibleIndex(fromIdx, eligible) {
+                if (!eligible || eligible.length === 0) return -1;
+                const n = this.sections.length;
+                for (let step = 1; step <= n; step++) {
+                    const idx = (fromIdx - step + n) % n;
                     if (eligible.includes(idx)) return idx;
                 }
                 return -1;
@@ -299,9 +259,98 @@ class SectionCarousel extends HTMLElement {
 
             previous() {
                 if (this.isTransitioning || this.sections.length === 0) return;
-                const prevIndex = (this.currentIndex - 1 + this.sections.length) % this.sections.length;
-                this.currentIndex = prevIndex;
-                this.next();
+                this.isTransitioning = true;
+                const currentSection = this.sections[this.currentIndex];
+                const eligible = this._getEligibleIndices();
+
+                // If nothing is eligible, just bail
+                if (eligible.length === 0) {
+                    this.isTransitioning = false;
+                    return;
+                }
+
+                // Find the previous eligible index before current
+                const prevIndex = this._findPreviousEligibleIndex(this.currentIndex, eligible);
+                // If only one eligible slide or can't find previous, stay put
+                if (prevIndex === this.currentIndex || prevIndex === -1) {
+                    this.isTransitioning = false;
+                    return;
+                }
+                
+                this._slideTo(prevIndex, true);
+            }
+
+            async _slideTo(targetIndex, isReverse = false) {
+                const currentSection = this.sections[this.currentIndex];
+                const targetSection = this.sections[targetIndex];
+
+                const slideDuration = this.parseDuration(this.getAttribute('slide-duration') || '1s');
+                const fadeOut = this.hasAttribute('fade-out');
+                const fadeIn = this.hasAttribute('fade-in');
+                const direction = this.getAttribute('slide-direction') || 'right-to-left';
+
+                // When going backward (previous), reverse the slide direction
+                const incomingSign = isReverse ? -1 : +1;
+                const outgoingSign = isReverse ? +1 : -1;
+
+                // Ensure initial positions
+                currentSection.style.transition = 'none';
+                targetSection.style.transition = 'none';
+                currentSection.style.transform = 'translate(0, 0)';
+                targetSection.style.transform = this._offscreenTransform(direction, incomingSign);
+                targetSection.style.opacity = fadeIn ? '0' : '1';
+                currentSection.style.opacity = '1';
+
+                // Manage stacking order
+                currentSection.style.zIndex = '1';
+                targetSection.style.zIndex = '2';
+
+                // Force reflow
+                void currentSection.offsetHeight;
+                void targetSection.offsetHeight;
+
+                // Apply transitions
+                const base = `transform ${slideDuration}ms ease-in-out`;
+                currentSection.style.transition = fadeOut ? `${base}, opacity ${slideDuration}ms ease-in-out` : base;
+                targetSection.style.transition = fadeIn ? `${base}, opacity ${slideDuration}ms ease-in-out` : base;
+
+                // Start animations
+                await new Promise(resolve => requestAnimationFrame(resolve));
+
+                currentSection.style.transform = this._offscreenTransform(direction, outgoingSign);
+                if (fadeOut) currentSection.style.opacity = '0';
+
+                targetSection.style.transform = 'translate(0, 0)';
+                if (fadeIn) targetSection.style.opacity = '1';
+
+                // Wait for transitions
+                await Promise.race([
+                    this._waitForTransitionEnd(currentSection, slideDuration + 50),
+                    this._waitForTransitionEnd(targetSection, slideDuration + 50)
+                ]);
+
+                // Set end-state styles
+                currentSection.style.transition = 'none';
+                currentSection.style.transform = this._offscreenTransform(direction, incomingSign);
+                if (fadeOut) currentSection.style.opacity = '0';
+
+                targetSection.style.transition = 'none';
+                targetSection.style.transform = 'translate(0, 0)';
+                targetSection.style.opacity = '1';
+
+                // Reset stacking
+                currentSection.style.zIndex = '';
+                targetSection.style.zIndex = '';
+
+                // Update shown timestamp and current index
+                this.lastShown[targetIndex] = Date.now();
+                this.currentIndex = targetIndex;
+                this.isTransitioning = false;
+
+                // Continue autoplay if it was active
+                if (this.hasAttribute('autoplay')) {
+                    this.startAutoplay();
+                }
             }
         }
 
