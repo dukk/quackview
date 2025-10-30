@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Image Tests</title>
+    <style>
+
+        body {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 20px;
+            height: 50vh;
+            width: 50vw;
+            border: 1px solid red;
+        }
+
+        random-image {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            min-height: 50vh;
+        }
+
+        .random-image {
+            object-fit: cover;
+        }
+
+        .image-a {
+            object-fit: contain;
+            clip-path: circle(40%);
+            clip-rule: evenodd;
+        }
+
+        .image-b {
+            transform: rotate(-10deg);
+        }
+
+        .image-c {
+            transform: rotate(10deg);
+        }
+
+    </style>
+    <script src="random-image.js" defer></script>
+</head>
+<body>
+
+    <main>
+        <section>
+            <random-image autoplay fade-in fade-out display-duration="5s" pause-off-screen>
+                <random-image-list condition="isWeekday" 
+                    src="/jobs/quackjob/debug/data/photos/list.json" 
+                    src-base-url="/jobs/quackjob/debug/">
+                    <random-image-template>
+                        <img class="random-image image-a">
+                    </random-image-template>
+                </random-image-list>
+                <random-image-list 
+                    src="/display/src/data/photos/animals/animals.json" 
+                    src-base-url="/display/src/"></random-image-list>
+                <random-image-list 
+                    src="/display/src/data/photos/landscapes/landscapes.json" 
+                    src-base-url="/display/src/"></random-image-list>
+                <random-image-template>
+                    <img class="random-image image-b">
+                </random-image-template>
+            </random-image>
+        </section>
+        <section>
+            <random-image autoplay fade-in fade-out display-duration="5s" pause-off-screen>
+                <random-image-list condition="isWeekday" 
+                    src="/jobs/quackjob/debug/data/photos/list.json" 
+                    src-base-url="/jobs/quackjob/debug/">
+                    <random-image-template>
+                        <img class="random-image image-a">
+                    </random-image-template>
+                </random-image-list>
+                <random-image-list 
+                    src="/display/src/data/photos/animals/animals.json" 
+                    src-base-url="/display/src/"></random-image-list>
+                <random-image-list 
+                    src="/display/src/data/photos/landscapes/landscapes.json" 
+                    src-base-url="/display/src/"></random-image-list>
+                <random-image-template>
+                    <img class="random-image image-c">
+                </random-image-template>
+            </random-image>
+        </section>
+    </main>
+
+</body>
+</html>
