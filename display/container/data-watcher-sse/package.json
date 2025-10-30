@@ -1,0 +1,16 @@
+{
+	"name": "data-watcher-sse",
+	"version": "0.1.0",
+	"description": "Simple SSE service that streams file modification events from a watched directory",
+	"main": "index.js",
+	"scripts": {
+		"start": "node index.js"
+	},
+	"author": "quackview",
+	"license": "MIT",
+	"dependencies": {
+		"express": "^4.18.2",
+		"cors": "^2.8.5",
+		"chokidar": "^3.6.0"
+	}
+}
