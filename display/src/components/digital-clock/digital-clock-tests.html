@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Clock Tests</title>
+    <style>
+
+        body {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            min-width: 100vw;
+        }
+
+        main {
+            height: 50%;
+            width: 50%;
+            border: 1px solid red;
+        }
+
+    </style>
+    <script src="digital-clock.js" defer></script>
+</head>
+<body>
+
+    <main>
+        <section>
+            <h1>Digital Clock w/ No Template</h1>
+            <digital-clock></digital-clock>
+        </section>
+
+        <section>
+            <h1>Digital Clock w/ Single Template</h1>
+            <digital-clock>
+                <template>
+                    <div data-clock="time" data-format="hh:mm:ss A"></div>
+                    <div data-clock="date" data-format="dddd, MMMM D, YYYY"></div>
+                </template>
+            </digital-clock>
+        </section>
+
+        <section>
+            <h1>Digital Clock w/ Independent Parts</h1>
+            <digital-clock>
+                <template>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; width: min-content; height: min-content;">
+                        <span data-clock="time" data-format="hh" style="font-size: 5rem;"></span>
+                        <span data-clock="time" data-format=":mm" style="font-size: 5rem;"></span>
+                        <span style="display: grid; grid-template-rows: 1fr 1fr;">
+                            <span data-clock="time" data-format=":ss" style="font-size: 1.5rem;"></span>
+                            <span data-clock="time" data-format="A" style="font-size: 2rem;"></span>
+                        </span>
+                    </div>
+                    <div style="font-size: 2rem;">
+                        <span data-clock="date" data-format="dddd"></span>,
+                        <span data-clock="date" data-format="MMMM"></span>
+                        <span data-clock="date" data-format="D"></span>,
+                        <span data-clock="date" data-format="YYYY"></span>
+                    </div>
+                </template>
+            </digital-clock>
+        </section>
+    </main>
+
+</body>
+</html>

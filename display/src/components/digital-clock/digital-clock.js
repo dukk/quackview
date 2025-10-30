@@ -1,144 +1,168 @@
 class DigitalClock extends HTMLElement {
-    static get observedAttributes() { return ['format', 'show-date', 'date-format']; }
     constructor() {
         super();
-        this.attachShadow({mode: 'open'});
-        this.format = this.getAttribute('format') || 'hh:mm:ss a';
-        // date display enabled by default; set attribute show-date="false" to disable
-        this.showDate = this.hasAttribute('show-date') ? this.getAttribute('show-date') !== 'false' : true;
-        this.dateFormat = this.getAttribute('date-format') || 'ddd, MMM D';
-        this.timer = null;
+        this._mounted = false;
+        this._debug = false;
+        this._io = null;
+        this._timer = null; // per-second tick
+        this._templateEl = null; // optional user-provided <template>
+        this._contentEl = null; // rendered content wrapper
     }
+
     connectedCallback() {
-        this.render();
-        this.timer = setInterval(() => this.render(), 1000);
+        if (this._mounted) return;
+        this._mounted = true;
+        this._debug = this.hasAttribute('debug');
+
+        // Minimal layout styles
+        this.style.display = this.style.display || 'block';
+        this.style.position = this.style.position || 'relative';
+
+        this._log('connected');
+
+        // Discover or create template
+        this._discoverTemplate();
+        if (!this._templateEl) {
+            this._templateEl = this._createDefaultTemplate();
+            this._log('created default template');
+        }
+
+        // Content container
+        this._contentEl = document.createElement('div');
+        this.appendChild(this._contentEl);
+
+        // Initial render
+        this._renderFromTemplate();
+        this._updateNow();
+
+        // Setup ticking and visibility handling
+        this._setupIntersectionObserver();
+        this._startTicking();
     }
+
     disconnectedCallback() {
-        clearInterval(this.timer);
+        this._stopTicking();
+        if (this._io) {
+            try { this._io.disconnect(); } catch {}
+            this._io = null;
+        }
     }
-    attributeChangedCallback(name, oldVal, newVal) {
-        if (name === 'format') {
-            this.format = newVal;
-        } else if (name === 'show-date') {
-            this.showDate = newVal === null ? true : newVal !== 'false';
-        } else if (name === 'date-format') {
-            this.dateFormat = newVal || 'ddd, MMM D';
-        }
-        this.render();
+
+    _discoverTemplate() {
+        const tpl = this.querySelector(':scope > template');
+        if (!tpl) return;
+        this._templateEl = tpl;
+        this._log('discovered user template');
     }
-    pad(n) { return n < 10 ? '0' + n : n; }
-    render() {
-        const now = new Date();
-        let h = now.getHours();
-        let m = now.getMinutes();
-        let s = now.getSeconds();
-        let ampm = h >= 12 ? 'PM' : 'AM';
-        let hour12 = h % 12 || 12;
-    // Build HTML by parsing the time format string into tokens and separators so each segment can be styled
-        const tokenRegex = /(hh|h|mm|m|ss|s|a)/g;
 
-        const pad = (n) => n < 10 ? '0' + n : '' + n;
-        const getValueForToken = (token) => {
-            switch (token) {
-                case 'hh': return pad(hour12);
-                case 'h': return '' + hour12;
-                case 'mm': return pad(m);
-                case 'm': return '' + m;
-                case 'ss': return pad(s);
-                case 's': return '' + s;
-                case 'a': return ampm;
-                default: return token;
-            }
-        };
+    _createDefaultTemplate() {
+        const tpl = document.createElement('template');
+        const wrapper = document.createElement('div');
+        const timeEl = document.createElement('div');
+        timeEl.setAttribute('data-clock', 'time');
+        timeEl.setAttribute('data-format', 'hh:mm:ss A');
+        timeEl.style.fontSize = '4rem';
+        timeEl.style.fontWeight = 'bold';
+        const dateEl = document.createElement('div');
+        dateEl.setAttribute('data-clock', 'date');
+        dateEl.setAttribute('data-format', 'dddd, MMMM D, YYYY');
+        dateEl.style.fontSize = '1.5rem';
+        wrapper.appendChild(timeEl);
+        wrapper.appendChild(dateEl);
+        tpl.content.appendChild(wrapper);
+        return tpl;
+    }
 
-        const escapeHtml = (str) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    _renderFromTemplate() {
+        this._contentEl.innerHTML = '';
+        const clone = this._templateEl.content.cloneNode(true);
+        this._contentEl.appendChild(clone);
+        this._log('rendered from template');
+    }
 
-        let htmlParts = [];
-        let lastIndex = 0;
-        let match;
-        while ((match = tokenRegex.exec(this.format)) !== null) {
-            if (match.index > lastIndex) {
-                const sep = this.format.slice(lastIndex, match.index);
-                htmlParts.push(`<span class="sep">${escapeHtml(sep)}</span>`);
-            }
-            const token = match[0];
-            const value = escapeHtml(getValueForToken(token));
-            let cls = 'segment';
-            if (token === 'hh' || token === 'h') cls = 'hours';
-            else if (token === 'mm' || token === 'm') cls = 'minutes';
-            else if (token === 'ss' || token === 's') cls = 'seconds';
-            else if (token === 'a') cls = 'ampm';
-
-            htmlParts.push(`<span class="${cls}">${value}</span>`);
-            lastIndex = tokenRegex.lastIndex;
-        }
-        if (lastIndex < this.format.length) {
-            const trailing = this.format.slice(lastIndex);
-            htmlParts.push(`<span class="sep">${escapeHtml(trailing)}</span>`);
-        }
-
-        const html = htmlParts.join('');
-        // Prepare date if enabled
-        let dateHtml = '';
-        if (this.showDate) {
-            const dateStr = this.formatDate(now, this.dateFormat);
-            dateHtml = `<div class="date">${dateStr}</div>`;
-        }
-
-        this.shadowRoot.innerHTML = `
-            <style>
-                :host {
-                    display: inline-block;
-                    font-family: inherit;
-                    font-size: 2.2rem;
-                    letter-spacing: 1px;
-                    color: var(--accent, #00d1ff);
-                    vertical-align: middle;
+    _setupIntersectionObserver() {
+        if (!this.hasAttribute('pause-off-screen')) return;
+        this._io = new IntersectionObserver(entries => {
+            for (const entry of entries) {
+                if (entry.target !== this) continue;
+                if (entry.isIntersecting) {
+                    this._log('observer: intersecting, resume ticking');
+                    this._startTicking();
+                } else {
+                    this._log('observer: not intersecting, pause ticking');
+                    this._stopTicking();
                 }
-                .digital-clock { display:block; }
-                .hours { font-weight: 700; }
-                .minutes { font-weight: 600; margin: 0 6px; }
-                .seconds { font-size: 1.2rem; opacity: 0.8; margin-left: 4px; }
-                .ampm { font-size: 1.1rem; opacity: 0.9; margin-left: 8px; }
-                .sep { opacity: 0.85; margin: 0 4px; }
-                .date { font-size: 1.05rem; color: var(--muted, #bfc9d6); margin-top: 6px; }
-            </style>
-            <span class="digital-clock">${html}</span>
-            ${dateHtml}
-        `;
+            }
+        }, { threshold: 0.01 });
+        this._io.observe(this);
     }
 
-    // Format date according to a simple token set similar in spirit to the time format
-    formatDate(dateObj, format) {
-        const weekdays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-        const weekdaysShort = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-        const monthsShort = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    _startTicking() {
+        this._stopTicking();
+        const tick = () => {
+            this._updateNow();
+            this._timer = setTimeout(tick, 1000 - (Date.now() % 1000)); // align to the next second
+        };
+        tick();
+        this._log('ticking started');
+    }
 
-        const day = dateObj.getDate();
-        const month = dateObj.getMonth() + 1;
-        const year = dateObj.getFullYear();
-        const weekday = dateObj.getDay();
+    _stopTicking() {
+        if (this._timer) {
+            try { clearTimeout(this._timer); } catch {}
+            this._timer = null;
+        }
+        this._log('ticking stopped');
+    }
 
-        const tokenRegex = /(dddd|ddd|MMMM|MMM|YYYY|YY|DD|D|MM|M)/g;
-
-        const pad = (n) => n < 10 ? '0' + n : '' + n;
-
-        return format.replace(tokenRegex, (token) => {
-            switch (token) {
-                case 'dddd': return weekdays[weekday];
-                case 'ddd': return weekdaysShort[weekday];
-                case 'MMMM': return months[month-1];
-                case 'MMM': return monthsShort[month-1];
-                case 'YYYY': return '' + year;
-                case 'YY': return String(year).slice(-2);
-                case 'DD': return pad(day);
-                case 'D': return '' + day;
-                case 'MM': return pad(month);
-                case 'M': return '' + month;
-                default: return token;
-            }
+    _updateNow() {
+        const now = new Date();
+        // Update all nodes with data-clock
+        const nodes = this._contentEl.querySelectorAll('[data-clock]');
+        nodes.forEach(node => {
+            const type = (node.getAttribute('data-clock') || '').toLowerCase();
+            const fmt = node.getAttribute('data-format') || (type === 'time' ? 'hh:mm:ss A' : 'dddd, MMMM D, YYYY');
+            node.textContent = this._format(now, fmt);
         });
     }
+
+    // Simple formatter supporting tokens used in tests
+    _format(date, format) {
+        const pad2 = (n) => String(n).padStart(2, '0');
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+        const h24 = date.getHours();
+        const h12raw = h24 % 12;
+        const h12 = h12raw === 0 ? 12 : h12raw;
+        const A = h24 >= 12 ? 'PM' : 'AM';
+        const HH = pad2(h24);
+        const hh = pad2(h12);
+        const mm = pad2(date.getMinutes());
+        const ss = pad2(date.getSeconds());
+        const dddd = dayNames[date.getDay()];
+        const D = String(date.getDate());
+        const MMMM = monthNames[date.getMonth()];
+        const YYYY = String(date.getFullYear());
+
+        // Replace tokens; order matters to avoid partial replacements
+        let out = format;
+        out = out.replace(/dddd/g, dddd);
+        out = out.replace(/MMMM/g, MMMM);
+        out = out.replace(/YYYY/g, YYYY);
+        out = out.replace(/hh/g, hh);
+        out = out.replace(/HH/g, HH);
+        out = out.replace(/mm/g, mm);
+        out = out.replace(/ss/g, ss);
+        out = out.replace(/\bD\b/g, D);
+        out = out.replace(/\bA\b/g, A);
+        return out;
+    }
+
+    _log(msg, data) {
+        if (!this._debug) return;
+        try { console.info('[digital-clock]', msg, data ?? ''); } catch {}
+    }
 }
+
 customElements.define('digital-clock', DigitalClock);
