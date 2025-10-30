@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Ticker Tests</title>
+    <style>
+
+        body {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            min-width: 100vw;
+        }
+
+        main {
+            height: 50%;
+            width: 50%;
+            border: 1px solid red;
+        }
+
+    </style>
+    <script src="news-ticker.js" defer></script>
+</head>
+<body>
+
+    
+    <main>
+        <news-ticker autoplay pause-off-screen scroll-speed="50" scroll-direction="right-to-left" class="footer-ticker" refresh="1h">
+            <!-- <news-list src="/jobs/quackjob/debug/data/news/local-news.json"></news-list> -->
+            <news-list src="/jobs/quackjob/debug/data/news/us-news.json" max-articles="5" refresh="30m"></news-list>
+            <news-list src="/jobs/quackjob/debug/data/news/world-news.json" max-articles="2"></news-list>
+            <news-list src="/jobs/quackjob/debug/data/news/weekend-news.json" condition="!isWeekday" max-articles="2"></news-list>
+            <news-list src="/jobs/quackjob/debug/data/news/entertainment-news.json" condition="!isWeekday" max-articles="2"></news-list>
+            <news-list-item-template>
+                <!-- <span data-item="date"></span> -->
+                <span data-item="title"></span>
+                <span data-item="source"></span>
+                <span data-item="summary"></span>
+            </news-list-item-template>
+        </news-ticker>
+    </main>
+
+</body>
+</html>
