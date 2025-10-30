@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Joke Tests</title>
+    <style>
+
+        body {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        main {
+            height: 50vh;
+            width: 50vw;
+            border: 1px solid red;
+        }
+
+
+    </style>
+    <script src="random-joke.js" defer></script>
+</head>
+<body>
+
+    <main>
+        <section>
+
+            <random-joke fade-in fade-out autoplay display-duration="10s" punchline-display-delay="5s" pause-off-screen refresh-on-screen-enter>
+                <random-joke-list src="/jobs/quackjob/debug/data/dad-jokes.json" ></random-joke-list>
+                <random-joke-template>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 1rem;" data-joke="setup"></div>
+                    <div style="font-size: 1.5rem;" data-joke="punchline"></div>
+                </random-joke-template>
+            </random-joke>
+            
+        </section>
+    </main>
+
+</body>
+</html>
