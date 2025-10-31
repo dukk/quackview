@@ -7,143 +7,330 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Share+Tech+Mono&family=Sour+Gummy:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <style>
-        :root, html, body {
-            height: 100%;
-        }
+    <link href="https://fonts.googleapis.com/css2?family=Goldman:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Zalando+Sans:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Atma:wght@300;400;500;600;700&family=Butterfly+Kids&display=swap" rel="stylesheet">
 
-        :root{
-            font-size: 18pt;
-            --dashboard-bg: #0b1220;
-            --panel-bg: rgba(255,255,255,0.04);
-            --accent: #Fff;
+    <style>
+        :root {
+            --dashboard-bg: linear-gradient(90deg, #0b1220, #000000);
+            --panel-bg: linear-gradient(90deg, #283652, #0e1a32);
+            --accent: #fff;
             --muted: #bfc9d6;
             --text: #e6eef6;
             --header-height: 20vh;
-            --main-height: 70vh;
             --footer-height: 10vh;
-            --gutter: 28px;
-            --title-size: 48px;
-            --subtext-size: 28px;
-            /* compensates for overscan on some displays */
-            --display-correction: 20px;
+
+            --vertical-gutter: 1vh;
+            --horizontal-gutter: 1vw;
+            --vertical-overscan-correction: 3vh;
+            --horizontal-overscan-correction: 3vw;
         }
 
         body {
+            display: grid;
+            grid-template-rows: 20vh calc(70vh - (var(--vertical-gutter) * 2) - (var(--vertical-overscan-correction) * 2)) 10vh;
+            grid-template-columns: 100%;
+            row-gap: var(--vertical-gutter);
+            height: calc(100vh - (var(--vertical-overscan-correction) * 2));
+            width: calc(100vw - (var(--horizontal-overscan-correction) * 2));
+            margin: var(--vertical-overscan-correction) var(--horizontal-overscan-correction);
+            padding: 0;
+
             font-family: 'Oswald', "Segoe UI", Roboto, sans-serif;
-            font-size: 18pt;
+            font-size: 20pt;
+
             color: var(--text);
             background: var(--dashboard-bg);
-            margin: 0;
-            padding: var(--display-correction);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            -webkit-user-select: none;
-            user-select: none;
-            cursor: none;
-            pointer-events: none;
         }
 
-        header {
-            padding: 0 var(--gutter);
-            display: flex;
-            background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-            z-index: 10;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+        header, footer {
+            background: var(--panel-bg);
+        }
+
+        header, footer, section {
+            align-items: center;
+            justify-content: center;
+            padding: var(--vertical-gutter) var(--horizontal-gutter);
+            /* border-radius: 5px; */
+        }
+
+        section {
+            max-height: 100%;
+        }
+
+        /* header, main, footer {
+            border: 1px solid red;
+        }
+
+        header section, main section, footer section {
+            border: 1px solid blue;
+        } */
+
+        .grid-2-column-half-half {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: var(--horizontal-gutter);
+            width: calc(100% - var(--horizontal-gutter));
+        }
+
+        .grid-2-column-small-large {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            column-gap: var(--horizontal-gutter);
+            width: calc(100% - var(--horizontal-gutter));
+        }
+
+        .grid-2-column-large-small {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            column-gap: var(--horizontal-gutter);
+            width: calc(100% - var(--horizontal-gutter));
+        }
+
+        .grid-3-column-equal {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            column-gap: var(--horizontal-gutter);
+            width: calc(100% - (var(--horizontal-gutter) * 2));
+        }
+
+        .grid-3-column-large-center {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            column-gap: var(--horizontal-gutter);
+            width: calc(100% - (var(--horizontal-gutter) * 2));
+        }
+
+        .grid-3-column-large-right {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr;
+            column-gap: var(--horizontal-gutter);
+            width: calc(100% - (var(--horizontal-gutter) * 2));
+        }
+
+        .grid-3-column-large-left {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            column-gap: var(--horizontal-gutter);
+            width: calc(100% - (var(--horizontal-gutter) * 2));
+        }
+
+        /* Carousel container */
+        section-carousel {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: relative;
             overflow: hidden;
         }
 
-        main {
-            /* Fix the main area to a strict height and prevent expansion */
-            flex: 0 0 auto;
-            height: calc(var(--main-height) - var(--display-correction));
-            min-height: 0; /* critical: allow flex children to shrink */
-            padding: var(--gutter);
-            overflow: hidden; /* nothing escapes the main area */
-            display: flex;
-            flex-direction: column;
+        /* Sections inside carousel */
+        section-carousel > section {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            position: absolute; /* Stack all slides; we'll animate transforms */
+            top: 0;
+            left: 0;
         }
 
-        header, header div {
-            height: calc(var(--header-height));
-        }
-
-        /* Ensure direct children of main cannot grow main; they must fit inside */
-        main > * { flex: 1 1 auto; min-height: 0; max-height: 100%; overflow: hidden; }
-
-        footer {
-            height: var(--footer-height);
-            padding: 0 1rem;
+        /* Example styling for carousel content */
+        section.joke-a {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            background: rgba(0,0,0,0.25);
-            position: sticky;
-            bottom: var(--display-correction);
-            z-index: 10;
-            border-top: 1px solid rgba(255,255,255,0.02);
-            color: var(--muted);
-            overflow: hidden;
+            font-size: 4rem;
+            font-weight: bold;
         }
 
-        .three-column-layout {
+        section.joke-b {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
             display: flex;
             align-items: center;
-            gap: var(--gutter);
-        }
-        .three-column-layout > .column-left,
-        .three-column-layout > .column-center,
-        .three-column-layout > .column-right {
-            flex: 1 1 0;
-            display: flex;
-        }
-        .three-column-layout > .column-left { justify-content: flex-start; width: 33.33%; }
-        .three-column-layout > .column-center { justify-content: center; width: 33.33%; }
-        .three-column-layout > .column-right { justify-content: flex-end; width: 33.33%; }
+            justify-content: center;
+            font-size: 4rem;
+            font-weight: bold;
+        }        
 
-        .golden-left-layout {
-            display: flex;
-            gap: var(--gutter);
-        }
-        .golden-left-layout > .column-left,
-        .golden-left-layout > .column-right {
-            flex: 1 0 0;
-            display: flex;
-        }
-        .golden-left-layout > .column-left { justify-content: flex-start; max-width: 38%; }
-        .golden-left-layout > .column-right { justify-content: flex-end; max-width: 62%; }
-
-
-       .golden-right-layout {
-            display: flex;
-            gap: var(--gutter);
-        }
-        .golden-right-layout > .column-left,
-        .golden-right-layout > .column-right {
-            flex: 1 0 0;
-            display: flex;
-        }
-        .golden-right-layout > .column-left { justify-content: flex-start; max-width: 62%; }
-        .golden-right-layout > .column-right { justify-content: flex-end; max-width: 38%; }
-
-        h1 {
-            font-size: 1.5rem;
-            margin: 0 0 0.25em 0;
-            font-weight: 400;
-        }
-
-        section-carousel {
+        random-image {
+            align-items: center;
             display: block;
-            flex: 1 1 auto;
+            justify-content: center;
             width: 100%;
-            height: 100%; /* fill main but not exceed it */
+            height: 100%;
+        }
+
+        .random-image {
+            max-width: 100%;
             max-height: 100%;
+            object-fit: cover;
+        }
+
+        .round-image {
+            object-fit: scale-down;
+            clip-path: circle(40%);
+            clip-rule: evenodd;
+        }
+
+        .mosaic-5x3 {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows:  repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .mosaic-big {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        .mosaic-big-x {
+            grid-column: span 3;
+            grid-row: span 3;
+        }
+
+        .mosaic-big-xx {
+            grid-column: span 4;
+            grid-row: span 4;
+        }
+
+        news-ticker {
+            font-size: 2rem;
+            vertical-align: middle;
+        }
+
+        random-joke {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            font-family: "Atma", system-ui;
+        }
+
+        .joke-setup {
+            font-size: 3rem; 
+            margin-bottom: 1rem;
+        }
+
+        .joke-punchline {
+            font-size: 2rem; 
+            text-align: center;
+            font-style: italic;
+        }
+
+        calendar-month {
+            height: 100%;
+            width: 100%;
+            background-color: var(--panel-bg);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar-month-title {
+            height: 15%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .calendar-weekday {
+            height: 10%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .calendar-grid {
+            height: 75%;
+            width: 100%;
+        }
+
+        .calendar-day {
+            opacity: .25;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .calendar-in-month-day {
+            opacity: .80;
+        }
+
+        .calendar-current-day {
+            opacity: 1;
+            box-shadow: 0 0 0 2px #f5576c;
+        }
+
+        .calendar-event-day {
+            box-shadow: inset 0 0 0 2px #248554;
+        }
+
+        .agenda-list {
+            overflow: hidden;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            scrollbar-color: transparent transparent; 
+            &::-webkit-scrollbar {
+                display: none;
+            }
+        }
+
+        digital-clock {
+            font-family: "Goldman", sans-serif;
+            height: 100%;
+            font-size: 4rem;
+        }
+
+        .digital-clock-time {
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            width: min-content; 
+        }
+
+        .digital-clock-sec-ampm {
+            display: grid;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .digital-clock-sec {
+            display: block;
+        }
+
+        .digital-clock-ampm {
+            display: block;
+            font-size: 1.1rem;
+        }
+
+        .digital-clock-date {
+            font-size: 1.2rem;
+        }
+
+        .news-ticker-article {
+            font-family: "Zalando Sans", sans-serif;
+        }
+
+        .news-ticker-source { 
+            opacity: .6;
+            font-size: 1.5rem; 
+        }
+
+        .news-ticker-title { 
+            font-weight: bold; 
+        }
+
+        .news-ticker-summary { 
+            font-size: 1.8rem; 
         }
 
     </style>
@@ -155,74 +342,309 @@
     <script src="components/vertical-bounce-back/vertical-bounce-back.js" defer></script>
     <script src="components/random-image/random-image.js" defer></script>
     <script src="components/news-ticker/news-ticker.js" defer></script>
-    <script src="components/random-simple-joke/random-simple-joke.js" defer></script>
+    <script src="components/random-joke/random-joke.js" defer></script>
+    
 </head>
 <body>
-    <header class="golden-left-layout">
-        <div class="column-left">
-            <digital-clock id="main-clock" format="h:mmssa" show-date="true" date-format="dddd, MMM D"></digital-clock>
-        </div>
-        <div class="column-right">
-            <vertical-bounce-back speed="80" delay="2000" class="header-height-fix">
-                <alert-list id="main-alerts" external-scroll
-                    url="data/alerts.json" interval="300000" time-format="h:mma"></alert-list>
-            </vertical-bounce-back>
-        </div>
+    <header class="grid-2-column-small-large">
+        <section>
+            <digital-clock>
+                <template>
+                    <div class="digital-clock-time">
+                        <span data-clock="time" data-format="hh"></span>
+                        <span data-clock="time" data-format=":mm"></span>
+                        <span class="digital-clock-sec-ampm">
+                            <!-- HACK: I couldn't get this dumb thing to align so I had to add blank spans -->
+                            <span></span>
+                            <span class="digital-clock-sec" data-clock="time" data-format=":ss"></span>
+                            <span class="digital-clock-ampm" data-clock="time" data-format="A"></span>
+                            <span></span>
+                        </span>
+                    </div>
+                    <div class="digital-clock-date">
+                        <span data-clock="date" data-format="dddd"></span>,
+                        <span data-clock="date" data-format="MMMM"></span>
+                        <span data-clock="date" data-format="D"></span>,
+                        <span data-clock="date" data-format="YYYY"></span>
+                    </div>
+                </template>
+            </digital-clock>
+        </section>
+        <section>
+            <alert-list source="/jobs/quackjob/debug/data/alerts/alerts.json"></alert-list>
+        </section>
     </header>
     <main>
-        
         <section-carousel autoplay fade-in fade-out 
             slide-duration="2s" 
             slide-direction="right-to-left" 
-            display-duration="15s">
+            display-duration="10s">
+
+            <section class="mosaic-5x3">
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter class="mosaic-big-x">
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+            </section>
+
+            <section class="mosaic-5x3" condition="lastShownAgoMinutes >= 2">
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter class="mosaic-big-xx">
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+            </section>
+
+            <section class="mosaic-5x3" condition="lastShownAgoMinutes >= 3">
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter class="mosaic-big-xx">
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                    </random-image-list>
+                    <random-image-template>
+                        <img class="random-image" alt="">
+                    </random-image-template>
+                </random-image>
+            </section>
+
+            <section class="grid-2-column-half-half" display-duration="30s">
+                <calendar-month month="current" show-events first-day-of-week="sunday">
+                    <calendar-month-events src="/jobs/quackjob/debug/data/calendar/current-events.json"></calendar-month-events>
+                </calendar-month>
+                <vertical-bounce-back speed="50" bounce-delay="2s">
+                    <calendar-agenda-view id="family-calendar-events" external-scroll
+                                url="data/calendar/upcoming-events.json" refresh="5"
+                                day-format="D dddd" time-format="h:mma"></calendar-agenda-view>
+                </vertical-bounce-back>
+            </section>
+
+            <section display-duration="16s" class="joke-a">
+                <random-joke fade-in fade-out punchline-display-delay="8s" pause-off-screen refresh-on-screen-enter>
+                    <random-joke-list src="data/dad-jokes.json" ></random-joke-list>
+                    <random-joke-template>
+                        <div class="joke-setup" data-joke="setup"></div>
+                        <div class="joke-punchline" data-joke="punchline"></div>
+                    </random-joke-template>
+                </random-joke>
+            </section>
 
             <section>
-                <random-simple-joke src="data/dad-jokes.json" interval="5000" punchline-reveal="2000" transition-time="1000"></random-simple-joke>
+                <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                    <random-image-list
+                        src="/jobs/quackjob/debug/data/photos/list.json" 
+                        src-base-url="/jobs/quackjob/debug/">
+                        <random-image-template>
+                            <img class="random-image round-image">
+                        </random-image-template>
+                    </random-image-list>
+                </random-image>
             </section>
 
-            <section class="golden-left-layout">
-                <div class="column-left">
-                    <vertical-bounce-back speed="100" delay="2000" class="">
-                        <random-image src="data/photos/list.json" interval="10000"></random-image>
-                        <random-image src="data/photos/list.json" interval="30000"></random-image>
-                        <random-image src="data/photos/list.json" interval="20000"></random-image>
-                        <random-image src="data/photos/list.json" interval="40000"></random-image>
-                    </vertical-bounce-back>
-                </div>
-                <div class="column-right">
-                    <random-image src="data/photos/list.json" interval="5000"></random-image>
-                </div>
+            <section condition="param('debug')" class="grid-2-column-small-large">
+                <vertical-bounce-back speed="80" delay="2000" class="">
+                    <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                        <random-image-list 
+                            src="/display/src/data/photos/landscapes/landscapes.json" 
+                            src-base-url="/display/src/"></random-image-list>
+                        <random-image-template>
+                            <img class="random-image" alt="">
+                        </random-image-template>
+                    </random-image>
+                </vertical-bounce-back>
+                <vertical-bounce-back speed="80" delay="2000" class="">
+                    <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                        <random-image-list 
+                            src="/display/src/data/photos/landscapes/landscapes.json" 
+                            src-base-url="/display/src/"></random-image-list>
+                        <random-image-template>
+                            <img class="random-image" alt="">
+                        </random-image-template>
+                    </random-image>
+
+                    <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                        <random-image-list 
+                            src="/display/src/data/photos/landscapes/landscapes.json" 
+                            src-base-url="/display/src/"></random-image-list>
+                        <random-image-template>
+                            <img class="random-image" alt="">
+                        </random-image-template>
+                    </random-image>
+
+                    <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                        <random-image-list 
+                            src="/display/src/data/photos/landscapes/landscapes.json" 
+                            src-base-url="/display/src/"></random-image-list>
+                        <random-image-template>
+                            <img class="random-image" alt="">
+                        </random-image-template>
+                    </random-image>
+
+                    <random-image fade-in fade-out pause-off-screen refresh-on-screen-enter>
+                        <random-image-list 
+                            src="/display/src/data/photos/landscapes/landscapes.json" 
+                            src-base-url="/display/src/"></random-image-list>
+                        <random-image-template>
+                            <img class="random-image" alt="">
+                        </random-image-template>
+                    </random-image>
+                </vertical-bounce-back>
             </section>
 
-            <section class="three-column-layout">
-                <div class="column-left">
-                    <calendar-month select-today="true" url="data/calendar/upcoming-events.json" refresh="5"></calendar-month>
-                </div>
-                <div class="column-center">
-                     <vertical-bounce-back speed="80" delay="2000" class="">
-                        <calendar-agenda-view id="family-calendar-events" external-scroll
-                            url="data/calendar/upcoming-events.json" refresh="5"
-                            day-format="D dddd" time-format="h:mma"></calendar-agenda-view>
-                    </vertical-bounce-back>
-                </div>
-                <div class="column-right">
-                    <vertical-bounce-back speed="50" delay="2000" class="">
-                        <random-image src="data/photos/list.json" interval="10000"></random-image>
-                        <random-image src="data/photos/list.json" interval="30000"></random-image>
-                        <random-image src="data/photos/list.json" interval="20000"></random-image>
-                        <random-image src="data/photos/list.json" interval="40000"></random-image>
-                    </vertical-bounce-back>
-                </div>
+            <section display-duration="16s" class="joke-b" condition="lastShownAgoMinutes >= 5>
+                <random-joke fade-in fade-out punchline-display-delay="8s" pause-off-screen refresh-on-screen-enter>
+                    <random-joke-list src="data/dad-jokes.json" ></random-joke-list>
+                    <random-joke-template>
+                        <div class="joke-setup" data-joke="setup"></div>
+                        <div class="joke-punchline" data-joke="punchline"></div>
+                    </random-joke-template>
+                </random-joke>
             </section>
 
-            <section>
-                <random-image src="data/photos/list.json" interval="5000"></random-image>
+            <!-- <section condition="isWeekend" class="highlight-a">
+                It's the weekend!!!
             </section>
+
+            <section condition="!isWeekend" class="highlight-a">
+                It's a weekday...
+            </section> -->
 
         </section-carousel>
     </main>
     <footer>
-        <news-ticker source="data/news/news.json" speed="50" separator="•"></news-ticker>
+        <section>
+            <news-ticker autoplay pause-off-screen scroll-speed="50" scroll-direction="right-to-left" class="footer-ticker" refresh="1h">
+                <news-list src="data/news/news.json" max-articles="5" refresh="30m"></news-list>
+                <!-- <news-list src="/jobs/quackjob/debug/data/news/local-news.json"></news-list> -->
+                <news-list src="/jobs/quackjob/debug/data/news/us-news.json" max-articles="5" refresh="30m"></news-list>
+                <news-list src="/jobs/quackjob/debug/data/news/world-news.json" max-articles="2"></news-list>
+                <!-- <news-list src="/jobs/quackjob/debug/data/news/weekend-news.json" condition="!isWeekday" max-articles="2"></news-list>
+                <news-list src="/jobs/quackjob/debug/data/news/entertainment-news.json" condition="!isWeekday" max-articles="2"></news-list> -->
+                <news-list-item-template>
+                    <span class="news-ticker-article">
+                        <span class="news-ticker-source" data-item="source"></span>
+                        <span class="news-ticker-title" data-item="title"></span>
+                        <span class="news-ticker-summary" data-item="summary"></span>
+                    </span>
+                </news-list-item-template>
+            </news-ticker>
+        </section>
     </footer>
 </body>
 </html>
