@@ -118,12 +118,20 @@ internal class MicrosoftGraphService(
             result = await pca.AcquireTokenWithDeviceCode(scopes, callback =>
             {
                 this.Logger.LogDebug(callback.Message);
-                this.AlertService.AddAlertAsync(new Alert()
+
+                try
                 {
-                    Title = "Device Authentication Code",
-                    Message = callback.Message,
-                    Expires = DateTime.UtcNow.AddMinutes(15)
-                });
+                    this.AlertService.AddAlertAsync(new Alert()
+                    {
+                        Title = "Device Authentication Code",
+                        Message = callback.Message,
+                        Expires = DateTime.UtcNow.AddMinutes(15)
+                    });
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.LogError(ex, "Failed to create alert for device authentication code.");
+                }
 
                 return Task.CompletedTask;
             }).ExecuteAsync();

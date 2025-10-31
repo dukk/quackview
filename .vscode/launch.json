@@ -19,6 +19,25 @@
             "name": "Docker: Build Display",
             "dockerfile": "${workspaceFolder}/display/container/Dockerfile",
             "contextPath": "${workspaceFolder}/display"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Display: Run (Docker)",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}/display/src",
+            "preLaunchTask": "docker-run-display-dev",
+            "postDebugTask": "docker-stop-display-dev"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Display: Run (Docker, prod-like)",
+            "url": "http://localhost:8081",
+            "webRoot": "${workspaceFolder}/display/src",
+            "preLaunchTask": "docker-run-display-prod",
+            "postDebugTask": "docker-stop-display-prod"
         }
-    ]
+    ],
+    "compounds": []
 }

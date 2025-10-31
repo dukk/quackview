@@ -2,6 +2,82 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "docker-build-display-dev",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"build",
+				"-t",
+				"quackview-display:dev",
+				"-f",
+				"${workspaceFolder}/display/container/Dockerfile",
+				"${workspaceFolder}/display"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "docker-run-display-dev",
+			"dependsOn": ["docker-build-display-dev"],
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"run",
+				"--rm",
+				"-d",
+				"--name","quackview-display-dev",
+				"-p","8080:80",
+				"-e","WATCH_DIR=/quackview/data",
+				"-e","PORT=3000",
+				"-e","CHOKIDAR_USEPOLLING=1",
+				"-e","CHOKIDAR_INTERVAL=500",
+				"-e","CHOKIDAR_AWAIT_WRITE_FINISH=1",
+				"-e","CHOKIDAR_STABILITY=500",
+				"-e","CHOKIDAR_POLLWRITE=100",
+				"-v","${workspaceFolder}\\display\\src:/usr/share/nginx/html:ro",
+				"-v","${workspaceFolder}\\jobs\\quackjob\\debug\\data:/quackview/data:rw",
+				"-v","${workspaceFolder}\\display\\container\\nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro",
+				"quackview-display:dev"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "docker-stop-display-dev",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"stop",
+				"quackview-display-dev"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "docker-run-display-prod",
+			"dependsOn": ["docker-build-display-dev"],
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"run",
+				"--rm",
+				"-d",
+				"--name","quackview-display-prod",
+				"-p","8081:80",
+				// No polling envs, use image defaults and prod nginx config baked into image
+				"-v","${workspaceFolder}\\jobs\\quackjob\\debug\\data:/quackview/data:ro",
+				"quackview-display:dev"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "docker-stop-display-prod",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"stop",
+				"quackview-display-prod"
+			],
+			"problemMatcher": []
+		},
+		{
 			"label": "QuackJob Build",
 			"type": "process",
 			"command": "dotnet",

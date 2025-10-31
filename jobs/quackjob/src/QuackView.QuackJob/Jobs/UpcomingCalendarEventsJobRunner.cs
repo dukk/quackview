@@ -40,7 +40,7 @@ internal class UpcomingCalendarEventsJobRunner(
             allEvents.AddRange(await this.OutlookCalendarEventService.GetEventsAsync(
                 accountEmail,
                 account.Calendars,
-                DateTime.UtcNow,
+                DateTime.UtcNow.AddDays(-config.DaysInPast),
                 DateTime.UtcNow.AddDays(config.DaysInFuture)));
         }
 
@@ -89,6 +89,7 @@ internal class UpcomingCalendarEventsJobConfig : FileOutputJobConfig
 
     public IList<CalendarAccounts> Accounts { get; set; } = [];
     public int DaysInFuture { get; set; } = 14;
+    public int DaysInPast { get; set; } = 0;
 }
 
 public class CalendarAccounts()

@@ -21,6 +21,9 @@ internal class DiskIOService : IDiskIOService
 {
     public Task CopyAsync(string sourcePath, string destinationPath)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(sourcePath, nameof(sourcePath));
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(destinationPath, nameof(destinationPath));
+
         return Task.Run(() =>
         {
             File.Copy(sourcePath, destinationPath, true);
@@ -33,21 +36,37 @@ internal class DiskIOService : IDiskIOService
 
     public Task WriteAllText(string path, string content)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(content, nameof(content));
+
         return File.WriteAllTextAsync(path, content);
     }
 
     public Task AppendAllTextAsync(string path, string content)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(content, nameof(content));
+
+        if (!File.Exists(path))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            return File.WriteAllTextAsync(path, content);
+        }
+
         return File.AppendAllTextAsync(path, content);
     }
 
     public Task<bool> FileExistsAsync(string path)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+
         return Task.FromResult(File.Exists(path));
     }
 
     public Task DeleteFileAsync(string path)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+
         return Task.Run(() =>
         {
             File.Delete(path);
@@ -56,6 +75,9 @@ internal class DiskIOService : IDiskIOService
 
     public Task MoveFileAsync(string sourcePath, string destinationPath)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(sourcePath, nameof(sourcePath));
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(destinationPath, nameof(destinationPath));
+
         return Task.Run(() =>
         {
             File.Move(sourcePath, destinationPath);
@@ -64,21 +86,30 @@ internal class DiskIOService : IDiskIOService
 
     public Task WriteAllTextAsync(string path, string content)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(content, nameof(content));
+
         return File.WriteAllTextAsync(path, content);
     }
 
     public async Task CreateDirectoryAsync(string path)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+
         await Task.Run(() => Directory.CreateDirectory(path));
     }
 
     public async Task<bool> DirectoryExistsAsync(string path)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+
         return await Task.Run(() => Directory.Exists(path));
     }
 
     public Task<IEnumerable<string>> EnumerateFilesAsync(string path, string searchPattern = "*", bool includeSubdirectories = false)
     {
+        ArgumentNullException.ThrowIfNullOrWhiteSpace(path, nameof(path));
+
         var searchOption = includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
         return Task.Run(() => Directory.EnumerateFiles(path, searchPattern, searchOption));
     }
