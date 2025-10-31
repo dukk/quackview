@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertical Bounce Back Tests</title>
+    <style>
+
+        body {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+        }
+
+        main {
+            height: 75vh;
+            width: 50vw;
+            border: 1px solid red;
+            padding: 10px;
+        }
+
+    </style>
+    <script src="vertical-bounce-back.js" defer></script>
+</head>
+<body>
+
+    <main>
+       <vertical-bounce-back speed="100" bounce-delay="2s">
+            <div style="height: 200vh; background: linear-gradient(white, lightblue); padding: 10px;">
+                <h1 style="position: sticky; top: 0; background-color: white; margin: 0; padding: 0.5rem; border-bottom: 1px solid black;">
+                    Vertical Bounce Back Test Content
+                </h1>
+                <p style="padding: 1rem;">
+                    Scroll this content vertically. When you reach the top or bottom, it should bounce back smoothly.
+                </p>
+                <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Aliquid dolorem ipsam aperiam nemo provident, quaerat et est beatae quidem aliquam laborum consequatur eius exercitationem harum assumenda aut! Tenetur, debitis eveniet.</p>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Architecto accusantium nihil deserunt aut nulla molestiae modi consequatur eum eos amet, sunt doloribus aliquid expedita in eveniet, culpa quos fuga rerum.</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facere, quidem. Laboriosam nostrum officiis dolorum facilis nemo totam aut, atque alias ad, similique odio magni veritatis nisi nobis optio corrupti consequuntur?</p>
+                <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Asperiores vel illo fuga saepe facilis ipsa magni id, eos quod ratione illum dolore. Minima eveniet, officiis odit veritatis libero modi a.</p>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam voluptatem facilis eaque laboriosam, debitis, distinctio ipsam tenetur, dolor autem hic reiciendis doloribus corporis! Esse, minus! Sapiente distinctio voluptatibus eius sed?</p>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Excepturi dolores, aut minima at omnis itaque commodi aspernatur quod architecto repellendus eaque mollitia quasi repellat porro nemo natus quas! Ipsam, quia.</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Mollitia asperiores animi fuga eos temporibus maiores quae, repellendus enim, quis ipsum voluptate praesentium earum voluptates alias odio non tempora? Reiciendis, molestiae.</p>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Nobis minima obcaecati totam, illum quisquam nam error fuga cum explicabo eos deserunt aliquam ab ipsa. Quae illo a molestiae sapiente vero.</p>
+            </div>
+       </vertical-bounce-back>
+    </main>
+
+</body>
+</html>
