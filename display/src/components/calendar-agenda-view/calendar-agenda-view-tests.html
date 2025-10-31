@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Month Tests</title>
+    <style>
+
+        body {
+            min-height: 100vh;
+            min-width: 100vw;
+        }
+
+        main {
+            height: 70%;
+            width: 70%;
+            border: 1px solid red;
+        }
+
+    </style>
+    <script src="calendar-agenda-view.js" defer></script>
+</head>
+<body>
+
+    <main>
+
+        <section>
+            <calendar-agenda-view day-format="D dddd" time-format="h:mma">
+                <calendar-agenda-view-events src="/jobs/quackjob/debug/data/calendar/current-events.json"></calendar-agenda-view-events>
+                <calendar-day-template>
+                    <div class="calendar-day-header">
+                        <span class="calendar-day-date" data-day="date"></span>
+                    </div>
+                    <div class="calendar-day-events">
+                        <calendar-event-template>
+                            <div class="calendar-event-item">
+                                <span class="calendar-event-time" data-event="time"></span>
+                                <span class="calendar-event-title" data-event="title"></span>
+                            </div>
+                        </calendar-event-template>
+                    </div>
+                </calendar-day-template>
+            </calendar-agenda-view>
+        </section>
+
+      
+    </main>
+
+</body>
+</html>

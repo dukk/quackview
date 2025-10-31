@@ -92,19 +92,37 @@ class CalendarAgendaView extends HTMLElement {
                 continue;
             }
 
-            const displayStart = isAllDay ? parsedStart : convertToTimeZone(parsedStart, targetTimeZone);
-            const dayKeyDate = isAllDay ? parsedStart : displayStart;
-            const dayKey = buildDayKey(dayKeyDate);
+            if (isAllDay) {
+                // Expand all-day events across each day they span.
+                const startDay = stripTime(parsedStart);
+                const parsedEnd = parseEventDateValue(event.end, false);
+                // End for all-day is typically exclusive (midnight after the last day)
+                let endExclusive = parsedEnd ? stripTime(parsedEnd) : addDays(startDay, 1);
+                // Guard: if endExclusive <= startDay, treat as single day
+                if (!(endExclusive instanceof Date) || endExclusive.getTime() <= startDay.getTime()) {
+                    endExclusive = addDays(startDay, 1);
+                }
 
-            if (!groups[dayKey]) {
-                groups[dayKey] = [];
+                for (let d = new Date(startDay.getTime()); d.getTime() < endExclusive.getTime(); d = addDays(d, 1)) {
+                    const dayKey = buildDayKey(d);
+                    if (!groups[dayKey]) groups[dayKey] = [];
+                    groups[dayKey].push({
+                        ...event,
+                        isAllDay: true,
+                        _parsedStart: new Date(d.getTime()),
+                        _originalStart: parsedStart
+                    });
+                }
+            } else {
+                const displayStart = convertToTimeZone(parsedStart, targetTimeZone);
+                const dayKey = buildDayKey(displayStart);
+                if (!groups[dayKey]) groups[dayKey] = [];
+                groups[dayKey].push({
+                    ...event,
+                    _parsedStart: displayStart,
+                    _originalStart: parsedStart
+                });
             }
-
-            groups[dayKey].push({
-                ...event,
-                _parsedStart: displayStart,
-                _originalStart: parsedStart
-            });
         }
 
         // Sort days ascending
@@ -269,6 +287,16 @@ function buildDayKey(dateObj) {
     const month = dateObj.getMonth() + 1;
     const day = dateObj.getDate();
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+}
+
+function stripTime(dateObj) {
+    return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+}
+
+function addDays(dateObj, days) {
+    const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    d.setDate(d.getDate() + (Number.isFinite(days) ? days : 0));
+    return d;
 }
 
 function renderDateSegments(dateObj, format) {

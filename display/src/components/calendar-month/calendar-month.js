@@ -1,248 +1,398 @@
 class CalendarMonth extends HTMLElement {
     constructor() {
         super();
-        this.attachShadow({ mode: 'open' });
-        this._today = new Date();
-        this._selected = null; // Date object
-        this._year = null;
-        this._month = null; // 0-based
-        this.events = [];
-        this.refreshIntervalId = null;
-        this.timeZone = normalizeTimeZone(this.getAttribute('time-zone') || this.getAttribute('timezone'));
-        this._daysWithEvents = new Set();
-    }
-
-    static get observedAttributes() {
-        return ['year', 'month', 'select-today', 'selected-date', 'url', 'refresh', 'time-zone', 'timezone'];
-    }
-
-    attributeChangedCallback(name, oldVal, newVal) {
-        if (name === 'year' || name === 'month') {
-            this._year = this.hasAttribute('year') ? parseInt(this.getAttribute('year'), 10) : null;
-            this._month = this.hasAttribute('month') ? parseInt(this.getAttribute('month'), 10) : null;
-            this._render();
-        }
-        if (name === 'select-today') {
-            if (this.hasAttribute('select-today')) {
-                this._selectToday();
-            }
-            this._render();
-        }
-        if (name === 'selected-date') {
-            const val = this.getAttribute('selected-date');
-            if (val) {
-                const d = new Date(val);
-                if (!Number.isNaN(d.getTime())) {
-                    this._selected = d;
-                }
-            } else {
-                this._selected = null;
-            }
-            this._render();
-        }
-        if (name === 'url' && newVal) {
-            this.fetchEvents(newVal);
-            this.setupRefresh();
-        }
-        if (name === 'refresh') {
-            this.setupRefresh();
-        }
-        if (name === 'time-zone' || name === 'timezone') {
-            this.timeZone = normalizeTimeZone(newVal);
-            this._render();
-        }
+        this._mounted = false;
+        this._debug = false;
+        this._lists = [];
+        this._events = [];
+        this._container = null;
+        this._weekdayHeader = null; // separate weekday header container
+        this._titleEl = null; // separate month title container
+    this._dayTemplate = null; // <template data-part="day">
+        this._eventTemplate = null; // <template data-part="event">
     }
 
     connectedCallback() {
-        // initialize month/year to today if not provided
-        const now = new Date();
-        if (this._year === null) this._year = now.getFullYear();
-        if (this._month === null) this._month = now.getMonth();
+        if (this._mounted) return;
+        this._mounted = true;
+        this._debug = this.hasAttribute('debug');
 
-        if (this.hasAttribute('select-today')) {
-            this._selectToday();
-        }
+        // Minimal host styles; keep styling primarily external
+        this.style.display = this.style.display || 'block';
 
-        if (this.hasAttribute('selected-date')) {
-            const val = this.getAttribute('selected-date');
-            const d = new Date(val);
-            if (!Number.isNaN(d.getTime())) this._selected = d;
-        }
+        this._log('connected');
 
-        this._render();
-        // start event refresh if url provided
-        const url = this.getAttribute('url');
-        if (url) {
-            this.fetchEvents(url);
-            this.setupRefresh();
-        }
-    }
+        // Discover templates or create defaults
+        this._discoverTemplates();
+        if (!this._dayTemplate) this._dayTemplate = this._createDefaultDayTemplate();
+        if (!this._eventTemplate) this._eventTemplate = this._createDefaultEventTemplate();
 
-    _selectToday() {
-        const t = new Date();
-        this._selected = new Date(t.getFullYear(), t.getMonth(), t.getDate());
-        // keep calendar focused on today's month
-        this._year = this._selected.getFullYear();
-        this._month = this._selected.getMonth();
-        this.setAttribute('selected-date', this._selected.toISOString().slice(0,10));
-    }
+        // Build DOM containers
+        this._buildContainers();
 
-    _onDayClick(evt) {
-        const dataset = evt.target.dataset;
-        if (!dataset || !dataset.day) return;
-        const y = Number(dataset.year);
-        const m = Number(dataset.month);
-        const d = Number(dataset.day);
-        const selected = new Date(y, m, d);
-        this._selected = selected;
-        this.setAttribute('selected-date', selected.toISOString().slice(0,10));
-        this.dispatchEvent(new CustomEvent('date-selected', { detail: { year: y, month: m, day: d, date: selected }, bubbles: true }));
-        this._render();
-    }
-
-    async fetchEvents(url) {
-        try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('Failed to fetch events');
-            const json = await res.json();
-            this.events = Array.isArray(json) ? json : (Array.isArray(json.events) ? json.events : []);
-            this._buildDaysWithEvents();
-            this._render();
-        } catch (err) {
-            // on error, clear events
-            this.events = [];
-            this._daysWithEvents.clear();
-            this._render();
-        }
-    }
-
-    setupRefresh() {
-        if (this.refreshIntervalId) {
-            clearInterval(this.refreshIntervalId);
-            this.refreshIntervalId = null;
-        }
-        const refreshAttr = this.getAttribute('refresh');
-        const url = this.getAttribute('url');
-        const minutes = parseFloat(refreshAttr);
-        if (url && minutes > 0) {
-            this.refreshIntervalId = setInterval(() => {
-                this.fetchEvents(url);
-            }, minutes * 60 * 1000);
-        }
+        // Collect event lists and render
+        this._collectLists();
+        this._loadAllLists().then(() => {
+            this._log('lists loaded', { lists: this._lists.length, events: this._events.length });
+            this._renderMonth();
+        });
     }
 
     disconnectedCallback() {
-        if (this.refreshIntervalId) {
-            clearInterval(this.refreshIntervalId);
-            this.refreshIntervalId = null;
+        // no timers to clear for now
+    }
+
+    _discoverTemplates() {
+        // Day and event templates are optional direct children of <calendar-month>
+        const templates = Array.from(this.querySelectorAll(':scope > template'));
+        for (const tpl of templates) {
+            const part = (tpl.getAttribute('data-part') || '').toLowerCase();
+            if (part === 'day') this._dayTemplate = tpl;
+            if (part === 'event') this._eventTemplate = tpl;
+        }
+        this._log('templates', { hasDay: !!this._dayTemplate, hasEvent: !!this._eventTemplate });
+    }
+
+    _createDefaultDayTemplate() {
+        const tpl = document.createElement('template');
+        const root = document.createElement('div');
+        root.className = 'calendar-day';
+        // minimal structure; page CSS can style .calendar-day, .day-number, .events
+        const num = document.createElement('div');
+        num.className = 'day-number';
+        num.setAttribute('data-day', 'number');
+        const events = document.createElement('div');
+        events.className = 'events';
+        events.setAttribute('data-day', 'events');
+        root.appendChild(num);
+        root.appendChild(events);
+        tpl.content.appendChild(root);
+        return tpl;
+    }
+
+    _createDefaultEventTemplate() {
+        const tpl = document.createElement('template');
+        const root = document.createElement('div');
+        root.className = 'event';
+        const time = document.createElement('span');
+        time.className = 'event-time';
+        time.setAttribute('data-event', 'time');
+        const title = document.createElement('span');
+        title.className = 'event-title';
+        title.setAttribute('data-event', 'title');
+        root.appendChild(time);
+        root.appendChild(document.createTextNode(' '));
+        root.appendChild(title);
+        tpl.content.appendChild(root);
+        return tpl;
+    }
+
+    _buildContainers() {
+        this.innerHTML = '';
+
+        // Month title header (normal div)
+        this._titleEl = document.createElement('div');
+        this._titleEl.className = 'calendar-month-title';
+        this.appendChild(this._titleEl);
+
+        // Weekday header wrapper (grid with 7 columns)
+        this._weekdayHeader = document.createElement('div');
+        this._weekdayHeader.className = 'calendar-weekdays';
+        this._weekdayHeader.style.display = 'grid';
+        this._weekdayHeader.style.gridTemplateColumns = 'repeat(7, 1fr)';
+        this._weekdayHeader.style.gap = '2px';
+        this.appendChild(this._weekdayHeader);
+
+        // Day grid container (6x7)
+        this._container = document.createElement('div');
+        this._container.className = 'calendar-grid';
+        // Provide a minimal grid so it works out of the box; users can override with page CSS
+        this._container.style.display = 'grid';
+        this._container.style.gridTemplateColumns = 'repeat(7, 1fr)';
+        this._container.style.gap = '2px';
+        this.appendChild(this._container);
+    }
+
+    _collectLists() {
+        const children = Array.from(this.querySelectorAll(':scope > calendar-month-events'));
+        this._lists = children.map((el, idx) => ({
+            el,
+            index: idx,
+            src: el.getAttribute('src'),
+            condition: el.getAttribute('condition') || '',
+            loaded: false,
+            error: null,
+            events: [],
+        }));
+        this._log('collected lists', this._lists.map(l => ({ index: l.index, src: l.src })));
+    }
+
+    async _loadAllLists() {
+        await Promise.all(this._lists.map(l => this._loadList(l)));
+        // Combine all
+        this._events = this._lists.filter(l => l.loaded && !l.error).flatMap(l => l.events);
+    }
+
+    async _loadList(list) {
+        if (!list.src) {
+            list.loaded = true;
+            return;
+        }
+        try {
+            const resp = await fetch(list.src, { cache: 'no-cache' });
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+            list.events = this._normalizeEvents(data);
+            list.loaded = true;
+            this._log('loaded list', { src: list.src, count: list.events.length });
+        } catch (err) {
+            list.error = String(err);
+            list.loaded = true;
+            // eslint-disable-next-line no-console
+            console.warn('calendar-month: failed to load list', list.src, err);
         }
     }
 
-    _buildDaysWithEvents() {
-        this._daysWithEvents.clear();
-        const targetTimeZone = this.timeZone;
-        for (const event of this.events) {
-            if (!event) continue;
-            const isAllDay = Boolean(event.isAllDay);
-            const parsedStart = parseEventDateValue(event.start, !isAllDay);
-            if (!parsedStart) continue;
-            const displayStart = isAllDay ? parsedStart : convertToTimeZone(parsedStart, targetTimeZone);
-            const dayKey = buildDayKey(displayStart);
-            this._daysWithEvents.add(dayKey);
-        }
+    _normalizeEvents(data) {
+        // Accept: array of objects or { events: [...] }
+        let arr = [];
+        if (Array.isArray(data)) arr = data;
+        else if (data && Array.isArray(data.events)) arr = data.events;
+        else return [];
+        return arr
+            .map(item => {
+                if (!item || typeof item !== 'object') return null;
+                const title = item.title || item.subject || item.name || '';
+                const startStr = item.start || item.startTime || item.startDate;
+                const endStr = item.end || item.endTime || item.endDate || startStr;
+                let start = startStr ? new Date(startStr) : null;
+                let end = endStr ? new Date(endStr) : null;
+                if (start && isNaN(start.getTime())) start = null;
+                if (end && isNaN(end.getTime())) end = null;
+                if (!start) return null;
+                // If end missing, assume 1 hour for non-all-day, or same day for all-day
+                const isAllDay = !!(item.isAllDay || item.allDay);
+                if (!end) {
+                    if (isAllDay) {
+                        end = new Date(start);
+                        end.setDate(end.getDate() + 1);
+                    } else {
+                        end = new Date(start.getTime() + 60 * 60 * 1000);
+                    }
+                }
+                // Ensure end after start
+                if (end <= start) {
+                    end = new Date(start.getTime() + (isAllDay ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000));
+                }
+                return {
+                    title,
+                    location: item.location || '',
+                    start,
+                    end,
+                    isAllDay,
+                    calendar: item.calendar || '',
+                    raw: item,
+                };
+            })
+            .filter(Boolean);
     }
 
-    _render() {
-        const year = Number.isFinite(this._year) ? this._year : new Date().getFullYear();
-        const month = Number.isFinite(this._month) ? this._month : new Date().getMonth();
-
-        const firstOfMonth = new Date(year, month, 1);
-        const startWeekday = firstOfMonth.getDay(); // 0=Sun
-        const daysInMonth = new Date(year, month+1, 0).getDate();
-
-        // compute previous month's tail days
-        const prevDays = startWeekday; // number of blank cells before day 1
-        const totalCells = Math.ceil((prevDays + daysInMonth) / 7) * 7;
-
-        const cells = [];
-        // date cursor starting at the (1 - prevDays)
-        let dayCursor = 1 - prevDays;
-        for (let i = 0; i < totalCells; i++, dayCursor++) {
-            let cell = null;
-            if (dayCursor < 1) {
-                // previous month
-                const prevDate = new Date(year, month, dayCursor);
-                cell = { date: prevDate, inMonth: false };
-            } else if (dayCursor > daysInMonth) {
-                // next month
-                const nextDate = new Date(year, month, dayCursor);
-                cell = { date: nextDate, inMonth: false };
-            } else {
-                const cur = new Date(year, month, dayCursor);
-                cell = { date: cur, inMonth: true };
+    _parseMonthSpec() {
+        const spec = (this.getAttribute('month') || 'current').toLowerCase();
+        const now = new Date();
+        let year = now.getFullYear();
+        let month = now.getMonth(); // 0-11
+        if (/^\d{4}-\d{1,2}$/.test(spec)) {
+            const [y, m] = spec.split('-').map(n => parseInt(n, 10));
+            if (!isNaN(y) && !isNaN(m)) {
+                year = y;
+                month = Math.max(1, Math.min(12, m)) - 1;
             }
-            cells.push(cell);
+        } else if (spec === 'next') {
+            month += 1;
+            if (month > 11) { month = 0; year += 1; }
+        } else if (spec === 'prev' || spec === 'previous') {
+            month -= 1;
+            if (month < 0) { month = 11; year -= 1; }
+        }
+        return { year, month };
+    }
+
+    _buildMonthDays(year, month) {
+        // Start from Sunday of the week containing the 1st
+        const first = new Date(year, month, 1);
+        const start = new Date(first);
+        const firstDOW = this._getFirstDayOfWeekIndex(); // 0..6
+        const firstDayOfMonthDOW = first.getDay(); // 0..6
+        const offset = (firstDayOfMonthDOW - firstDOW + 7) % 7;
+        start.setDate(1 - offset);
+        const days = [];
+        for (let i = 0; i < 42; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            days.push({
+                date: d,
+                inMonth: d.getMonth() === month,
+                events: [],
+            });
+        }
+        return days;
+    }
+
+    _eventOccursOnDay(event, dayDate) {
+        // Check if any overlap between [start, end) and the day span [day 00:00, next 00:00)
+        const startOfDay = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setDate(endOfDay.getDate() + 1);
+        return event.start < endOfDay && event.end > startOfDay;
+    }
+
+    _renderMonth() {
+        const { year, month } = this._parseMonthSpec();
+        const days = this._buildMonthDays(year, month);
+
+        // Assign events to days
+        for (const ev of this._events) {
+            for (const day of days) {
+                if (this._eventOccursOnDay(ev, day.date)) {
+                    day.events.push(ev);
+                }
+            }
         }
 
-        const today = new Date();
-        const sel = this._selected ? new Date(this._selected.getFullYear(), this._selected.getMonth(), this._selected.getDate()) : null;
+        // Update title and weekday header; then render days
+        this._titleEl.textContent = this._formatMonthTitle(year, month);
 
-        const weekDays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
-        // build HTML
-        const html = [];
-        html.push(`<style>
-            :host{ display: flex; flex-direction: column; flex: 1 1 auto; align-self: stretch; min-width: 0; min-height: 0; font-family: inherit; color: var(--text, #e6eef6); }
-            .calendar { display:flex; width: 100%; flex: 1 1 auto; min-height: 0; box-sizing: border-box; padding: .5rem; background: var(--panel-bg, rgba(255,255,255,0.02)); border-radius:6px; flex-direction:column; }
-            .header { display:flex; justify-content: space-between; align-items:center; margin-bottom: .25rem }
-            .month-title { font-weight:600 }
-            .grid { display:grid; grid-template-columns: repeat(7, 1fr); gap:2px; flex:1 1 auto; align-content:start; min-height: 0 }
-            .wd { text-align:center; font-size: .85em; opacity: .8 }
-            .cell { min-height: 3rem; display:flex; align-items:center; justify-content:center; cursor: pointer; border-radius:4px; box-sizing:border-box }
-            .cell.inMonth{ background: transparent }
-            .cell.notInMonth { opacity: .25 }
-            .cell.today { box-shadow: inset 0 0 0 2px rgba(255,255,255,0.06); }
-            .cell.selected { background: rgba(255,255,255,0.08); font-weight:700 }
-            .cell.has-event { border: 2px solid rgba(46, 204, 113, 0.6); }
-        </style>`);
-
-        html.push(`<div class="calendar">
-            <div class="header">
-                <div class="month-title">${firstOfMonth.toLocaleString(undefined, { month: 'long' })} ${year}</div>
-                <div class="controls"></div>
-            </div>
-            <div class="grid">`);
-
-        // weekdays header
-        for (const wd of weekDays) {
-            html.push(`<div class="wd">${wd}</div>`);
+        // Weekday header row
+        this._weekdayHeader.innerHTML = '';
+        const dayNames = this._getOrderedDayNames();
+        for (const name of dayNames) {
+            const el = document.createElement('div');
+            el.className = 'calendar-weekday';
+            el.textContent = name;
+            this._weekdayHeader.appendChild(el);
         }
 
-        // day cells
-        for (const c of cells) {
-            const d = c.date;
-            const y = d.getFullYear();
-            const m = d.getMonth();
-            const day = d.getDate();
-            const classes = ['cell'];
-            if (c.inMonth) classes.push('inMonth'); else classes.push('notInMonth');
-            const dayKey = buildDayKey(d);
-            if (today.getFullYear() === y && today.getMonth() === m && today.getDate() === day) classes.push('today');
-            if (sel && sel.getFullYear() === y && sel.getMonth() === m && sel.getDate() === day) classes.push('selected');
-            if (this._daysWithEvents.has(dayKey)) classes.push('has-event');
+        // Day cells
+        this._container.innerHTML = '';
+        for (const day of days) {
+            const dayEl = this._renderDay(day);
+            this._container.appendChild(dayEl);
+        }
+        this._log('rendered month', { year, month: month + 1 });
+    }
 
-            html.push(`<div class="${classes.join(' ')}" data-year="${y}" data-month="${m}" data-day="${day}">${day}</div>`);
+    _formatMonthTitle(year, monthIndex) {
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        return `${monthNames[monthIndex]} ${year}`;
+    }
+
+    _renderDay(day) {
+        // Clone day template
+        const frag = this._dayTemplate.content.cloneNode(true);
+        const root = frag.firstElementChild || frag.firstChild;
+        if (root && root.setAttribute) {
+            // Add class for in-month days and dataset date
+            if (day.inMonth) root.classList.add('calendar-in-month-day');
+            // Add event presence and current day classes here for styling
+            if (day.events && day.events.length > 0) root.classList.add('calendar-event-day');
+            const today = new Date();
+            if (
+                day.date.getFullYear() === today.getFullYear() &&
+                day.date.getMonth() === today.getMonth() &&
+                day.date.getDate() === today.getDate()
+            ) {
+                root.classList.add('calendar-current-day');
+            }
+            root.setAttribute('data-date', day.date.toISOString().slice(0, 10));
         }
 
-        html.push(`</div></div>`);
+        // Fill day number
+        const numNode = this._queryWithin(frag, '[data-day="number"]');
+        if (numNode) numNode.textContent = String(day.date.getDate());
 
-        this.shadowRoot.innerHTML = html.join('');
+        // Events container
+        const eventsContainer = this._queryWithin(frag, '[data-day="events"]') || root;
+        // Sort events: all-day first, then by start time
+        const events = day.events.slice().sort((a, b) => {
+            if (a.isAllDay && !b.isAllDay) return -1;
+            if (!a.isAllDay && b.isAllDay) return 1;
+            return a.start.getTime() - b.start.getTime();
+        });
+        const showEvents = this.hasAttribute('show-events');
+        if (showEvents) {
+            for (const ev of events) {
+                const evEl = this._renderEvent(ev, day.date);
+                eventsContainer.appendChild(evEl);
+            }
+        }
 
-        // attach click handler
-        const grid = this.shadowRoot.querySelector('.grid');
-        grid.removeEventListener('click', this._boundClick);
-        this._boundClick = this._onDayClick.bind(this);
-        grid.addEventListener('click', this._boundClick);
+        const container = document.createElement('div');
+        container.appendChild(frag);
+        return container.firstElementChild || container.firstChild;
+    }
+
+    _renderEvent(ev, dayDate) {
+        const frag = this._eventTemplate.content.cloneNode(true);
+        const timeNode = this._queryWithin(frag, '[data-event="time"]');
+        const titleNode = this._queryWithin(frag, '[data-event="title"]');
+        if (timeNode) timeNode.textContent = this._formatEventTime(ev, dayDate);
+        if (titleNode) titleNode.textContent = ev.title || '';
+
+        const container = document.createElement('div');
+        container.appendChild(frag);
+        return container.firstElementChild || container.firstChild;
+    }
+
+    _formatEventTime(ev, dayDate) {
+        if (ev.isAllDay) return 'All day';
+        // If the event spans multiple days, show appropriate indicator
+        const startOfDay = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setDate(endOfDay.getDate() + 1);
+        const showStart = ev.start >= startOfDay && ev.start < endOfDay;
+        const showEnd = ev.end > startOfDay && ev.end <= endOfDay;
+        if (showStart) return this._formatTime(ev.start);
+        if (showEnd) return `until ${this._formatTime(ev.end)}`;
+        return 'continues';
+    }
+
+    _formatTime(date) {
+        const pad2 = (n) => String(n).padStart(2, '0');
+        let h = date.getHours();
+        const m = pad2(date.getMinutes());
+        const A = h >= 12 ? 'PM' : 'AM';
+        h = h % 12; if (h === 0) h = 12;
+        return `${h}:${m} ${A}`;
+    }
+
+    _queryWithin(fragment, selector) {
+        if (!fragment) return null;
+        if (fragment.querySelector) return fragment.querySelector(selector);
+        // Fallback for DocumentFragment without querySelector in some environments
+        const container = document.createElement('div');
+        container.appendChild(fragment.cloneNode(true));
+        return container.querySelector(selector);
+    }
+
+    _log(msg, data) {
+        if (!this._debug) return;
+        try { console.info('[calendar-month]', msg, data ?? ''); } catch {}
+    }
+
+    _getFirstDayOfWeekIndex() {
+        const map = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+        const attr = (this.getAttribute('first-day-of-week') || 'sunday').toLowerCase();
+        if (attr in map) return map[attr];
+        const asNum = parseInt(attr, 10);
+        if (!isNaN(asNum) && asNum >= 0 && asNum <= 6) return asNum;
+        return 0;
+    }
+
+    _getOrderedDayNames() {
+        const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const start = this._getFirstDayOfWeekIndex();
+        return names.slice(start).concat(names.slice(0, start));
     }
 }
 
