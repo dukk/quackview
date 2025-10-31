@@ -1,122 +1,122 @@
 [
-  {
-    "joke": "Why don't eggs tell jokes?",
-    "punchline": "Because they'd crack each other up."
-  },
-  {
-    "joke": "Why did the math book look sad?",
-    "punchline": "It had too many problems."
-  },
-  {
-    "joke": "What do you call fake spaghetti?",
-    "punchline": "An impasta."
-  },
-  {
-    "joke": "Why did the scarecrow win an award?",
-    "punchline": "Because he was outstanding in his field."
-  },
-  {
-    "joke": "What do you call a fish wearing a bowtie?",
-    "punchline": "Sofishticated."
-  },
-  {
-    "joke": "Why can't your nose be 12 inches long?",
-    "punchline": "Because then it would be a foot."
-  },
-  {
-    "joke": "Why did the golfer bring two pairs of pants?",
-    "punchline": "In case he got a hole in one."
-  },
-  {
-    "joke": "What do you call a factory that makes okay products?",
-    "punchline": "A satisfactory."
-  },
-  {
-    "joke": "Why did the bicycle fall over?",
-    "punchline": "It was two-tired."
-  },
-  {
-    "joke": "What do you call cheese that isn't yours?",
-    "punchline": "Nacho cheese."
-  },
-  {
-    "joke": "Why did the tomato turn red?",
-    "punchline": "Because it saw the salad dressing."
-  },
-  {
-    "joke": "How do you organize a space party?",
-    "punchline": "You planet."
-  },
-  {
-    "joke": "Why don't skeletons fight each other?",
-    "punchline": "They don't have the guts."
-  },
-  {
-    "joke": "What do you call a belt made of watches?",
-    "punchline": "A waist of time."
-  },
-  {
-    "joke": "Why did the cookie go to the hospital?",
-    "punchline": "Because it felt crummy."
-  },
-  {
-    "joke": "Why did the computer go to therapy?",
-    "punchline": "It had too many bytes from its past."
-  },
-  {
-    "joke": "What do you call a snowman with a six-pack?",
-    "punchline": "An abdominal snowman."
-  },
-  {
-    "joke": "Why did the coffee file a police report?",
-    "punchline": "It got mugged."
-  },
-  {
-    "joke": "Why don't oysters donate to charity?",
-    "punchline": "Because they're shellfish."
-  },
-  {
-    "joke": "What do you call a group of musical whales?",
-    "punchline": "An orca-stra."
-  },
-  {
-    "joke": "Why did the dad sit on the remote?",
-    "punchline": "Because he wanted to control himself."
-  },
-  {
-    "joke": "What do you call a dog that can do magic?",
-    "punchline": "A Labracadabrador."
-  },
-  {
-    "joke": "Why did the chicken join a band?",
-    "punchline": "Because it had the drumsticks."
-  },
-  {
-    "joke": "Why don’t some couples go to the gym?",
-    "punchline": "Because some relationships don’t work out."
-  },
-  {
-    "joke": "What do you call a cow with no legs?",
-    "punchline": "Ground beef."
-  },
-  {
-    "joke": "Why did the man put his money in the blender?",
-    "punchline": "He wanted to make liquid assets."
-  },
-  {
-    "joke": "Why did the banana go to the doctor?",
-    "punchline": "Because it wasn’t peeling well."
-  },
-  {
-    "joke": "What do you call a sleeping bull?",
-    "punchline": "A bulldozer."
-  },
-  {
-    "joke": "Why did the dad bring a ladder to the bar?",
-    "punchline": "He heard the drinks were on the house."
-  },
-  {
-    "joke": "Why did the music teacher go to jail?",
-    "punchline": "Because she got caught with too many notes."
-  }
+	{
+		"setup": "Why don't eggs tell jokes?",
+		"punchline": "Because they'd crack each other up."
+	},
+	{
+		"setup": "Why did the math book look sad?",
+		"punchline": "It had too many problems."
+	},
+	{
+		"setup": "What do you call fake spaghetti?",
+		"punchline": "An impasta."
+	},
+	{
+		"setup": "Why did the scarecrow win an award?",
+		"punchline": "Because he was outstanding in his field."
+	},
+	{
+		"setup": "What do you call a fish wearing a bowtie?",
+		"punchline": "Sofishticated."
+	},
+	{
+		"setup": "Why can't your nose be 12 inches long?",
+		"punchline": "Because then it would be a foot."
+	},
+	{
+		"setup": "Why did the golfer bring two pairs of pants?",
+		"punchline": "In case he got a hole in one."
+	},
+	{
+		"setup": "What do you call a factory that makes okay products?",
+		"punchline": "A satisfactory."
+	},
+	{
+		"setup": "Why did the bicycle fall over?",
+		"punchline": "It was two-tired."
+	},
+	{
+		"setup": "What do you call cheese that isn't yours?",
+		"punchline": "Nacho cheese."
+	},
+	{
+		"setup": "Why did the tomato turn red?",
+		"punchline": "Because it saw the salad dressing."
+	},
+	{
+		"setup": "How do you organize a space party?",
+		"punchline": "You planet."
+	},
+	{
+		"setup": "Why don't skeletons fight each other?",
+		"punchline": "They don't have the guts."
+	},
+	{
+		"setup": "What do you call a belt made of watches?",
+		"punchline": "A waist of time."
+	},
+	{
+		"setup": "Why did the cookie go to the hospital?",
+		"punchline": "Because it felt crummy."
+	},
+	{
+		"setup": "Why did the computer go to therapy?",
+		"punchline": "It had too many bytes from its past."
+	},
+	{
+		"setup": "What do you call a snowman with a six-pack?",
+		"punchline": "An abdominal snowman."
+	},
+	{
+		"setup": "Why did the coffee file a police report?",
+		"punchline": "It got mugged."
+	},
+	{
+		"setup": "Why don't oysters donate to charity?",
+		"punchline": "Because they're shellfish."
+	},
+	{
+		"setup": "What do you call a group of musical whales?",
+		"punchline": "An orca-stra."
+	},
+	{
+		"setup": "Why did the dad sit on the remote?",
+		"punchline": "Because he wanted to control himself."
+	},
+	{
+		"setup": "What do you call a dog that can do magic?",
+		"punchline": "A Labracadabrador."
+	},
+	{
+		"setup": "Why did the chicken join a band?",
+		"punchline": "Because it had the drumsticks."
+	},
+	{
+		"setup": "Why don’t some couples go to the gym?",
+		"punchline": "Because some relationships don’t work out."
+	},
+	{
+		"setup": "What do you call a cow with no legs?",
+		"punchline": "Ground beef."
+	},
+	{
+		"setup": "Why did the man put his money in the blender?",
+		"punchline": "He wanted to make liquid assets."
+	},
+	{
+		"setup": "Why did the banana go to the doctor?",
+		"punchline": "Because it wasn’t peeling well."
+	},
+	{
+		"setup": "What do you call a sleeping bull?",
+		"punchline": "A bulldozer."
+	},
+	{
+		"setup": "Why did the dad bring a ladder to the bar?",
+		"punchline": "He heard the drinks were on the house."
+	},
+	{
+		"setup": "Why did the music teacher go to jail?",
+		"punchline": "Because she got caught with too many notes."
+	}
 ]
