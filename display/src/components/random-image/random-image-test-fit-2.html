@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Image Test Fit 2</title>
+    <style>
+
+        body {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        main {
+            height: 50vh;
+            width: 50vw;
+            border: 1px solid red;
+        }
+
+        random-image {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        random-image img {
+            object-fit: cover;
+        }
+
+        .mosaic-5x3 {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows:  repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .mosaic-big {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        .mosaic-big-x {
+            grid-column: span 3;
+            grid-row: span 3;
+        }
+
+        .mosaic-big-xx {
+            grid-column: span 4;
+            grid-row: span 4;
+        }
+
+    </style>
+    <script src="random-image.js" defer></script>
+</head>
+<body>
+
+    <main>
+        <section class="mosaic-5x3">
+            <random-image autoplay fade-in fade-out display-duration="5s" pause-off-screen class="mosaic-big-xx">
+                <random-image-list
+                    src="/jobs/quackjob/debug/data/photos/list.json" 
+                    src-base-url="/jobs/quackjob/debug/">
+                </random-image-list>
+            </random-image>
+            <random-image autoplay fade-in fade-out display-duration="5s" pause-off-screen>
+                <random-image-list
+                    src="/jobs/quackjob/debug/data/photos/list.json" 
+                    src-base-url="/jobs/quackjob/debug/">
+                </random-image-list>
+            </random-image>
+            <random-image autoplay fade-in fade-out display-duration="5s" pause-off-screen>
+                <random-image-list
+                    src="/jobs/quackjob/debug/data/photos/list.json" 
+                    src-base-url="/jobs/quackjob/debug/">
+                </random-image-list>
+            </random-image>
+            <random-image autoplay fade-in fade-out display-duration="5s" pause-off-screen>
+                <random-image-list 
+                    src="/jobs/quackjob/debug/data/photos/list.json" 
+                    src-base-url="/jobs/quackjob/debug/">
+                </random-image-list>
+            </random-image>
+        </section>
+    </main>
+
+</body>
+</html>
