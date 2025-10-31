@@ -6,6 +6,7 @@ class SectionCarousel extends HTMLElement {
                 this.timer = null;
                 this.isTransitioning = false;
                 this.lastShown = [];
+                this.isPaused = false;
                 this._handleKeyDown = this._handleKeyDown.bind(this);
             }
 
@@ -81,10 +82,15 @@ class SectionCarousel extends HTMLElement {
                     event.preventDefault();
                     this.stopAutoplay(); // Stop autoplay when manually navigating
                     this.previous();
+                } else if (event.code === 'Space' || event.key === ' ') {
+                    // Toggle pause/resume on spacebar
+                    event.preventDefault();
+                    this._togglePause();
                 }
             }
 
             startAutoplay() {
+                if (this.isPaused) return;
                 this.stopAutoplay();
                 const delay = this.getCurrentDisplayDuration();
                 this.timer = setTimeout(() => {
@@ -96,6 +102,16 @@ class SectionCarousel extends HTMLElement {
                 if (this.timer) {
                     clearTimeout(this.timer);
                     this.timer = null;
+                }
+            }
+
+            _togglePause() {
+                if (this.isPaused) {
+                    this.isPaused = false;
+                    if (this.hasAttribute('autoplay')) this.startAutoplay();
+                } else {
+                    this.isPaused = true;
+                    this.stopAutoplay();
                 }
             }
 
@@ -348,7 +364,7 @@ class SectionCarousel extends HTMLElement {
                 this.isTransitioning = false;
 
                 // Continue autoplay if it was active
-                if (this.hasAttribute('autoplay')) {
+                if (this.hasAttribute('autoplay') && !this.isPaused) {
                     this.startAutoplay();
                 }
             }
